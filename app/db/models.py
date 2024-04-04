@@ -1,20 +1,37 @@
+import hashlib
+from typing import Iterable
 from tortoise import fields
+from tortoise.backends.base.client import BaseDBAsyncClient
 from tortoise.models import Model
 from app.utils.types import EventState, EventOptionResponse
-
-__all__ = ["User"]
-
 
 class User(Model):
     id = fields.IntField(pk=True, autoincrement=True)
     name = fields.CharField(max_length=32, null=False, unique=True)
     password = fields.CharField(max_length=100, null=False)
-    avatar = fields.CharField(max_length=100, null=True)
     owner = fields.BooleanField(default=False, null=False)
     user_and_group: fields.ReverseRelation["UserAndGroup"]
 
+    async def save(self, using_db: BaseDBAsyncClient | None = None, update_fields: Iterable[str] | None = None, force_create: bool = False, force_update: bool = False) -> None:
+        self.password = self.hash_password("changeme")
+        return await super().save(using_db, update_fields, force_create, force_update)
+    
     class Meta:
         table = "users"
+
+    def to_dict(self):
+        return {"id":self.id, "name":self.name, "owner":self.owner}
+    
+    def verify_password(self, input_password:str):
+        salt, stored_password = self.password.split("$")
+        input_hashed_password = hashlib.sha256((input_password + salt).encode()).hexdigest()
+        return input_hashed_password == stored_password
+    
+    def hash_password(self, password):
+        salt = hashlib.sha256().hexdigest()[:10]
+        hashed_password = hashlib.sha256((password + salt).encode()).hexdigest()
+        return f"{salt}${hashed_password}"
+
 
 class Group(Model):
     id = fields.IntField(pk=True, autoincrement=True)
@@ -25,6 +42,9 @@ class Group(Model):
 
     class Meta:
         table = "groups"
+
+    def to_dict(self):
+        return {"id":self.id, "name":self.name, "description":self.description}
 
 class UserAndGroup(Model):
     id = fields.BigIntField(pk=True, autoincrement=True)
@@ -46,6 +66,9 @@ class UserAndGroup(Model):
     class Meta:
         table = "user_and_group"
 
+    def to_dict(self):
+        return {"id":self.id}
+
 class UserGroupPermission(Model):
     id = fields.BigIntField(pk=True, autoincrement=True)
 
@@ -58,6 +81,9 @@ class UserGroupPermission(Model):
 
     class Meta:
         table = "user_group_permission"
+
+    def to_dict(self):
+        return {"id":self.id, "name":self.name, "description":self.description}
 
 class Event(Model):
     id = fields.IntField(pk=True, autoincrement=True)
@@ -76,6 +102,9 @@ class Event(Model):
     class Meta:
         table = "events"
 
+    def to_dict(self):
+        return {"id":self.id, "title":self.title, "color":self.color, "description":self.description, "state":self.state,}
+
 
 class EventOption(Model):
     id = fields.IntField(pk=True, autoincrement=True)
@@ -92,9 +121,11 @@ class EventOption(Model):
 
     user_event_option_responses: fields.ReverseRelation["UserEventOptionResponse"]
 
-
     class Meta:
         table = "event_options"
+
+    def to_dict(self):
+        return {"id":self.id, "date":self.date, "start_time":self.start_time, "end_time":self.end_time}
 
 class UserEventOptionResponse(Model):
     id = fields.IntField(pk=True, autoincrement=True)
@@ -114,6 +145,12 @@ class UserEventOptionResponse(Model):
         on_delete=fields.CASCADE,
     )
 
+    class Meta:
+        table = "user_event_option_responses"
+
+    def to_dict(self):
+        return {"id":self.id, "response":self.response}
+
 class Invite():
     id = fields.IntField(pk=True, autoincrement=True)
     code = fields.CharField(max_length=16, null=False)
@@ -121,3 +158,6 @@ class Invite():
 
     class Meta:
         table = "invites"
+
+    def to_dict(self):
+        return {"id":self.id, "code":self.code, "expiration_date":self.expiration_date}

@@ -1,11 +1,19 @@
 import hashlib
+from sanic_jwt import exceptions
+from app.db.models import User
 
-def hash_password(password):
-    salt = hashlib.sha256().hexdigest()[:10]
-    hashed_password = hashlib.sha256((password + salt).encode()).hexdigest()
-    return f"{salt}${hashed_password}"
+async def authenticate(request, *args, **kwargs):
+    username = request.json.get("username", None)
+    password = request.json.get("password", None)
 
-def verify_password(input_password, hashed_password):
-    salt, stored_password = hashed_password.split("$")
-    input_hashed_password = hashlib.sha256((input_password + salt).encode()).hexdigest()
-    return input_hashed_password == stored_password
+    if not username or not password:
+        raise exceptions.AuthenticationFailed("Missing username or password.")
+
+    user = await User.get_or_none(name=username)
+    if user is None:
+        raise exceptions.AuthenticationFailed("User not found.")
+
+    if not user.verify_password(password):
+        raise exceptions.AuthenticationFailed("Password is incorrect.")
+
+    return user

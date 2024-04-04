@@ -1,16 +1,10 @@
-import importlib
 import json
 import os
-import secrets
-import string
 import hashlib
-from urllib.parse import quote
 from app.db.models import User
-import hikari
 from dotenv import load_dotenv
 
 from app.utils import settings
-from app.utils.auth import hash_password
 
 
 def load_config():
@@ -18,19 +12,11 @@ def load_config():
         with open(f"{settings.RESOURCES}/AppConfig.json", "r") as file:
             config = json.load(file)
             return config
-        
-def import_modules(app):
-    for filename in os.listdir("./app/routes"):
-        if filename.endswith(".py") and filename != "__init__.py":
-            module = importlib.import_module(f"app.routes.{filename[:-3]}")
-            module.setup(app)
-            print(f"{filename[:-3]} added")
 
 async def create_owner():
     owner = await User.get_or_none(id=1)
     if not owner:
-        password = hash_password("changeme")
-        await User.create(id=1, name="admin", password=password, owner=True)
+        await User.create(id=1, name="admin", password="changeme", owner=True)
         
 def setup():
     if os.path.exists(".env"):
