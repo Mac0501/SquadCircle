@@ -40,8 +40,9 @@ CREATE TABLE IF NOT EXISTS "user_event_option_responses" (
     "event_option_id" INT NOT NULL REFERENCES "event_options" ("id") ON DELETE CASCADE,
     "user_and_group_id" BIGINT NOT NULL REFERENCES "user_and_group" ("id") ON DELETE CASCADE
 );
-CREATE TABLE IF NOT EXISTS "user_group_permission" (
+CREATE TABLE IF NOT EXISTS "user_group_permissions" (
     "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "permission" SMALLINT NOT NULL  /* CAN_CREATE_EVENTS: 1\nCAN_MANAGE_USERS: 2 */,
     "user_and_group_id" BIGINT NOT NULL REFERENCES "user_and_group" ("id") ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS "aerich" (

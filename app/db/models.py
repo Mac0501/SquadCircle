@@ -3,7 +3,7 @@ from typing import Iterable
 from tortoise import fields
 from tortoise.backends.base.client import BaseDBAsyncClient
 from tortoise.models import Model
-from app.utils.types import EventState, EventOptionResponse
+from app.utils.types import EventStateEnum, EventOptionResponseEnum, UserGroupPermissionEnum
 
 class User(Model):
     id = fields.IntField(pk=True, autoincrement=True)
@@ -71,7 +71,7 @@ class UserAndGroup(Model):
 
 class UserGroupPermission(Model):
     id = fields.BigIntField(pk=True, autoincrement=True)
-
+    permission = fields.IntEnumField(enum_type=UserGroupPermissionEnum, null=False)
     user_and_group: fields.ForeignKeyRelation["UserAndGroup"] = fields.ForeignKeyField(
         "models.UserAndGroup",
         to_field="id",
@@ -80,17 +80,17 @@ class UserGroupPermission(Model):
     )
 
     class Meta:
-        table = "user_group_permission"
+        table = "user_group_permissions"
 
     def to_dict(self):
-        return {"id":self.id, "name":self.name, "description":self.description}
+        return {"id":self.id, "name":self.permission}
 
 class Event(Model):
     id = fields.IntField(pk=True, autoincrement=True)
     title = fields.CharField(max_length=100, null=False)
     color = fields.CharField(max_length=6, null=False)
     description = fields.TextField(max_length=2000, null=True)
-    state = fields.IntEnumField(enum_type=EventState, null=False, default=EventState.OPEN)
+    state = fields.IntEnumField(enum_type=EventStateEnum, null=False, default=EventStateEnum.OPEN)
     group: fields.ForeignKeyRelation["Group"] = fields.ForeignKeyField(
         "models.Group",
         to_field="id",
@@ -129,7 +129,7 @@ class EventOption(Model):
 
 class UserEventOptionResponse(Model):
     id = fields.IntField(pk=True, autoincrement=True)
-    response = fields.IntEnumField(enum_type=EventOptionResponse, null=False)
+    response = fields.IntEnumField(enum_type=EventOptionResponseEnum, null=False)
 
     event_option: fields.ForeignKeyRelation["EventOption"] = fields.ForeignKeyField(
         "models.EventOption",
