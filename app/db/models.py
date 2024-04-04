@@ -10,6 +10,7 @@ class User(Model):
     name = fields.CharField(max_length=32, null=False, unique=True)
     password = fields.CharField(max_length=100, null=False)
     owner = fields.BooleanField(default=False, null=False)
+    groups: fields.ReverseRelation["Group"]
     user_and_group: fields.ReverseRelation["UserAndGroup"]
 
     async def save(self, using_db: BaseDBAsyncClient | None = None, update_fields: Iterable[str] | None = None, force_create: bool = False, force_update: bool = False) -> None:
@@ -39,6 +40,14 @@ class Group(Model):
     description = fields.TextField(max_length=2000, null=False)
     user_and_group: fields.ReverseRelation["UserAndGroup"]
     events: fields.ReverseRelation["UserAndGroup"]
+
+    users: fields.ManyToManyRelation["User"] = fields.ManyToManyField(
+        model_name="models.User",
+        related_name="groups",
+        through="user_and_groups",
+        forward_key="user_id",
+        backward_key="group_id",
+    )
 
     class Meta:
         table = "groups"

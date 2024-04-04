@@ -81,7 +81,8 @@ async def upload_avatar(request: Request, user_id: int):
     
 
 @users.route("/<user_id:int>/avatar.png", methods=["GET"])
-async def get_avatar(request, user_id):
+@protected()
+async def get_avatar(request: Request, user_id: int):
     user = await User.exists(id=user_id)
     if user:
         # Construct the full path to the avatar image file
@@ -96,3 +97,15 @@ async def get_avatar(request, user_id):
             return json({"error": "Avatar file not found"}, status=404)
     else:
         return json({"error": f"User with ID {user_id} not found"}, status=404)
+    
+
+@users.route("/<user_id:int>/groups", methods=["GET"])
+@protected()
+async def get_user_groups(request: Request, user_id: int):
+    user = await User.get_or_none(id=user_id)
+    if not user:
+        return json({"error": f"User with ID {user_id} not found"}, status=404)
+    
+    await user.fetch_related("groups")
+    
+    return json([group.to_dict() for group in user.groups])

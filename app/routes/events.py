@@ -14,13 +14,13 @@ async def get_events(request: Request):
     return json([event.to_dict() for event in events])
 
 
-@events.route("/", methods=["POST"])
-@protected()
-@atomic()
-async def create_event(request: Request):
-    data = request.json
-    event = await Event.create(**data)
-    return json(event.to_dict(), status=201)
+# @events.route("/", methods=["POST"])
+# @protected()
+# @atomic()
+# async def create_event(request: Request):
+#     data = request.json
+#     event = await Event.create(**data)
+#     return json(event.to_dict(), status=201)
 
 
 @events.route("/<event_id:int>", methods=["GET"])

@@ -50,6 +50,10 @@ CREATE TABLE IF NOT EXISTS "aerich" (
     "version" VARCHAR(255) NOT NULL,
     "app" VARCHAR(100) NOT NULL,
     "content" JSON NOT NULL
+);
+CREATE TABLE IF NOT EXISTS "user_and_groups" (
+    "group_id" INT NOT NULL REFERENCES "groups" ("id") ON DELETE CASCADE,
+    "user_id" INT NOT NULL REFERENCES "users" ("id") ON DELETE CASCADE
 );"""
 
 

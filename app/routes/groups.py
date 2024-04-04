@@ -3,7 +3,7 @@ from sanic_jwt import protected
 from sanic.request import Request
 from sanic.response import json
 from tortoise.transactions import atomic
-from app.db.models import Group
+from app.db.models import Event, Group
 
 groups = Blueprint("groups", url_prefix="/groups")
 
@@ -56,3 +56,24 @@ async def delete_group(request: Request, group_id: int):
         return json({"message": f"Group with ID {group_id} deleted successfully"})
     else:
         return json({"error": f"Group with ID {group_id} not found"}, status=404)
+    
+
+@groups.route("/<group_id:int>/events", methods=["GET"])
+@protected()
+async def get_all_events_for_group(request: Request, group_id: int):
+    group = await Group.get_or_none(id=group_id)
+    if not group:
+        return json({"error": "Group not found"}, status=404)
+    events = await Event.filter(group_id=group_id)
+    return json([event.to_dict() for event in events])
+
+
+@groups.route("/<group_id:int>/events", methods=["POST"])
+@protected()
+async def create_event_for_group(request, group_id: int):
+    data = request.json
+    group = await Group.get_or_none(id=group_id)
+    if not group:
+        return json({"error": "Group not found"}, status=404)
+    event = await Event.create(group_id=group_id, **data)
+    return json(event.to_dict())
