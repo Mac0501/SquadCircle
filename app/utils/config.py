@@ -1,10 +1,9 @@
 import json
 import os
-import hashlib
 from app.db.models import User
 from dotenv import load_dotenv
-
 from app.utils import settings
+from app.utils.tools import generate_random_hex
 
 
 def load_config():
@@ -14,9 +13,9 @@ def load_config():
             return config
 
 async def create_owner():
-    owner = await User.get_or_none(id=1)
+    owner = await User.exists(id=1)
     if not owner:
-        await User.create(id=1, name="admin", password="changeme", owner=True)
+        await User.create(id=1, name="admin", password=User.hash_password("changeme"), owner=True)
         
 def setup():
     if os.path.exists(".env"):
@@ -29,7 +28,7 @@ def setup():
     if AppConfig != None:
         secret = AppConfig["Statik"]["secret"]
     else:
-        secret = hashlib.sha256().hexdigest()[:16]
+        secret = generate_random_hex(16)
     config = {
         "App": {
             "backend_api": "127.0.0.1:8000",

@@ -4,7 +4,7 @@ from sanic_jwt import protected
 from sanic.request import Request
 from sanic.response import json
 from tortoise.transactions import atomic
-from app.db.models import User
+from app.db.models import Event, User, UserAndGroup, UserEventOptionResponse, EventOption
 
 users = Blueprint("users", url_prefix="/users")
 
@@ -41,6 +41,10 @@ async def update_user(request: Request, user_id: int):
     data = request.json
     user = await User.get_or_none(id=user_id)
     if user:
+        if "password" in data:
+            hashed_password = User.hash_password(data["password"])
+            data["password"] = hashed_password
+
         await user.update_from_dict(data)
         return json(user.to_dict())
     else:
@@ -109,3 +113,28 @@ async def get_user_groups(request: Request, user_id: int):
     await user.fetch_related("groups")
     
     return json([group.to_dict() for group in user.groups])
+
+
+@users.route("/<user_id:int>/event_options/<event_option_id:int>/user_event_option_response", methods=["POST"])
+@atomic()
+async def add_user_event_option_response(request: Request, user_id: int, event_option_id: int):
+    data = request.json
+    user = await User.get_or_none(id=user_id)
+    event_option = await EventOption.get_or_none(id=event_option_id).prefetch_related("event")
+
+    if not user:
+        return json({"error": f"User with ID {user_id} not found"}, status=404)
+    
+    if not event_option:
+        return json({"error": f"EventOption with ID {event_option_id} not found"}, status=404)
+    
+    user_and_group = await UserAndGroup.get_or_none(user_id=user.id, group_id=event_option.event.group_id)
+    if not user_and_group:
+        return json({"error": f"User with ID {user_id} is not in Group with ID {event_option.event.group_id}"}, status=404)
+
+    user_event_option_response = await UserEventOptionResponse.create(
+        response=data.get("response"),
+        event_option=event_option,
+        user_and_group=user_and_group,
+    )
+    return json(user_event_option_response.to_dict(), status=201)
