@@ -27,7 +27,6 @@ CREATE TABLE IF NOT EXISTS "users" (
     "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     "name" VARCHAR(32) NOT NULL UNIQUE,
     "password" VARCHAR(100) NOT NULL,
-    "avatar" VARCHAR(100),
     "owner" INT NOT NULL  DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS "user_and_group" (
@@ -35,7 +34,7 @@ CREATE TABLE IF NOT EXISTS "user_and_group" (
     "group_id" INT NOT NULL REFERENCES "groups" ("id") ON DELETE CASCADE,
     "user_id" INT NOT NULL REFERENCES "users" ("id") ON DELETE CASCADE
 );
-CREATE TABLE IF NOT EXISTS "usereventoptionresponse" (
+CREATE TABLE IF NOT EXISTS "user_event_option_responses" (
     "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     "response" SMALLINT NOT NULL  /* ACCEPTED: 1\nDENIED: 2 */,
     "event_option_id" INT NOT NULL REFERENCES "event_options" ("id") ON DELETE CASCADE,
