@@ -3,7 +3,7 @@ from sanic_jwt import protected
 from sanic.request import Request
 from sanic.response import json
 from tortoise.transactions import atomic
-from app.db.models import Event, Group, User, UserAndGroup
+from app.db.models import Event, Group, Invite, User, UserAndGroup
 
 groups = Blueprint("groups", url_prefix="/groups")
 
@@ -57,6 +57,25 @@ async def delete_group(request: Request, group_id: int):
     else:
         return json({"error": f"Group with ID {group_id} not found"}, status=404)
     
+@groups.route("/<group_id:int>/invites", methods=["GET"])
+@protected()
+async def get_group_invites(request: Request, group_id: int):
+    group = await Group.get_or_none(id=group_id).prefetch_related("invites")
+    if not group:
+        return json({"error": "Group not found"}, status=404)
+    return json([invite.to_dict() for invite in group.invites])
+
+
+@groups.route("/<group_id:int>/invites", methods=["POST"])
+@protected()
+@atomic()
+async def create_group_invite(request, group_id: int):
+    data = request.json
+    group = await Group.get_or_none(id=group_id)
+    if not group:
+        return json({"error": "Group not found"}, status=404)
+    event = await Invite.create(group_id=group_id, code=Invite.generate_code(), expiration_date=data.get(""))
+    return json(event.to_dict())
 
 @groups.route("/<group_id:int>/events", methods=["GET"])
 @protected()
@@ -84,7 +103,6 @@ async def create_event_for_group(request, group_id: int):
 async def add_user_to_group(request: Request, group_id: int, user_id:int):
     group = await Group.get_or_none(id=group_id)
     user = await User.get_or_none(id=user_id)
-
 
     if not user:
         return json({"error": f"User with ID {user_id} not found"}, status=404)

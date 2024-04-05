@@ -22,15 +22,6 @@ async def get_invite(request: Request, invite_id: int):
     else:
         return json({"error": f"Invite with ID {invite_id} not found"}, status=404)
 
-@invites.route("/", methods=["POST"])
-@protected()
-@atomic()
-async def create_invite(request: Request):
-    data = request.json
-    data["code"] = Invite.generate_code()
-    invite = await Invite.create(**data)
-    return json(invite.to_dict(), status=201)
-
 @invites.route("/<invite_id:int>", methods=["DELETE"])
 @protected()
 @atomic()
