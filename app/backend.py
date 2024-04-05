@@ -1,13 +1,14 @@
 import aerich
-from sanic import Sanic
+from sanic import Request, Sanic
 from sanic_ext import Extend
-from sanic_jwt import initialize
+from sanic_jwt import initialize, inject_user
 from .routes import routes
 from tortoise.contrib.sanic import register_tortoise
 
 from app.db.Aerich import TORTOISE_ORM
 from app.utils.config import load_config, setup, create_owner
 from app.utils.auth import authenticate, retrieve_user, Register
+from app.utils.tools import process_match
 
 setup()
 app = Sanic("SquadCircle")
@@ -17,6 +18,14 @@ app.blueprint(routes)
 app.config.CORS_ORIGINS = f"http://{config['App']['URI']}"
 app.config.CORS_SUPPORTS_CREDENTIALS = True
 app.config.OAS = False
+
+@app.on_request
+@inject_user()
+async def example(request: Request, user):
+    request.match_info = await process_match(request.match_info)
+    request.match_info["my_user"] = user
+    pass
+
 Extend(app)
 
 my_views = (

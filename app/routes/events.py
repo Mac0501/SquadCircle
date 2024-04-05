@@ -3,20 +3,20 @@ from sanic_jwt import protected
 from sanic.request import Request
 from sanic.response import json
 from tortoise.transactions import atomic
-from app.db.models import Event, EventOption
+from app.db.models import Event, User
 
 events = Blueprint("events", url_prefix="/events")
 
 @events.route("/", methods=["GET"])
 @protected()
-async def get_events(request: Request):
+async def get_events(request: Request, my_user: User):
     events = await Event.all()
     return json([event.to_dict() for event in events])
 
 
 @events.route("/<event_id:int>", methods=["GET"])
 @protected()
-async def get_event(request: Request, event_id: int):
+async def get_event(request: Request, my_user: User, event_id: int):
     event = await Event.get_or_none(id=event_id)
     if event:
         return json(event.to_dict())
@@ -27,7 +27,7 @@ async def get_event(request: Request, event_id: int):
 @events.route("/<event_id:int>", methods=["PUT"])
 @protected()
 @atomic()
-async def update_event(request: Request, event_id: int):
+async def update_event(request: Request, my_user: User, event_id: int):
     data = request.json
     event = await Event.get_or_none(id=event_id)
     if event:
@@ -40,7 +40,7 @@ async def update_event(request: Request, event_id: int):
 @events.route("/<event_id:int>", methods=["DELETE"])
 @protected()
 @atomic()
-async def delete_event(request: Request, event_id: int):
+async def delete_event(request: Request, my_user: User, event_id: int):
     event = await Event.get_or_none(id=event_id)
     if event:
         await event.delete()
@@ -52,7 +52,7 @@ async def delete_event(request: Request, event_id: int):
 @events.route("/<event_id:int>/event_options", methods=["GET"])
 @protected()
 @atomic()
-async def get_event_event_options(request: Request, event_id: int):
+async def get_event_event_options(request: Request, my_user: User, event_id: int):
     event = await Event.get_or_none(id=event_id).prefetch_related("event_options")
     if event:
         return json([event_option.to_dict() for event_option in event.event_options])

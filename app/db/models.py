@@ -7,6 +7,7 @@ from app.utils.tools import generate_random_hex
 from app.utils.types import EventStateEnum, EventOptionResponseEnum, UserGroupPermissionEnum
 
 class User(Model):
+    __parse_name__ = "user"
     id = fields.IntField(pk=True, autoincrement=True)
     name = fields.CharField(max_length=32, null=False, unique=True)
     password = fields.CharField(max_length=100, null=False)
@@ -34,6 +35,7 @@ class User(Model):
 
 
 class Group(Model):
+    __parse_name__ = "group"
     id = fields.IntField(pk=True, autoincrement=True)
     name = fields.CharField(max_length=32, null=False, unique=True)
     description = fields.TextField(max_length=2000, null=False)
@@ -56,6 +58,7 @@ class Group(Model):
         return {"id":self.id, "name":self.name, "description":self.description}
 
 class UserAndGroup(Model):
+    __parse_name__ = "user_and_group"
     id = fields.BigIntField(pk=True, autoincrement=True)
     user_id: int
     user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField(
@@ -81,6 +84,7 @@ class UserAndGroup(Model):
         return {"id":self.id, "user_id":self.user_id, "group_id":self.group_id}
 
 class UserGroupPermission(Model):
+    __parse_name__ = "user_group_permission"
     id = fields.BigIntField(pk=True, autoincrement=True)
     permission = fields.IntEnumField(enum_type=UserGroupPermissionEnum, null=False)
     user_and_group_id: int
@@ -98,6 +102,7 @@ class UserGroupPermission(Model):
         return {"id":self.id, "name":self.permission, "user_and_group_id":self.user_and_group_id}
 
 class Event(Model):
+    __parse_name__ = "event"
     id = fields.IntField(pk=True, autoincrement=True)
     title = fields.CharField(max_length=100, null=False)
     color = fields.CharField(max_length=6, null=False)
@@ -123,6 +128,7 @@ class Event(Model):
 
 
 class EventOption(Model):
+    __parse_name__ = "event_option"
     id = fields.IntField(pk=True, autoincrement=True)
     date = fields.DateField(null=False)
     start_time = fields.TimeField(null=False)
@@ -145,6 +151,7 @@ class EventOption(Model):
         return {"id":self.id, "date":self.date, "start_time":self.start_time, "end_time":self.end_time, "event_id":self.event_id}
 
 class UserEventOptionResponse(Model):
+    __parse_name__ = "user_event_option_response"
     id = fields.IntField(pk=True, autoincrement=True)
     response = fields.IntEnumField(enum_type=EventOptionResponseEnum, null=False)
 
@@ -170,6 +177,7 @@ class UserEventOptionResponse(Model):
         return {"id":self.id, "response":self.response, "event_option_id": self.event_option_id, "user_and_group_id":self.user_and_group_id}
 
 class Invite():
+    __parse_name__ = "invite"
     id = fields.IntField(pk=True, autoincrement=True)
     code = fields.CharField(max_length=16, null=False, unique=True)
     expiration_date = fields.DateField(null=False)
