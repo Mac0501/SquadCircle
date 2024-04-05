@@ -11,7 +11,9 @@ class User(Model):
     name = fields.CharField(max_length=32, null=False, unique=True)
     password = fields.CharField(max_length=100, null=False)
     owner = fields.BooleanField(default=False, null=False)
+
     groups: fields.ReverseRelation["Group"]
+    user_and_group_id: int
     user_and_group: fields.ReverseRelation["UserAndGroup"]
     
     class Meta:
@@ -36,9 +38,10 @@ class Group(Model):
     id = fields.IntField(pk=True, autoincrement=True)
     name = fields.CharField(max_length=32, null=False)
     description = fields.TextField(max_length=2000, null=False)
+
+    user_and_group_id: int
     user_and_group: fields.ReverseRelation["UserAndGroup"]
     events: fields.ReverseRelation["UserAndGroup"]
-
     users: fields.ManyToManyRelation["User"] = fields.ManyToManyField(
         model_name="models.User",
         related_name="groups",
@@ -55,12 +58,14 @@ class Group(Model):
 
 class UserAndGroup(Model):
     id = fields.BigIntField(pk=True, autoincrement=True)
+    user_id: int
     user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField(
         model_name="models.User",
         to_field="id",
         related_name="user_and_group",
         null=False,
     )
+    group_id: int
     group: fields.ForeignKeyRelation["Group"] = fields.ForeignKeyField(
         model_name="models.Group",
         to_field="id",
@@ -68,7 +73,7 @@ class UserAndGroup(Model):
         null=False,
     )
     user_event_option_responses: fields.ReverseRelation["UserEventOptionResponse"]
-    user_group_permission: fields.ReverseRelation["UserGroupPermission"]
+    user_group_permissions: fields.ReverseRelation["UserGroupPermission"]
 
     class Meta:
         table = "user_and_group"
@@ -98,6 +103,8 @@ class Event(Model):
     color = fields.CharField(max_length=6, null=False)
     description = fields.TextField(max_length=2000, null=True)
     state = fields.IntEnumField(enum_type=EventStateEnum, null=False, default=EventStateEnum.OPEN)
+
+    group_id:int
     group: fields.ForeignKeyRelation["Group"] = fields.ForeignKeyField(
         "models.Group",
         to_field="id",
@@ -119,6 +126,7 @@ class EventOption(Model):
     start_time = fields.TimeField(null=False)
     end_time = fields.TimeField(null=True)
 
+    event_id: int
     event: fields.ForeignKeyRelation["Event"] = fields.ForeignKeyField(
         "models.Event",
         to_field="id",
@@ -138,13 +146,14 @@ class UserEventOptionResponse(Model):
     id = fields.IntField(pk=True, autoincrement=True)
     response = fields.IntEnumField(enum_type=EventOptionResponseEnum, null=False)
 
+    event_option_id: int
     event_option: fields.ForeignKeyRelation["EventOption"] = fields.ForeignKeyField(
         "models.EventOption",
         to_field="id",
         related_name="user_event_option_responses",
         on_delete=fields.CASCADE,
     )
-
+    user_and_group_id: int
     user_and_group: fields.ForeignKeyRelation["UserAndGroup"] = fields.ForeignKeyField(
         "models.UserAndGroup",
         to_field="id",

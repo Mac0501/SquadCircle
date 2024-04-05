@@ -92,10 +92,31 @@ async def add_user_to_group(request: Request, group_id: int, user_id:int):
     if not group:
         return json({"error": f"Group with ID {group_id} not found"}, status=404)
 
-    existing_user_group = await UserAndGroup.get_or_none(group=group, user=user)
-    if existing_user_group:
+    existing_user_and_group = await UserAndGroup.get_or_none(group=group, user=user)
+    if existing_user_and_group:
         return json({"error": f"User with ID {user_id} is already in the Group with ID {group_id}"}, status=400)
 
     user_group = await UserAndGroup.create(user=user, group=group)
 
     return json(user_group.to_dict(), status=201)
+
+
+@groups.route("/<group_id:int>/users/<user_id:int>", methods=["DELETE"])
+@protected()
+@atomic()
+async def remove_user_from_group(request: Request, group_id: int, user_id:int):
+    group = await Group.get_or_none(id=group_id)
+    user = await User.get_or_none(id=user_id)
+
+    if not user:
+        return json({"error": f"User with ID {user_id} not found"}, status=404)
+    
+    if not group:
+        return json({"error": f"Group with ID {group_id} not found"}, status=404)
+
+    user_and_group = await UserAndGroup.get_or_none(group=group, user=user)
+    if user_and_group:
+        await user_and_group.delete()
+        return json({"message": f"User with ID {user_id} was from Group with ID {group_id} successfully removed."})
+    else:
+        return json({"error": f"User with ID {user_id} is not in the Group with ID {group_id}"}, status=400)

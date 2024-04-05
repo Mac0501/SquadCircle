@@ -1,6 +1,13 @@
-import hashlib
 from sanic_jwt import exceptions
 from app.db.models import User
+
+async def retrieve_user(request, payload, *args, **kwargs):
+    if payload:
+        user = await User.get_or_none(id=payload.get('id', None))
+        return user
+    else:
+        return None
+
 
 async def authenticate(request, *args, **kwargs):
     username = request.json.get("username", None)
