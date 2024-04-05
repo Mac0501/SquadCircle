@@ -1,0 +1,15 @@
+:3000 {
+	encode gzip zstd
+
+	@api {
+		path /api*
+	}
+
+	handle @api {
+		reverse_proxy localhost:8000
+	}
+
+	handle {
+		reverse_proxy localhost:3001
+	}
+}
