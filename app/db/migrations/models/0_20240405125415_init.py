@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS "events" (
     "color" VARCHAR(6) NOT NULL,
     "description" TEXT,
     "state" SMALLINT NOT NULL  DEFAULT 1 /* OPEN: 1\nAKTIVE: 2\nCLOSED: 3\nARCHIVED: 4 */,
+    "choosen_event_option_id" INT,
     "group_id" INT NOT NULL REFERENCES "groups" ("id") ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS "event_options" (

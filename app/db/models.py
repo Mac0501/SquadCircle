@@ -104,10 +104,7 @@ class Event(Model):
     description = fields.TextField(max_length=2000, null=True)
     state = fields.IntEnumField(enum_type=EventStateEnum, null=False, default=EventStateEnum.OPEN)
 
-    # choosen_event_option_id: int|None
-    # choosen_event_option: fields.OneToOneNullableRelation["EventOption"] = fields.OneToOneField(
-    #     "models.EventOption", null=True
-    # )
+    choosen_event_option_id = fields.IntField(null=True)
 
     group_id:int
     group: fields.ForeignKeyRelation["Group"] = fields.ForeignKeyField(
