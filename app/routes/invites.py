@@ -6,6 +6,7 @@ from tortoise.transactions import atomic
 from app.db.models import Invite, User
 from app.utils.decorators import check_for_permission
 from app.utils.types import UserGroupPermissionEnum
+from app.utils.tools import filter_dict_by_keys
 
 invites = Blueprint("invites", url_prefix="/invites")
 
@@ -25,6 +26,16 @@ async def get_invite(request: Request, my_user: User, invite: Invite|None):
         return json(invite.to_dict())
     else:
         return json({"error": f"Invite not found"}, status=404)
+    
+@invites.route("/verify_code", methods=["POST"], name="verify_code_invite")
+async def verify_code_invite(request: Request, my_user: User):
+    code = filter_dict_by_keys(request.json, ["code"], True)
+
+    invite = await Invite.get_or_none(code=code)
+    if not invite or invite.is_expired():
+        if invite:
+            await invite.delete()
+        return json({'message': 'Invite code doesnt exists'}, status=404)
 
 @invites.route("/<invite_id:int>", methods=["DELETE"], name="delete_invite")
 @protected()
