@@ -14,17 +14,17 @@ setup()
 app = Sanic("SquadCircle")
 config = load_config()
 app.ctx.Config = config
-app.blueprint(routes)
 app.config.CORS_ORIGINS = f"http://{config['App']['URI']}"
 app.config.CORS_SUPPORTS_CREDENTIALS = True
-app.config.OAS = False
 
-@app.on_request
+@routes.middleware("request")
 @inject_user()
 async def example(request: Request, user):
     request.match_info = await process_match(request.match_info)
     request.match_info["my_user"] = user
     pass
+
+app.blueprint(routes)
 
 Extend(app)
 
