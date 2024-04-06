@@ -4,6 +4,7 @@ from .events import events
 from .groups import groups
 from .invites import invites
 from .me import me
+from .user_event_option_response import user_event_option_response
 from .users import users
 
-routes = Blueprint.group(event_options, events, groups, invites, me, users, url_prefix="/api")
+routes = Blueprint.group(event_options, events, groups, invites, me, user_event_option_response, users, url_prefix="/api")
