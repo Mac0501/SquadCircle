@@ -62,7 +62,7 @@ class Group(Model):
 
 class UserAndGroup(Model):
     __parse_name__ = "user_and_group"
-    id = fields.BigIntField(pk=True, autoincrement=True)
+    id = fields.IntField(pk=True, autoincrement=True)
     user_id: int
     user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField(
         model_name="models.User",
@@ -81,7 +81,7 @@ class UserAndGroup(Model):
     user_group_permissions: fields.ReverseRelation["UserGroupPermission"]
 
     class Meta:
-        table = "user_and_group"
+        table = "user_and_groups"
 
     def to_dict(self) -> Dict[str, any]:
         return {"id":self.id, "user_id":self.user_id, "group_id":self.group_id}
@@ -91,7 +91,7 @@ class UserAndGroup(Model):
 
 class UserGroupPermission(Model):
     __parse_name__ = "user_group_permission"
-    id = fields.BigIntField(pk=True, autoincrement=True)
+    id = fields.IntField(pk=True, autoincrement=True)
     permission = fields.IntEnumField(enum_type=UserGroupPermissionEnum, null=False)
     user_and_group_id: int
     user_and_group: fields.ForeignKeyRelation["UserAndGroup"] = fields.ForeignKeyField(
