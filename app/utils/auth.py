@@ -1,4 +1,3 @@
-from datetime import datetime
 from sanic_jwt import exceptions
 from app.db.models import Invite, User, UserAndGroup
 from sanic.response import json
