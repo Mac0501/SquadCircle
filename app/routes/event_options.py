@@ -72,15 +72,12 @@ async def create_user_event_option_response(request: Request, my_user: User, eve
         return json({"error": f"User is not in Group"}, status=404)
 
     user_event_option_response = await UserEventOptionResponse.get_or_none(event_option_id=event_option.id, user_and_group_id=user_and_group.id)
-    if data.get("response", None):
-        if user_event_option_response:
-            user_event_option_response.update(response=data.get("response"))
-        else:
-            user_event_option_response = await UserEventOptionResponse.create(
-                response=data.get("response"),
-                event_option=event_option,
-                user_and_group=user_and_group,
-            )
-        return json(user_event_option_response.to_dict(), status=201)
+    data = filter_dict_by_keys(request.json, ["response"], True)
+    if user_event_option_response:
+        user_event_option_response.update_from_dict(data)
     else:
-        return json(user_event_option_response.to_dict(), status=400)
+        user_event_option_response = await UserEventOptionResponse.create(
+            event_option=event_option,
+            user_and_group=user_and_group, **data
+        )
+    return json(user_event_option_response.to_dict(), status=201)
