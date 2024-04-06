@@ -4,12 +4,15 @@ from sanic.request import Request
 from sanic.response import json
 from tortoise.transactions import atomic
 from app.db.models import User, UserEventOptionResponse
+from app.utils.decorators import check_for_permission
 from app.utils.tools import filter_dict_by_keys
+from app.utils.types import UserGroupPermissionEnum
 
 user_event_option_response= Blueprint("user_event_option_response", url_prefix="/user_event_option_response")
 
 @user_event_option_response.route("/<user_event_option_response_id:int>", methods=["GET"])
 @protected()
+@check_for_permission()
 async def get_user_event_option_response(request: Request, my_user: User, user_event_option_response: UserEventOptionResponse|None):
     if user_event_option_response:
         return json(user_event_option_response.to_dict())
@@ -19,6 +22,7 @@ async def get_user_event_option_response(request: Request, my_user: User, user_e
 
 @user_event_option_response.route("/<user_event_option_response_id:int>", methods=["PUT"])
 @protected()
+@check_for_permission()
 @atomic()
 async def update_user_event_option_response(request: Request, my_user: User, user_event_option_response: UserEventOptionResponse|None):
     if user_event_option_response:

@@ -4,6 +4,7 @@ from sanic.request import Request
 from sanic.response import json
 from tortoise.transactions import atomic
 from app.db.models import Event, Group, Invite, User, UserAndGroup, UserGroupPermission
+from app.utils.decorators import check_for_permission, is_owner
 from app.utils.tools import filter_dict_by_keys
 from app.utils.types import UserGroupPermissionEnum
 
@@ -11,6 +12,7 @@ groups = Blueprint("groups", url_prefix="/groups")
 
 @groups.route("/", methods=["GET"])
 @protected()
+@is_owner()
 async def get_groups(request: Request, my_user: User):
     groups = await Group.all()
     return json([group.to_dict() for group in groups])
@@ -18,6 +20,7 @@ async def get_groups(request: Request, my_user: User):
 
 @groups.route("/", methods=["POST"])
 @protected()
+@is_owner()
 @atomic()
 async def create_group(request: Request, my_user: User):
     data = filter_dict_by_keys(request.json, ["name", "description"], True)
@@ -27,6 +30,7 @@ async def create_group(request: Request, my_user: User):
 
 @groups.route("/<group_id:int>", methods=["GET"])
 @protected()
+@check_for_permission()
 async def get_group(request: Request, my_user: User, group: Group|None):
     if group:
         return json(group.to_dict())
@@ -36,6 +40,7 @@ async def get_group(request: Request, my_user: User, group: Group|None):
 
 @groups.route("/<group_id:int>", methods=["PUT"])
 @protected()
+@is_owner()
 @atomic()
 async def update_group(request: Request, my_user: User, group: Group|None):
     data = filter_dict_by_keys(request.json, ["name", "description"])
@@ -48,6 +53,7 @@ async def update_group(request: Request, my_user: User, group: Group|None):
 
 @groups.route("/<group_id:int>", methods=["DELETE"])
 @protected()
+@is_owner()
 @atomic()
 async def delete_group(request: Request, my_user: User, group: Group|None):
     if group:
@@ -59,6 +65,7 @@ async def delete_group(request: Request, my_user: User, group: Group|None):
     
 @groups.route("/<group_id:int>/invites", methods=["GET"])
 @protected()
+@check_for_permission([UserGroupPermissionEnum.MANAGE_INVITES])
 async def get_group_invites(request: Request, my_user: User, group: Group|None):
     if not group:
         return json({"error": "Group not found"}, status=404)
@@ -68,6 +75,7 @@ async def get_group_invites(request: Request, my_user: User, group: Group|None):
 
 @groups.route("/<group_id:int>/invites", methods=["POST"])
 @protected()
+@check_for_permission([UserGroupPermissionEnum.MANAGE_INVITES])
 @atomic()
 async def create_group_invite(request, group: Group|None):
     if not group:
@@ -79,6 +87,7 @@ async def create_group_invite(request, group: Group|None):
 
 @groups.route("/<group_id:int>/events", methods=["GET"])
 @protected()
+@check_for_permission()
 async def get_all_events_for_group(request: Request, my_user: User, group: Group|None):
     if not group:
         return json({"error": "Group not found"}, status=404)
@@ -88,6 +97,7 @@ async def get_all_events_for_group(request: Request, my_user: User, group: Group
 
 @groups.route("/<group_id:int>/events", methods=["POST"])
 @protected()
+@check_for_permission([UserGroupPermissionEnum.MANAGE_EVENTS])
 @atomic()
 async def create_event_for_group(request, group: Group|None):
     if not group:
@@ -99,6 +109,7 @@ async def create_event_for_group(request, group: Group|None):
 
 @groups.route("/<group_id:int>/users/<user_id:int>", methods=["POST"])
 @protected()
+@check_for_permission([UserGroupPermissionEnum.MANAGE_USERS])
 @atomic()
 async def add_user_to_group(request: Request, my_user: User, group: Group|None, user: User|None):
 
@@ -119,6 +130,7 @@ async def add_user_to_group(request: Request, my_user: User, group: Group|None, 
 
 @groups.route("/<group_id:int>/users/<user_id:int>", methods=["DELETE"])
 @protected()
+@check_for_permission([UserGroupPermissionEnum.MANAGE_USERS])
 @atomic()
 async def remove_user_from_group(request: Request, my_user: User, group: Group|None, user: User|None):
     if not user:
@@ -156,6 +168,7 @@ async def remove_user_from_group(request: Request, my_user: User, group: Group|N
 
 @groups.route("/<group_id:int>/users/<user_id:int>/permissions", methods=["POST"])
 @protected()
+@check_for_permission([UserGroupPermissionEnum.MANAGE_USERS])
 @atomic()
 async def add_group_user_permission(request: Request, my_user: User, group: Group|None, user: User|None):
     if not user:
@@ -202,6 +215,7 @@ async def add_group_user_permission(request: Request, my_user: User, group: Grou
 
 @groups.route("/<group_id:int>/users/<user_id:int>/permissions", methods=["DELETE"])
 @protected()
+@check_for_permission([UserGroupPermissionEnum.MANAGE_USERS])
 @atomic()
 async def remove_group_user_permission(request: Request, my_user: User, group: Group|None, user: User|None):
     if not user:

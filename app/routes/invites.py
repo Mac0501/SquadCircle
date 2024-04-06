@@ -4,11 +4,14 @@ from sanic.response import json
 from sanic_jwt import protected
 from tortoise.transactions import atomic
 from app.db.models import Invite, User
+from app.utils.decorators import check_for_permission
+from app.utils.types import UserGroupPermissionEnum
 
 invites = Blueprint("invites", url_prefix="/invites")
 
 @invites.route("/", methods=["GET"])
 @protected()
+@check_for_permission([UserGroupPermissionEnum.MANAGE_INVITES])
 async def get_invites(request: Request, my_user: User):
     invites = await Invite.all()
     return json([invite.to_dict() for invite in invites])
@@ -16,6 +19,7 @@ async def get_invites(request: Request, my_user: User):
 
 @invites.route("/<invite_id:int>", methods=["GET"])
 @protected()
+@check_for_permission([UserGroupPermissionEnum.MANAGE_INVITES])
 async def get_invite(request: Request, my_user: User, invite: Invite|None):
     if invite:
         return json(invite.to_dict())
@@ -24,6 +28,7 @@ async def get_invite(request: Request, my_user: User, invite: Invite|None):
 
 @invites.route("/<invite_id:int>", methods=["DELETE"])
 @protected()
+@check_for_permission([UserGroupPermissionEnum.MANAGE_INVITES])
 @atomic()
 async def delete_invite(request: Request, my_user: User, invite: Invite|None):
     if invite:

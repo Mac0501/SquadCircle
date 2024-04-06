@@ -1,15 +1,18 @@
 from sanic import Blueprint
-from sanic_jwt import protected, exceptions
+from sanic_jwt import protected
 from sanic.request import Request
 from sanic.response import json
 from tortoise.transactions import atomic
 from app.db.models import EventOption, User, UserAndGroup, UserEventOptionResponse
 from app.utils.tools import filter_dict_by_keys
+from app.utils.decorators import check_for_permission
+from app.utils.types import UserGroupPermissionEnum
 
 event_options = Blueprint("event_options", url_prefix="/event_options")
 
 @event_options.route("/<event_option_id:int>", methods=["GET"])
 @protected()
+@check_for_permission()
 async def get_event_option(request: Request, my_user: User, event_option: EventOption|None):
     if event_option:
         return json(event_option.to_dict())
@@ -19,6 +22,7 @@ async def get_event_option(request: Request, my_user: User, event_option: EventO
 
 @event_options.route("/<event_option_id:int>", methods=["PUT"])
 @protected()
+@check_for_permission([UserGroupPermissionEnum.MANAGE_EVENTS])
 @atomic()
 async def update_event_option(request: Request, my_user: User, event_option: EventOption|None):
     if event_option:
@@ -30,6 +34,7 @@ async def update_event_option(request: Request, my_user: User, event_option: Eve
 
 @event_options.route("/<event_option_id:int>", methods=["DELETE"])
 @protected()
+@check_for_permission([UserGroupPermissionEnum.MANAGE_EVENTS])
 @atomic()
 async def delete_event_option(request: Request, my_user: User, event_option: EventOption|None):
     if event_option:
@@ -41,6 +46,7 @@ async def delete_event_option(request: Request, my_user: User, event_option: Eve
 
 @event_options.route("/<event_option_id:int>/user_event_option_response", methods=["GET"])
 @protected()
+@check_for_permission()
 async def get_user_event_option_responses(request: Request, my_user: User, event_option: EventOption|None):
     
     if not event_option:
@@ -53,6 +59,7 @@ async def get_user_event_option_responses(request: Request, my_user: User, event
     
 @event_options.route("/<event_option_id:int>/user_event_option_response", methods=["POST"])
 @protected()
+@check_for_permission()
 @atomic()
 async def create_user_event_option_response(request: Request, my_user: User, event_option: EventOption|None):
     data = request.json

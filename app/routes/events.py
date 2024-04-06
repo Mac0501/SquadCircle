@@ -4,12 +4,15 @@ from sanic.request import Request
 from sanic.response import json
 from tortoise.transactions import atomic
 from app.db.models import Event, EventOption, User
+from app.utils.decorators import check_for_permission
 from app.utils.tools import filter_dict_by_keys
+from app.utils.types import UserGroupPermissionEnum
 
 events = Blueprint("events", url_prefix="/events")
 
 @events.route("/", methods=["GET"])
 @protected()
+@check_for_permission()
 async def get_events(request: Request, my_user: User):
     events = await Event.all()
     return json([event.to_dict() for event in events])
@@ -17,6 +20,7 @@ async def get_events(request: Request, my_user: User):
 
 @events.route("/<event_id:int>", methods=["GET"])
 @protected()
+@check_for_permission()
 async def get_event(request: Request, my_user: User, event: Event|None):
     if event:
         return json(event.to_dict())
@@ -26,6 +30,7 @@ async def get_event(request: Request, my_user: User, event: Event|None):
 
 @events.route("/<event_id:int>", methods=["PUT"])
 @protected()
+@check_for_permission([UserGroupPermissionEnum.MANAGE_EVENTS])
 @atomic()
 async def update_event(request: Request, my_user: User, event: Event|None):
     if event:
@@ -37,6 +42,7 @@ async def update_event(request: Request, my_user: User, event: Event|None):
 
 @events.route("/<event_id:int>", methods=["DELETE"])
 @protected()
+@check_for_permission([UserGroupPermissionEnum.MANAGE_EVENTS])
 @atomic()
 async def delete_event(request: Request, my_user: User, event: Event|None):
     if event:
@@ -48,6 +54,7 @@ async def delete_event(request: Request, my_user: User, event: Event|None):
     
 @events.route("/<event_id:int>/event_options", methods=["GET"])
 @protected()
+@check_for_permission()
 async def get_event_event_options(request: Request, my_user: User, event: Event|None):
     if event:
         await event.fetch_related("event_options")
@@ -57,6 +64,7 @@ async def get_event_event_options(request: Request, my_user: User, event: Event|
     
 @events.route("/<event_id:int>/event_options", methods=["POST"])
 @protected()
+@check_for_permission([UserGroupPermissionEnum.MANAGE_EVENTS])
 @atomic()
 async def create_event_event_options(request: Request, my_user: User, event: Event|None):
     if event:

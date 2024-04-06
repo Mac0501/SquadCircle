@@ -56,6 +56,9 @@ class Group(Model):
 
     def to_dict(self):
         return {"id":self.id, "name":self.name, "description":self.description}
+    
+    async def get_group_id(self):
+        return self.id
 
 class UserAndGroup(Model):
     __parse_name__ = "user_and_group"
@@ -82,6 +85,9 @@ class UserAndGroup(Model):
 
     def to_dict(self):
         return {"id":self.id, "user_id":self.user_id, "group_id":self.group_id}
+    
+    async def get_group_id(self):
+        return self.group_id
 
 class UserGroupPermission(Model):
     __parse_name__ = "user_group_permission"
@@ -100,6 +106,10 @@ class UserGroupPermission(Model):
 
     def to_dict(self):
         return {"id":self.id, "name":self.permission, "user_and_group_id":self.user_and_group_id}
+
+    async def get_group_id(self):
+        user_and_group = await UserAndGroup.get(id=self.user_and_group_id)
+        return user_and_group.group_id
 
 class Event(Model):
     __parse_name__ = "event"
@@ -126,6 +136,9 @@ class Event(Model):
     def to_dict(self):
         return {"id":self.id, "title":self.title, "color":self.color, "description":self.description, "state":self.state, "group_id": self.group_id, "choosen_event_option_id":self.choosen_event_option_id}
 
+    async def get_group_id(self):
+        return self.group_id
+
 
 class EventOption(Model):
     __parse_name__ = "event_option"
@@ -149,6 +162,10 @@ class EventOption(Model):
 
     def to_dict(self):
         return {"id":self.id, "date":self.date, "start_time":self.start_time, "end_time":self.end_time, "event_id":self.event_id}
+    
+    async def get_group_id(self):
+        event = await Event.get(id=self.event_id)
+        return event.group_id
 
 class UserEventOptionResponse(Model):
     __parse_name__ = "user_event_option_response"
@@ -175,6 +192,11 @@ class UserEventOptionResponse(Model):
 
     def to_dict(self):
         return {"id":self.id, "response":self.response, "event_option_id": self.event_option_id, "user_and_group_id":self.user_and_group_id}
+    
+    async def get_group_id(self):
+        user_and_group = await UserAndGroup.get(id=self.user_and_group_id)
+        return user_and_group.group_id
+
 
 class Invite():
     __parse_name__ = "invite"
@@ -195,6 +217,9 @@ class Invite():
 
     def to_dict(self):
         return {"id":self.id, "code":self.code, "expiration_date":self.expiration_date, "group_id":self.group_id}
+    
+    async def get_group_id(self):
+        return self.group_id
     
     @staticmethod
     def generate_code():

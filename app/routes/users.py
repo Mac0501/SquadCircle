@@ -5,12 +5,14 @@ from sanic.request import Request
 from sanic.response import json 
 from tortoise.transactions import atomic
 from app.db.models import User
+from app.utils.decorators import is_owner
 
 users = Blueprint("users", url_prefix="/users")
 
 
 @users.route("/", methods=["GET"])
 @protected()
+@is_owner()
 async def get_users(request: Request, my_user: User):
     users = await User.all()
     return json([user.to_dict() for user in users])
@@ -27,6 +29,7 @@ async def get_user(request: Request, my_user: User, user: User|None):
 
 @users.route("/<user_id:int>", methods=["DELETE"])
 @protected()
+@is_owner()
 @atomic()
 async def delete_user(request: Request, my_user: User, user: User|None):
     if user:
@@ -54,6 +57,7 @@ async def get_avatar(request: Request, my_user: User, user: User|None):
 
 @users.route("/<user_id:int>/groups", methods=["GET"])
 @protected()
+@is_owner()
 async def get_user_groups(request: Request, my_user: User, user: User|None):
     if not user:
         return json({"error": f"User not found"}, status=404)
