@@ -1,12 +1,28 @@
+from datetime import datetime
 from sanic_jwt import exceptions
-from app.db.models import User
+from app.db.models import Invite, User, UserAndGroup
 from sanic.response import json
 from sanic_jwt import BaseEndpoint
 
 class Register(BaseEndpoint):
     async def post(self, request, *args, **kwargs):
+        code = request.json.get("code", None)
+        if not code:
+            return json({'message': 'Missing invite code'}, status=400)
+        
+        invite = await Invite.get_or_none(code=code)
+        if not invite or invite.is_expired():
+            if invite:
+                await invite.delete()
+            return json({'message': 'Invite code doesnt exists'}, status=404)
+
         name = request.json.get('name', None)
+        if not name:
+            return json({'message': 'Missing name'}, status=400)
+        
         password = request.json.get('password', None)
+        if not password:
+            return json({'message': 'Missing password'}, status=400)
 
         name_exists = await User.exists(name=name)
 
@@ -14,7 +30,7 @@ class Register(BaseEndpoint):
             return json({'message': 'Username already exists'}, status=400)
         else:
             user = await User.create(name=name, password= User.hash_password(password))
-
+            user_and_group = await UserAndGroup.create(user_id=user.id, group_id=invite.group_id)
             access_token, output = await self.responses.get_access_token_output(
                 request,
                 user,
