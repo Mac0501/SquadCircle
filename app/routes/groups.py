@@ -10,17 +10,17 @@ from app.utils.types import UserGroupPermissionEnum
 
 groups = Blueprint("groups", url_prefix="/groups")
 
-@groups.route("/", methods=["GET"])
+@groups.route("/", methods=["GET"], name="get_groups")
 @protected()
-@is_owner()
+@is_owner
 async def get_groups(request: Request, my_user: User):
     groups = await Group.all()
     return json([group.to_dict() for group in groups])
 
 
-@groups.route("/", methods=["POST"])
+@groups.route("/", methods=["POST"], name="create_group")
 @protected()
-@is_owner()
+@is_owner
 @atomic()
 async def create_group(request: Request, my_user: User):
     data = filter_dict_by_keys(request.json, ["name", "description"], True)
@@ -28,7 +28,7 @@ async def create_group(request: Request, my_user: User):
     return json(group.to_dict(), status=201)
 
 
-@groups.route("/<group_id:int>", methods=["GET"])
+@groups.route("/<group_id:int>", methods=["GET"], name="get_group")
 @protected()
 @check_for_permission()
 async def get_group(request: Request, my_user: User, group: Group|None):
@@ -38,9 +38,9 @@ async def get_group(request: Request, my_user: User, group: Group|None):
         return json({"error": f"Group not found"}, status=404)
 
 
-@groups.route("/<group_id:int>", methods=["PUT"])
+@groups.route("/<group_id:int>", methods=["PUT"], name="update_group")
 @protected()
-@is_owner()
+@is_owner
 @atomic()
 async def update_group(request: Request, my_user: User, group: Group|None):
     data = filter_dict_by_keys(request.json, ["name", "description"])
@@ -51,9 +51,9 @@ async def update_group(request: Request, my_user: User, group: Group|None):
         return json({"error": f"Group not found"}, status=404)
 
 
-@groups.route("/<group_id:int>", methods=["DELETE"])
+@groups.route("/<group_id:int>", methods=["DELETE"], name="delete_group")
 @protected()
-@is_owner()
+@is_owner
 @atomic()
 async def delete_group(request: Request, my_user: User, group: Group|None):
     if group:
@@ -63,7 +63,7 @@ async def delete_group(request: Request, my_user: User, group: Group|None):
         return json({"error": f"Group not found"}, status=404)
     
     
-@groups.route("/<group_id:int>/invites", methods=["GET"])
+@groups.route("/<group_id:int>/invites", methods=["GET"], name="get_group_invites")
 @protected()
 @check_for_permission([UserGroupPermissionEnum.MANAGE_INVITES])
 async def get_group_invites(request: Request, my_user: User, group: Group|None):
@@ -73,7 +73,7 @@ async def get_group_invites(request: Request, my_user: User, group: Group|None):
     return json([invite.to_dict() for invite in group.invites])
 
 
-@groups.route("/<group_id:int>/invites", methods=["POST"])
+@groups.route("/<group_id:int>/invites", methods=["POST"], name="create_group_invite")
 @protected()
 @check_for_permission([UserGroupPermissionEnum.MANAGE_INVITES])
 @atomic()
@@ -85,7 +85,7 @@ async def create_group_invite(request, group: Group|None):
     return json(invite.to_dict())
 
 
-@groups.route("/<group_id:int>/events", methods=["GET"])
+@groups.route("/<group_id:int>/events", methods=["GET"], name="get_all_events_for_group")
 @protected()
 @check_for_permission()
 async def get_all_events_for_group(request: Request, my_user: User, group: Group|None):
@@ -95,7 +95,7 @@ async def get_all_events_for_group(request: Request, my_user: User, group: Group
     return json([event.to_dict() for event in events])
 
 
-@groups.route("/<group_id:int>/events", methods=["POST"])
+@groups.route("/<group_id:int>/events", methods=["POST"], name="create_event_for_group")
 @protected()
 @check_for_permission([UserGroupPermissionEnum.MANAGE_EVENTS])
 @atomic()
@@ -107,7 +107,7 @@ async def create_event_for_group(request, group: Group|None):
     return json(event.to_dict())
 
 
-@groups.route("/<group_id:int>/users/<user_id:int>", methods=["POST"])
+@groups.route("/<group_id:int>/users/<user_id:int>", methods=["POST"], name="add_user_to_group")
 @protected()
 @check_for_permission([UserGroupPermissionEnum.MANAGE_USERS])
 @atomic()
@@ -128,7 +128,7 @@ async def add_user_to_group(request: Request, my_user: User, group: Group|None, 
     return json(user_group.to_dict(), status=201)
 
 
-@groups.route("/<group_id:int>/users/<user_id:int>", methods=["DELETE"])
+@groups.route("/<group_id:int>/users/<user_id:int>", methods=["DELETE"], name="remove_user_from_group")
 @protected()
 @check_for_permission([UserGroupPermissionEnum.MANAGE_USERS])
 @atomic()
@@ -166,7 +166,7 @@ async def remove_user_from_group(request: Request, my_user: User, group: Group|N
         return json({"error": f"User is not in the Group"}, status=400)
     
 
-@groups.route("/<group_id:int>/users/<user_id:int>/permissions", methods=["POST"])
+@groups.route("/<group_id:int>/users/<user_id:int>/permissions", methods=["POST"], name="add_group_user_permission")
 @protected()
 @check_for_permission([UserGroupPermissionEnum.MANAGE_USERS])
 @atomic()
@@ -213,7 +213,7 @@ async def add_group_user_permission(request: Request, my_user: User, group: Grou
         return json({"error": f"User is not in the Group"}, status=400)
 
 
-@groups.route("/<group_id:int>/users/<user_id:int>/permissions", methods=["DELETE"])
+@groups.route("/<group_id:int>/users/<user_id:int>/permissions", methods=["DELETE"], name="remove_group_user_permission")
 @protected()
 @check_for_permission([UserGroupPermissionEnum.MANAGE_USERS])
 @atomic()

@@ -10,7 +10,7 @@ from app.utils.types import UserGroupPermissionEnum
 
 events = Blueprint("events", url_prefix="/events")
 
-@events.route("/", methods=["GET"])
+@events.route("/", methods=["GET"], name="get_events")
 @protected()
 @check_for_permission()
 async def get_events(request: Request, my_user: User):
@@ -18,7 +18,7 @@ async def get_events(request: Request, my_user: User):
     return json([event.to_dict() for event in events])
 
 
-@events.route("/<event_id:int>", methods=["GET"])
+@events.route("/<event_id:int>", methods=["GET"], name="get_event")
 @protected()
 @check_for_permission()
 async def get_event(request: Request, my_user: User, event: Event|None):
@@ -28,7 +28,7 @@ async def get_event(request: Request, my_user: User, event: Event|None):
         return json({"error": "Event not found"}, status=404)
 
 
-@events.route("/<event_id:int>", methods=["PUT"])
+@events.route("/<event_id:int>", methods=["PUT"], name="update_event")
 @protected()
 @check_for_permission([UserGroupPermissionEnum.MANAGE_EVENTS])
 @atomic()
@@ -40,7 +40,7 @@ async def update_event(request: Request, my_user: User, event: Event|None):
         return json({"error": "Event not found"}, status=404)
 
 
-@events.route("/<event_id:int>", methods=["DELETE"])
+@events.route("/<event_id:int>", methods=["DELETE"], name="delete_event")
 @protected()
 @check_for_permission([UserGroupPermissionEnum.MANAGE_EVENTS])
 @atomic()
@@ -52,7 +52,7 @@ async def delete_event(request: Request, my_user: User, event: Event|None):
         return json({"error": "Event not found"}, status=404)
     
     
-@events.route("/<event_id:int>/event_options", methods=["GET"])
+@events.route("/<event_id:int>/event_options", methods=["GET"], name="get_event_event_options")
 @protected()
 @check_for_permission()
 async def get_event_event_options(request: Request, my_user: User, event: Event|None):
@@ -62,7 +62,7 @@ async def get_event_event_options(request: Request, my_user: User, event: Event|
     else:
         return json({"error": "Event not found"}, status=404)
     
-@events.route("/<event_id:int>/event_options", methods=["POST"])
+@events.route("/<event_id:int>/event_options", methods=["POST"], name="create_event_event_options")
 @protected()
 @check_for_permission([UserGroupPermissionEnum.MANAGE_EVENTS])
 @atomic()

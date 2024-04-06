@@ -9,7 +9,7 @@ from app.utils.types import UserGroupPermissionEnum
 
 invites = Blueprint("invites", url_prefix="/invites")
 
-@invites.route("/", methods=["GET"])
+@invites.route("/", methods=["GET"], name="get_invites")
 @protected()
 @check_for_permission([UserGroupPermissionEnum.MANAGE_INVITES])
 async def get_invites(request: Request, my_user: User):
@@ -17,7 +17,7 @@ async def get_invites(request: Request, my_user: User):
     return json([invite.to_dict() for invite in invites])
 
 
-@invites.route("/<invite_id:int>", methods=["GET"])
+@invites.route("/<invite_id:int>", methods=["GET"], name="get_invite")
 @protected()
 @check_for_permission([UserGroupPermissionEnum.MANAGE_INVITES])
 async def get_invite(request: Request, my_user: User, invite: Invite|None):
@@ -26,7 +26,7 @@ async def get_invite(request: Request, my_user: User, invite: Invite|None):
     else:
         return json({"error": f"Invite not found"}, status=404)
 
-@invites.route("/<invite_id:int>", methods=["DELETE"])
+@invites.route("/<invite_id:int>", methods=["DELETE"], name="delete_invite")
 @protected()
 @check_for_permission([UserGroupPermissionEnum.MANAGE_INVITES])
 @atomic()

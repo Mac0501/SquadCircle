@@ -10,7 +10,7 @@ from app.utils.tools import filter_dict_by_keys
 me = Blueprint("me", url_prefix="/users/me")
 
 
-@me.route("/", methods=["GET"])
+@me.route("/", methods=["GET"], name="get_me")
 @protected()
 async def get_me(request: Request, my_user: User):
     if my_user:
@@ -19,7 +19,7 @@ async def get_me(request: Request, my_user: User):
         return json({"error": f"Not Existing"}, status=404)
     
 
-@me.route("/", methods=["PUT"])
+@me.route("/", methods=["PUT"], name="update_me")
 @protected()
 @atomic()
 async def update_me(request: Request, my_user: User):
@@ -32,7 +32,7 @@ async def update_me(request: Request, my_user: User):
     return json(my_user.to_dict())
     
 
-@me.route("/groups", methods=["GET"])
+@me.route("/groups", methods=["GET"], name="get_me_groups")
 @protected()
 async def get_me_groups(request: Request, my_user: User):
     await my_user.fetch_related("groups")
@@ -40,7 +40,7 @@ async def get_me_groups(request: Request, my_user: User):
     return json([group.to_dict() for group in my_user.groups])
 
 
-@me.route("/groups/<group_id:int>/", methods=["DELETE"])
+@me.route("/groups/<group_id:int>/", methods=["DELETE"], name="remove_me_from_group")
 @protected()
 @atomic()
 async def remove_me_from_group(request: Request, my_user: User, group: Group|None):
@@ -57,7 +57,7 @@ async def remove_me_from_group(request: Request, my_user: User, group: Group|Non
         return json({"error": f"User is not in the Group"}, status=400)
 
 
-@me.route("/groups/<group_id:int>/permissions", methods=["GET"])
+@me.route("/groups/<group_id:int>/permissions", methods=["GET"], name="get_me_groups_permissions")
 @protected()
 async def get_me_groups_permissions(request: Request, my_user: User, group: Group|None):
     if group:
@@ -70,7 +70,7 @@ async def get_me_groups_permissions(request: Request, my_user: User, group: Grou
         return json({"error": "Group not found"}, status=404)
 
 
-@me.route("/avatar", methods=["GET"])
+@me.route("/avatar", methods=["GET"], name="get_avatar")
 @protected()
 async def get_avatar(request: Request, my_user: User):
     avatar_path = f"{request.app.ctx.Config['Resources']['users']}/{my_user.id}/avatar.png"
@@ -83,7 +83,7 @@ async def get_avatar(request: Request, my_user: User):
         return json({"error": "Avatar file not found"}, status=404)
 
 
-@me.route("/avatar", methods=["POST"])
+@me.route("/avatar", methods=["POST"], name="upload_avatar")
 @protected()
 async def upload_avatar(request: Request, my_user: User):
     if my_user:

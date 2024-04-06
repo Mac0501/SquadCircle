@@ -6,11 +6,10 @@ from tortoise.transactions import atomic
 from app.db.models import User, UserEventOptionResponse
 from app.utils.decorators import check_for_permission
 from app.utils.tools import filter_dict_by_keys
-from app.utils.types import UserGroupPermissionEnum
 
 user_event_option_response= Blueprint("user_event_option_response", url_prefix="/user_event_option_response")
 
-@user_event_option_response.route("/<user_event_option_response_id:int>", methods=["GET"])
+@user_event_option_response.route("/<user_event_option_response_id:int>", methods=["GET"], name="get_user_event_option_response")
 @protected()
 @check_for_permission()
 async def get_user_event_option_response(request: Request, my_user: User, user_event_option_response: UserEventOptionResponse|None):
@@ -20,7 +19,7 @@ async def get_user_event_option_response(request: Request, my_user: User, user_e
         return json({"error": f"Event Option not found"}, status=404)
 
 
-@user_event_option_response.route("/<user_event_option_response_id:int>", methods=["PUT"])
+@user_event_option_response.route("/<user_event_option_response_id:int>", methods=["PUT"], name="update_user_event_option_response")
 @protected()
 @check_for_permission()
 @atomic()

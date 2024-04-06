@@ -10,7 +10,7 @@ from app.utils.types import UserGroupPermissionEnum
 
 event_options = Blueprint("event_options", url_prefix="/event_options")
 
-@event_options.route("/<event_option_id:int>", methods=["GET"])
+@event_options.route("/<event_option_id:int>", methods=["GET"], name="get_event_option")
 @protected()
 @check_for_permission()
 async def get_event_option(request: Request, my_user: User, event_option: EventOption|None):
@@ -20,7 +20,7 @@ async def get_event_option(request: Request, my_user: User, event_option: EventO
         return json({"error": f"Event Option not found"}, status=404)
 
 
-@event_options.route("/<event_option_id:int>", methods=["PUT"])
+@event_options.route("/<event_option_id:int>", methods=["PUT"], name="update_event_option")
 @protected()
 @check_for_permission([UserGroupPermissionEnum.MANAGE_EVENTS])
 @atomic()
@@ -32,7 +32,7 @@ async def update_event_option(request: Request, my_user: User, event_option: Eve
         return json({"error": f"Event Option not found"}, status=404)
 
 
-@event_options.route("/<event_option_id:int>", methods=["DELETE"])
+@event_options.route("/<event_option_id:int>", methods=["DELETE"], name="delete_event_option")
 @protected()
 @check_for_permission([UserGroupPermissionEnum.MANAGE_EVENTS])
 @atomic()
@@ -44,7 +44,7 @@ async def delete_event_option(request: Request, my_user: User, event_option: Eve
         return json({"error": f"Event Option not found"}, status=404)
     
 
-@event_options.route("/<event_option_id:int>/user_event_option_response", methods=["GET"])
+@event_options.route("/<event_option_id:int>/user_event_option_response", methods=["GET"], name="get_user_event_option_responses")
 @protected()
 @check_for_permission()
 async def get_user_event_option_responses(request: Request, my_user: User, event_option: EventOption|None):
@@ -57,7 +57,7 @@ async def get_user_event_option_responses(request: Request, my_user: User, event
     return json([{"id":user_event_option_response.id, "response":user_event_option_response.response, "user_id":user_event_option_response.user_and_group.user_id, "event_id":user_event_option_responses.event_id} for user_event_option_response in user_event_option_responses], status=201)
     
     
-@event_options.route("/<event_option_id:int>/user_event_option_response", methods=["POST"])
+@event_options.route("/<event_option_id:int>/user_event_option_response", methods=["POST"], name="create_user_event_option_response")
 @protected()
 @check_for_permission()
 @atomic()
