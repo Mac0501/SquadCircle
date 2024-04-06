@@ -1,9 +1,10 @@
 from sanic import Blueprint
-from sanic_jwt import protected
+from sanic_jwt import protected, exceptions
 from sanic.request import Request
 from sanic.response import json
 from tortoise.transactions import atomic
 from app.db.models import EventOption, User, UserAndGroup, UserEventOptionResponse
+from app.utils.tools import filter_dict_by_keys
 
 event_options = Blueprint("event_options", url_prefix="/event_options")
 
@@ -20,9 +21,8 @@ async def get_event_option(request: Request, my_user: User, event_option: EventO
 @protected()
 @atomic()
 async def update_event_option(request: Request, my_user: User, event_option: EventOption|None):
-    data = request.json
     if event_option:
-        await event_option.update_from_dict(data)
+        await event_option.update_from_dict(filter_dict_by_keys(request.json,["date", "start_time", "end_time"]))
         return json(event_option.to_dict())
     else:
         return json({"error": f"Event Option not found"}, status=404)
@@ -41,7 +41,6 @@ async def delete_event_option(request: Request, my_user: User, event_option: Eve
 
 @event_options.route("/<event_option_id:int>/user_event_option_response", methods=["GET"])
 @protected()
-@atomic()
 async def get_user_event_option_responses(request: Request, my_user: User, event_option: EventOption|None):
     
     if not event_option:
@@ -65,10 +64,16 @@ async def create_user_event_option_response(request: Request, my_user: User, eve
     if not user_and_group:
         return json({"error": f"User is not in Group"}, status=404)
 
-    user_event_option_response = await UserEventOptionResponse.create(
-        response=data.get("response"),
-        event_option=event_option,
-        user_and_group=user_and_group,
-    )
-
-    return json(user_event_option_response.to_dict(), status=201)
+    user_event_option_response = await UserEventOptionResponse.get_or_none(event_option_id=event_option.id, user_and_group_id=user_and_group.id)
+    if data.get("response", None):
+        if user_event_option_response:
+            user_event_option_response.update(response=data.get("response"))
+        else:
+            user_event_option_response = await UserEventOptionResponse.create(
+                response=data.get("response"),
+                event_option=event_option,
+                user_and_group=user_and_group,
+            )
+        return json(user_event_option_response.to_dict(), status=201)
+    else:
+        return json(user_event_option_response.to_dict(), status=400)

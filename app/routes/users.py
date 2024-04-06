@@ -25,25 +25,6 @@ async def get_user(request: Request, my_user: User, user: User|None):
         return json({"error": f"User with ID {user.id} not found"}, status=404)
 
 
-@users.route("/<user_id:int>", methods=["PUT"])
-@protected()
-@atomic()
-async def update_user(request: Request, my_user: User, user: User|None):
-    data = request.json
-    if user:
-
-        if "owner" in data:
-            data.pop("owner")
-        if "password" in data:
-            hashed_password = User.hash_password(data["password"])
-            data["password"] = hashed_password
-
-        await user.update_from_dict(data)
-        return json(user.to_dict())
-    else:
-        return json({"error": f"User not found"}, status=404)
-
-
 @users.route("/<user_id:int>", methods=["DELETE"])
 @protected()
 @atomic()
@@ -55,15 +36,13 @@ async def delete_user(request: Request, my_user: User, user: User|None):
         return json({"error": f"User not found"}, status=404)
     
 
-@users.route("/<user_id:int>/avatar.png", methods=["GET"])
+@users.route("/<user_id:int>/avatar", methods=["GET"])
 @protected()
 async def get_avatar(request: Request, my_user: User, user: User|None):
     if user:
-        # Construct the full path to the avatar image file
         avatar_path = f"{request.app.ctx.Config['Resources']['users']}/{user.id}/avatar.png"
         if os.path.isfile(avatar_path):
             try:
-                # Send the avatar image file as a response
                 return await file(avatar_path)
             except FileNotFoundError:
                 return json({"error": "Avatar not found"}, status=404)

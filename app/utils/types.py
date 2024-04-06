@@ -12,5 +12,7 @@ class EventOptionResponseEnum(IntEnum):
     DENIED = 2
 
 class UserGroupPermissionEnum(IntEnum):
-    CAN_CREATE_EVENTS = 1
-    CAN_MANAGE_USERS = 2
+    ADMIN = 1
+    MANAGE_USERS = 2
+    MANAGE_INVITES = 3
+    MANAGE_EVENTS = 4

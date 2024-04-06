@@ -3,7 +3,8 @@ from sanic_jwt import protected
 from sanic.request import Request
 from sanic.response import json
 from tortoise.transactions import atomic
-from app.db.models import Event, User
+from app.db.models import Event, EventOption, User
+from app.utils.tools import filter_dict_by_keys
 
 events = Blueprint("events", url_prefix="/events")
 
@@ -16,45 +17,51 @@ async def get_events(request: Request, my_user: User):
 
 @events.route("/<event_id:int>", methods=["GET"])
 @protected()
-async def get_event(request: Request, my_user: User, event_id: int):
-    event = await Event.get_or_none(id=event_id)
+async def get_event(request: Request, my_user: User, event: Event|None):
     if event:
         return json(event.to_dict())
     else:
-        return json({"error": f"Event with ID {event_id} not found"}, status=404)
+        return json({"error": "Event not found"}, status=404)
 
 
 @events.route("/<event_id:int>", methods=["PUT"])
 @protected()
 @atomic()
-async def update_event(request: Request, my_user: User, event_id: int):
-    data = request.json
-    event = await Event.get_or_none(id=event_id)
+async def update_event(request: Request, my_user: User, event: Event|None):
     if event:
-        await event.update_from_dict(data)
+        await event.update_from_dict(filter_dict_by_keys(request.json, ["title", "color", "description", "state"]))
         return json(event.to_dict())
     else:
-        return json({"error": f"Event with ID {event_id} not found"}, status=404)
+        return json({"error": "Event not found"}, status=404)
 
 
 @events.route("/<event_id:int>", methods=["DELETE"])
 @protected()
 @atomic()
-async def delete_event(request: Request, my_user: User, event_id: int):
-    event = await Event.get_or_none(id=event_id)
+async def delete_event(request: Request, my_user: User, event: Event|None):
     if event:
         await event.delete()
-        return json({"message": f"Event with ID {event_id} deleted successfully"})
+        return json({"message": "Event deleted successfully"})
     else:
-        return json({"error": f"Event with ID {event_id} not found"}, status=404)
+        return json({"error": "Event not found"}, status=404)
     
     
 @events.route("/<event_id:int>/event_options", methods=["GET"])
 @protected()
-@atomic()
-async def get_event_event_options(request: Request, my_user: User, event_id: int):
-    event = await Event.get_or_none(id=event_id).prefetch_related("event_options")
+async def get_event_event_options(request: Request, my_user: User, event: Event|None):
     if event:
+        await event.fetch_related("event_options")
         return json([event_option.to_dict() for event_option in event.event_options])
     else:
-        return json({"error": f"Event with ID {event_id} not found"}, status=404)
+        return json({"error": "Event not found"}, status=404)
+    
+@events.route("/<event_id:int>/event_options", methods=["POST"])
+@protected()
+@atomic()
+async def create_event_event_options(request: Request, my_user: User, event: Event|None):
+    if event:
+        data = filter_dict_by_keys(request.json,["date", "start_time", "end_time"])
+        event_option = await EventOption.create(event_id=event.id **data)
+        return json(event_option.to_dict())
+    else:
+        return json({"error": "Event not found"}, status=404)
