@@ -1,3 +1,5 @@
+import imghdr
+from io import BytesIO
 import os
 from sanic import Blueprint, file
 from sanic_jwt import protected
@@ -6,6 +8,7 @@ from sanic.response import json
 from tortoise.transactions import atomic
 from app.db.models import Group, User, UserAndGroup
 from app.utils.tools import filter_dict_by_keys
+from PIL import Image
 
 me = Blueprint("me", url_prefix="/users/me")
 
@@ -29,6 +32,7 @@ async def update_me(request: Request, my_user: User):
         data["password"] = hashed_password
 
     await my_user.update_from_dict(data)
+    await my_user.save()
     return json(my_user.to_dict())
     
 
@@ -73,7 +77,7 @@ async def get_me_groups_permissions(request: Request, my_user: User, group: Grou
 @me.route("/avatar", methods=["GET"], name="get_avatar")
 @protected()
 async def get_avatar(request: Request, my_user: User):
-    avatar_path = f"{request.app.ctx.Config['Resources']['users']}/{my_user.id}/avatar.png"
+    avatar_path = f"{request.app.ctx.Config['Resources']['users']}/{my_user.id}/avatar.webp"
     if os.path.isfile(avatar_path):
         try:
             return await file(avatar_path)
@@ -87,16 +91,23 @@ async def get_avatar(request: Request, my_user: User):
 @protected()
 async def upload_avatar(request: Request, my_user: User):
     if my_user:
-        uploaded_files = await request.files
+        uploaded_files = request.files
         if "avatar" in uploaded_files:
             avatar_file = uploaded_files["avatar"][0]
-            os.makedirs(f"{request.app.ctx.Config['Resources']['users']}/{my_user.id}", exist_ok=True)
-            avatar_path = f"/{request.app.ctx.Config['Resources']['users']}/{my_user.id}/avatar.png"
+            
+            # Check if the uploaded file is an image
+            image_type = imghdr.what(None, avatar_file.body)
+            if image_type:
+                os.makedirs(f"{request.app.ctx.Config['Resources']['users']}/{my_user.id}", exist_ok=True)
+                avatar_path = f"{request.app.ctx.Config['Resources']['users']}/{my_user.id}/avatar.webp"
 
-            with open(avatar_path, "wb") as f:
-                f.write(avatar_file.body)
-
-            return json({"message": "Avatar uploaded successfully"})
+                # Convert the image to WebP format with alpha channel
+                with Image.open(BytesIO(avatar_file.body)) as img:
+                    img.save(avatar_path, 'WEBP', quality=95, lossless=True, alpha=True)
+                    
+                return json({"message": "Avatar uploaded and converted to WebP successfully"})
+            else:
+                return json({"error": "Uploaded file is not an image"}, status=400)
         else:
             return json({"error": "Avatar file not found in the request"}, status=400)
     else:

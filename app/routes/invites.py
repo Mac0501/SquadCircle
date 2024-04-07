@@ -30,12 +30,15 @@ async def get_invite(request: Request, my_user: User, invite: Invite|None):
 @invites.route("/verify_code", methods=["POST"], name="verify_code_invite")
 async def verify_code_invite(request: Request, my_user: User):
     code = filter_dict_by_keys(request.json, ["code"], True)
-
+    code = code.get("code")
+    if len(code) > 16:
+        return json({'message': 'Invite code doesnt exists'}, status=404)
     invite = await Invite.get_or_none(code=code)
     if not invite or invite.is_expired():
         if invite:
             await invite.delete()
         return json({'message': 'Invite code doesnt exists'}, status=404)
+    return json({'message': 'Invite code is valid'})
 
 @invites.route("/<invite_id:int>", methods=["DELETE"], name="delete_invite")
 @protected()

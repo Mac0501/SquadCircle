@@ -44,9 +44,10 @@ async def process_match(match_data: Dict[str, Any]) -> Dict[str, Any]:
 
 def filter_dict_by_keys(input_dict:Dict[str,Any], key_list:List[str], check_if_one_key_matches:bool = False):
     filtered_dict = {}
-    for key in key_list:
-        if key in input_dict:
-            filtered_dict[key] = input_dict[key]
+    if input_dict:
+        for key in key_list:
+            if key in input_dict:
+                filtered_dict[key] = input_dict[key]
     if check_if_one_key_matches and filtered_dict == {}:
         raise MissingBodyArgument()
     return filtered_dict

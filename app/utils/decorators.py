@@ -10,16 +10,16 @@ def is_owner(func):
     @wraps(func)
     async def wrapper(request: Request, my_user: User, *args, **kwargs):
         if my_user.owner:
-            return await func(request, my_user *args, **kwargs)
+            return await func(request, my_user, *args, **kwargs)
         return json({"error": f"You are not allowed to access this enpoint."}, status=403)
 
     return wrapper
 
-def check_for_permission(permissions:List[UserGroupPermissionEnum] = []):
+def check_for_permission(permissions: List[UserGroupPermissionEnum] = None):
     def decorator(func):
         async def wrapper(request: Request, my_user: User, *args, **kwargs):
             if my_user.owner:
-                return await func(request, my_user *args, **kwargs)
+                return await func(request, my_user, *args, **kwargs)
         
             first_arg = args[0] if args else None
             first_kwarg = next(iter(kwargs.values()), None) if kwargs else None
@@ -27,12 +27,14 @@ def check_for_permission(permissions:List[UserGroupPermissionEnum] = []):
 
             user_and_group = await UserAndGroup.get_or_none(user_id=my_user.id, group_id=group_id).prefetch_related("user_group_permissions")
             if user_and_group:
-                if permissions == []:
-                    return await func(request, my_user *args, **kwargs)
-                permissions.append(UserGroupPermissionEnum.ADMIN)
+                if permissions is None:
+                    return await func(request, my_user, *args, **kwargs)
+                
+                permissions_list = permissions.copy() if permissions else []
+                permissions_list.append(UserGroupPermissionEnum.ADMIN)
                 for my_permission in user_and_group.user_group_permissions:
-                    if my_permission.permission in permissions:
-                        return await func(request, my_user *args, **kwargs)
-            return json({"error": f"You are not allowed to access this enpoint."}, status=403)
+                    if my_permission.permission in permissions_list:
+                        return await func(request, my_user, *args, **kwargs)
+            return json({"error": f"You are not allowed to access this endpoint."}, status=403)
         return wrapper
     return decorator

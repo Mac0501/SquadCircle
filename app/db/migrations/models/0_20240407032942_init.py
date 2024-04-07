@@ -6,7 +6,7 @@ async def upgrade(db: BaseDBAsyncClient) -> str:
         CREATE TABLE IF NOT EXISTS "groups" (
     "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     "name" VARCHAR(32) NOT NULL UNIQUE,
-    "description" TEXT NOT NULL
+    "description" TEXT
 );
 CREATE TABLE IF NOT EXISTS "events" (
     "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,

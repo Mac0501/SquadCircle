@@ -38,7 +38,7 @@ class Group(Model):
     __parse_name__ = "group"
     id = fields.IntField(pk=True, autoincrement=True)
     name = fields.CharField(max_length=32, null=False, unique=True)
-    description = fields.TextField(max_length=2000, null=False)
+    description = fields.TextField(max_length=2000, null=True)
 
     user_and_groups: fields.ReverseRelation["UserAndGroup"]
     events: fields.ReverseRelation["Group"]
@@ -97,7 +97,7 @@ class UserGroupPermission(Model):
     user_and_group: fields.ForeignKeyRelation["UserAndGroup"] = fields.ForeignKeyField(
         "models.UserAndGroup",
         to_field="id",
-        related_name="user_group_permission",
+        related_name="user_group_permissions",
         on_delete=fields.CASCADE,
     )
 
@@ -105,7 +105,7 @@ class UserGroupPermission(Model):
         table = "user_group_permissions"
 
     def to_dict(self) -> Dict[str, any]:
-        return {"id":self.id, "name":self.permission, "user_and_group_id":self.user_and_group_id}
+        return {"id":self.id, "permission":self.permission, "user_and_group_id":self.user_and_group_id}
 
     async def get_group_id(self) -> int:
         user_and_group = await UserAndGroup.get(id=self.user_and_group_id)
@@ -161,7 +161,13 @@ class EventOption(Model):
         table = "event_options"
 
     def to_dict(self) -> Dict[str, any]:
-        return {"id":self.id, "date":self.date, "start_time":self.start_time, "end_time":self.end_time, "event_id":self.event_id}
+        return {
+            "id": self.id,
+            "date": self.date.isoformat(),
+            "start_time": self.start_time.strftime("%H:%M:%S"),
+            "end_time": self.end_time.strftime("%H:%M:%S") if self.end_time else None,
+            "event_id": self.event_id
+        }
     
     async def get_group_id(self) -> int:
         event = await Event.get(id=self.event_id)
@@ -216,12 +222,12 @@ class Invite(Model):
         table = "invites"
 
     def to_dict(self) -> Dict[str, any]:
-        return {"id":self.id, "code":self.code, "expiration_date":self.expiration_date, "group_id":self.group_id}
+        return {"id":self.id, "code":self.code, "expiration_date":self.expiration_date.isoformat(), "group_id":self.group_id}
     
     async def get_group_id(self) -> int:
         return self.group_id
     
-    async def is_expired(self) -> bool:
+    def is_expired(self) -> bool:
         return self.expiration_date < date.today()
     
     @staticmethod

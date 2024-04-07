@@ -9,6 +9,9 @@ class Register(BaseEndpoint):
         if not code:
             return json({'message': 'Missing invite code'}, status=400)
         
+        if len(code) > 16:
+            return json({'message': 'Invite code doesnt exists'}, status=404)
+        
         invite = await Invite.get_or_none(code=code)
         if not invite or invite.is_expired():
             if invite:

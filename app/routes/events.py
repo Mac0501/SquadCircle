@@ -10,12 +10,12 @@ from app.utils.types import UserGroupPermissionEnum
 
 events = Blueprint("events", url_prefix="/events")
 
-@events.route("/", methods=["GET"], name="get_events")
-@protected()
-@check_for_permission()
-async def get_events(request: Request, my_user: User):
-    events = await Event.all()
-    return json([event.to_dict() for event in events])
+# @events.route("/", methods=["GET"], name="get_events")
+# @protected()
+# @check_for_permission()
+# async def get_events(request: Request, my_user: User):
+#     events = await Event.all()
+#     return json([event.to_dict() for event in events])
 
 
 @events.route("/<event_id:int>", methods=["GET"], name="get_event")
@@ -35,6 +35,7 @@ async def get_event(request: Request, my_user: User, event: Event|None):
 async def update_event(request: Request, my_user: User, event: Event|None):
     if event:
         await event.update_from_dict(filter_dict_by_keys(request.json, ["title", "color", "description", "state"]))
+        await event.save()
         return json(event.to_dict())
     else:
         return json({"error": "Event not found"}, status=404)
@@ -69,7 +70,7 @@ async def get_event_event_options(request: Request, my_user: User, event: Event|
 async def create_event_event_options(request: Request, my_user: User, event: Event|None):
     if event:
         data = filter_dict_by_keys(request.json,["date", "start_time", "end_time"])
-        event_option = await EventOption.create(event_id=event.id **data)
+        event_option = await EventOption.create(event_id=event.id, **data)
         return json(event_option.to_dict())
     else:
         return json({"error": "Event not found"}, status=404)

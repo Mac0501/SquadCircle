@@ -46,6 +46,7 @@ async def update_group(request: Request, my_user: User, group: Group|None):
     data = filter_dict_by_keys(request.json, ["name", "description"])
     if group:
         await group.update_from_dict(data)
+        await group.save()
         return json(group.to_dict())
     else:
         return json({"error": f"Group not found"}, status=404)
@@ -77,7 +78,7 @@ async def get_group_invites(request: Request, my_user: User, group: Group|None):
 @protected()
 @check_for_permission([UserGroupPermissionEnum.MANAGE_INVITES])
 @atomic()
-async def create_group_invite(request, group: Group|None):
+async def create_group_invite(request: Request, my_user: User, group: Group|None):
     if not group:
         return json({"error": "Group not found"}, status=404)
     data = filter_dict_by_keys(request.json, ["expiration_date"], True)
@@ -99,12 +100,25 @@ async def get_all_events_for_group(request: Request, my_user: User, group: Group
 @protected()
 @check_for_permission([UserGroupPermissionEnum.MANAGE_EVENTS])
 @atomic()
-async def create_event_for_group(request, group: Group|None):
+async def create_event_for_group(request: Request, my_user: User, group: Group|None):
     if not group:
         return json({"error": "Group not found"}, status=404)
     data = filter_dict_by_keys(request.json, ["title", "color", "description", "state"], True)
     event = await Event.create(group_id=group.id, **data)
     return json(event.to_dict())
+
+@groups.route("/<group_id:int>/users", methods=["Get"], name="get_group_users")
+@protected()
+@check_for_permission()
+@atomic()
+async def get_group_users(request: Request, my_user: User, group: Group|None):
+    
+    if not group:
+        return json({"error": f"Group not found"}, status=404)
+
+    await group.fetch_related("users")
+
+    return json([user.to_dict() for user in group.users])
 
 
 @groups.route("/<group_id:int>/users/<user_id:int>", methods=["POST"], name="add_user_to_group")
@@ -141,13 +155,11 @@ async def remove_user_from_group(request: Request, my_user: User, group: Group|N
 
     user_and_group = await UserAndGroup.get_or_none(group=group, user=user).prefetch_related("user_group_permissions")
 
-    if my_user.owner or my_user.id == user.id:
-        await user_and_group.delete()
-        return json({"message": f"User was from Group successfully removed"})
-
-    my_user_and_group = await UserAndGroup.get_or_none(group=group, user=my_user).prefetch_related("user_group_permissions")
-
     if user_and_group:
+        if my_user.owner or my_user.id == user.id:
+            await user_and_group.delete()
+            return json({"message": f"User was from Group successfully removed"})
+        my_user_and_group = await UserAndGroup.get_or_none(group=group, user=my_user).prefetch_related("user_group_permissions")
         if my_user_and_group:
             for permission in user_and_group.user_group_permissions:
                 if permission.permission in [UserGroupPermissionEnum.ADMIN]: 
@@ -181,11 +193,11 @@ async def add_group_user_permission(request: Request, my_user: User, group: Grou
         return json({"error": f"You are not allowed to access this enpoint."}, status=403)
     
     data = filter_dict_by_keys(request.json, ["permission"], True)
-    data_permission = UserGroupPermissionEnum(data.get("permisson"))
+    data_permission = UserGroupPermissionEnum(data.get("permission"))
 
     user_and_group = await UserAndGroup.get_or_none(group=group, user=user).prefetch_related("user_group_permissions")
 
-    user_group_permission = await UserGroupPermission.get_or_none(user_and_group_id=user_and_group.id, permission=permission)
+    user_group_permission = await UserGroupPermission.get_or_none(user_and_group_id=user_and_group.id, permission=data_permission)
     if user_group_permission:
         return json({"error": f"User has permission allready"}, status=400)
 
@@ -193,7 +205,7 @@ async def add_group_user_permission(request: Request, my_user: User, group: Grou
 
     if user_and_group:
         if my_user.owner:
-            user_group_permission = await UserGroupPermission.create(user_and_group_id=user_and_group.id, permission=permission)
+            user_group_permission = await UserGroupPermission.create(user_and_group_id=user_and_group.id, permission=data_permission)
             return json(user_group_permission.to_dict())
         if my_user_and_group:
             if data_permission == UserGroupPermissionEnum.ADMIN:
@@ -201,12 +213,12 @@ async def add_group_user_permission(request: Request, my_user: User, group: Grou
             if data_permission == UserGroupPermissionEnum.MANAGE_USERS:
                 for permission in my_user_and_group.user_group_permissions:
                     if permission.permission in [UserGroupPermissionEnum.ADMIN]: 
-                        user_group_permission = await UserGroupPermission.create(user_and_group_id=user_and_group.id, permission=permission)
+                        user_group_permission = await UserGroupPermission.create(user_and_group_id=user_and_group.id, permission=data_permission)
                         return json(user_group_permission.to_dict())
             else:
                 for permission in my_user_and_group.user_group_permissions:
                     if permission.permission in [UserGroupPermissionEnum.ADMIN, UserGroupPermissionEnum.MANAGE_USERS]: 
-                        user_group_permission = await UserGroupPermission.create(user_and_group_id=user_and_group.id, permission=permission)
+                        user_group_permission = await UserGroupPermission.create(user_and_group_id=user_and_group.id, permission=data_permission)
                         return json(user_group_permission.to_dict())
         return json({"error": f"You are not allowed to access this enpoint."}, status=403)
     else:
@@ -228,11 +240,11 @@ async def remove_group_user_permission(request: Request, my_user: User, group: G
         return json({"error": f"You are not allowed to access this enpoint."}, status=403)
     
     data = filter_dict_by_keys(request.json, ["permission"], True)
-    data_permission = UserGroupPermissionEnum(data.get("permisson"))
+    data_permission = UserGroupPermissionEnum(data.get("permission"))
 
     user_and_group = await UserAndGroup.get_or_none(group=group, user=user).prefetch_related("user_group_permissions")
 
-    user_group_permission = await UserGroupPermission.get_or_none(user_and_group_id=user_and_group.id, permission=permission)
+    user_group_permission = await UserGroupPermission.get_or_none(user_and_group_id=user_and_group.id, permission=data_permission)
     if not user_group_permission:
         return json({"error": f"User doesnt have permission allready"}, status=400)
 

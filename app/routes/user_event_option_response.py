@@ -28,6 +28,7 @@ async def update_user_event_option_response(request: Request, my_user: User, use
         await user_event_option_response.fetch_related("user_and_group")
         if user_event_option_response.user_and_group.user_id == my_user.id:
             await user_event_option_response.update_from_dict(filter_dict_by_keys(request.json,["response"]))
+            await user_event_option_response.save()
             return json(user_event_option_response.to_dict())
         else:
             return json({"error": f"You are not allowed to access this enpoint."}, status=403)

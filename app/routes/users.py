@@ -33,8 +33,10 @@ async def get_user(request: Request, my_user: User, user: User|None):
 @atomic()
 async def delete_user(request: Request, my_user: User, user: User|None):
     if user:
-        await user.delete()
-        return json({"message": f"User deleted successfully"})
+        if not user.owner:
+            await user.delete()
+            return json({"message": f"User deleted successfully"})
+        return json({"error": f"User cant be deleted"}, status=400)
     else:
         return json({"error": f"User not found"}, status=404)
     
@@ -43,7 +45,7 @@ async def delete_user(request: Request, my_user: User, user: User|None):
 @protected()
 async def get_avatar(request: Request, my_user: User, user: User|None):
     if user:
-        avatar_path = f"{request.app.ctx.Config['Resources']['users']}/{user.id}/avatar.png"
+        avatar_path = f"{request.app.ctx.Config['Resources']['users']}/{user.id}/avatar.webp"
         if os.path.isfile(avatar_path):
             try:
                 return await file(avatar_path)
