@@ -3,7 +3,7 @@ from enum import IntEnum
 
 class EventStateEnum(IntEnum):
     OPEN = 1
-    AKTIVE = 2
+    ACTIVE = 2
     CLOSED = 3
     ARCHIVED = 4
 
