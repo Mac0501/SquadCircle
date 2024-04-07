@@ -1,3 +1,4 @@
+from datetime import date
 from sanic import Blueprint
 from sanic_jwt import protected
 from sanic.request import Request
@@ -70,8 +71,8 @@ async def delete_group(request: Request, my_user: User, group: Group|None):
 async def get_group_invites(request: Request, my_user: User, group: Group|None):
     if not group:
         return json({"error": "Group not found"}, status=404)
-    await group.fetch_related("invites")
-    return json([invite.to_dict() for invite in group.invites])
+    invites = await Invite.filter(expiration_date__gte=date.today(), group_id=group.id)
+    return json([invite.to_dict() for invite in invites])
 
 
 @groups.route("/<group_id:int>/invites", methods=["POST"], name="create_group_invite")
