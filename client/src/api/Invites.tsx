@@ -13,7 +13,7 @@ class Invite {
 
     static async get_invite(id: number): Promise<Invite | null> {
         try {
-            const response = await fetch(`/invites/${id}`, {
+            const response = await fetch(`/api/invites/${id}`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -34,7 +34,7 @@ class Invite {
 
     static async get_invites(): Promise<Invite[] | null> {
         try {
-            const response = await fetch('/invites', {
+            const response = await fetch('/api/invites', {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -55,7 +55,7 @@ class Invite {
 
     async delete(): Promise<boolean> {
         try {
-            const response = await fetch(`/invites/${this.id}`, {
+            const response = await fetch(`/api/invites/${this.id}`, {
                 method: 'DELETE',
                 credentials: 'include',
                 headers: {
@@ -71,7 +71,7 @@ class Invite {
 
     static async verifyCode(code: string): Promise<boolean> {
         try {
-            const response = await fetch('/invites/verify_code', {
+            const response = await fetch('/api/invites/verify_code', {
                 method: 'POST',
                 credentials: 'include',
                 headers: {

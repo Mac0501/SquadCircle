@@ -14,7 +14,7 @@ class Me {
 
     static async get_me(): Promise<Me | null> {
         try {
-            const response = await fetch(`/users/me`, {
+            const response = await fetch(`/api/users/me`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -43,7 +43,7 @@ class Me {
             data.password = password;
         }
         try {
-            const response = await fetch(`/users/me`, {
+            const response = await fetch(`/api/users/me`, {
                 method: 'PUT',
                 credentials: 'include',
                 headers: {
@@ -66,7 +66,7 @@ class Me {
 
     static async get_me_groups(): Promise<Group[] | null> {
         try {
-            const response = await fetch(`/users/me/groups`, {
+            const response = await fetch(`/api/users/me/groups`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -87,7 +87,7 @@ class Me {
 
     static async remove_me_from_group(group: Group): Promise<boolean> {
         try {
-            const response = await fetch(`/me/groups/${group.id}`, {
+            const response = await fetch(`/api/users/me/groups/${group.id}`, {
                 method: 'DELETE',
                 credentials: 'include',
                 headers: {
@@ -103,7 +103,7 @@ class Me {
 
     static async get_me_groups_permissions(group: Group): Promise<UserGroupPermission[] | null> {
         try {
-            const response = await fetch(`/me/groups/${group.id}/permissions`, {
+            const response = await fetch(`/api/users/me/groups/${group.id}/permissions`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -124,7 +124,7 @@ class Me {
 
     static async get_avatar(): Promise<Blob | null> {
         try {
-            const response = await fetch(`/avatar`, {
+            const response = await fetch(`/api/users/me/avatar`, {
                 method: 'GET',
                 credentials: 'include',
             });
@@ -144,7 +144,7 @@ class Me {
             const formData = new FormData();
             formData.append('avatar', avatar);
 
-            const response = await fetch(`/avatar`, {
+            const response = await fetch(`/api/users/me/avatar`, {
                 method: 'POST',
                 credentials: 'include',
                 body: formData,

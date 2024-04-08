@@ -21,7 +21,7 @@ class Event {
 
     static async get_event(id: number): Promise<Event | null> {
         try {
-            const response = await fetch(`/events/${id}`, {
+            const response = await fetch(`/api/events/${id}`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -42,7 +42,7 @@ class Event {
 
     static async get_events(): Promise<Event[] | null> {
         try {
-            const response = await fetch('/events', {
+            const response = await fetch('/api/events', {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -63,7 +63,7 @@ class Event {
 
     async delete(): Promise<boolean> {
         try {
-            const response = await fetch(`/events/${this.id}`, {
+            const response = await fetch(`/api/events/${this.id}`, {
                 method: 'DELETE',
                 credentials: 'include',
                 headers: {
@@ -79,7 +79,7 @@ class Event {
 
     async update(data: EventUpdateData): Promise<boolean> {
         try {
-            const response = await fetch(`/events/${this.id}`, {
+            const response = await fetch(`/api/events/${this.id}`, {
                 method: 'PUT',
                 credentials: 'include',
                 headers: {

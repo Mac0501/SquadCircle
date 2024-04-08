@@ -18,7 +18,7 @@ class Group {
 
     static async get_group(id: number): Promise<Group | null> {
         try {
-            const response = await fetch(`/goups/${id}`, {
+            const response = await fetch(`/api/goups/${id}`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -39,7 +39,7 @@ class Group {
 
     static async get_groups(): Promise<Group[] | null> {
         try {
-            const response = await fetch('/groups', {
+            const response = await fetch('/api/groups', {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -60,7 +60,7 @@ class Group {
 
     async delete(): Promise<boolean> {
         try {
-            const response = await fetch(`/groups/${this.id}`, {
+            const response = await fetch(`/api/groups/${this.id}`, {
                 method: 'DELETE',
                 credentials: 'include',
                 headers: {
@@ -76,7 +76,7 @@ class Group {
 
     async update(data: GroupUpdateData): Promise<boolean> {
         try {
-            const response = await fetch(`/groups/${this.id}`, {
+            const response = await fetch(`/api/groups/${this.id}`, {
                 method: 'PUT',
                 credentials: 'include',
                 headers: {
@@ -98,7 +98,7 @@ class Group {
 
     static async create(name: string, description: string | null = null): Promise<Group | null> {
         try {
-            const response = await fetch('/groups', {
+            const response = await fetch('/api/groups', {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -120,7 +120,7 @@ class Group {
 
     async get_invites(): Promise<Invite[] | null> {
         try {
-            const response = await fetch(`/groups/${this.id}/invites`, {
+            const response = await fetch(`/api/groups/${this.id}/invites`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -141,7 +141,7 @@ class Group {
 
     async create_invite(expiration_date: string): Promise<Invite | null> {
         try {
-            const response = await fetch(`/groups/${this.id}/invites`, {
+            const response = await fetch(`/api/groups/${this.id}/invites`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -163,7 +163,7 @@ class Group {
 
     async get_users(): Promise<User[] | null> {
         try {
-            const response = await fetch(`/groups/${this.id}/users`, {
+            const response = await fetch(`/api/groups/${this.id}/users`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -184,7 +184,7 @@ class Group {
 
     async add_user(user: User): Promise<UserAndGroup | null> {
         try {
-            const response = await fetch(`/groups/${this.id}/users/${user.id}`, {
+            const response = await fetch(`/api/groups/${this.id}/users/${user.id}`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -205,7 +205,7 @@ class Group {
 
     async remove_user(user: User): Promise<boolean> {
         try {
-            const response = await fetch(`/groups/${this.id}/users/${user.id}`, {
+            const response = await fetch(`/api/groups/${this.id}/users/${user.id}`, {
                 method: 'DELETE',
                 credentials: 'include',
                 headers: {
@@ -221,7 +221,7 @@ class Group {
 
     async add_group_user_permission(user: User, permission: UserGroupPermissionEnum): Promise<UserGroupPermission | null> {
         try {
-            const response = await fetch(`/groups/${this.id}/users/${user.id}/permissions`, {
+            const response = await fetch(`/api/groups/${this.id}/users/${user.id}/permissions`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -243,12 +243,13 @@ class Group {
 
     async remove_group_user_permission(user: User, permission: UserGroupPermissionEnum): Promise<boolean> {
         try {
-            const response = await fetch(`/groups/${this.id}/users/${user.id}/permissions/${permission}`, {
+            const response = await fetch(`/api/groups/${this.id}/users/${user.id}/permissions`, {
                 method: 'DELETE',
                 credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json'
-                }
+                },
+                body: JSON.stringify({ permission })
             });
             return response.ok;
         } catch (error) {
@@ -259,7 +260,7 @@ class Group {
 
     async get_all_events_for_group(): Promise<Event[] | null> {
         try {
-            const response = await fetch(`/groups/${this.id}/events`, {
+            const response = await fetch(`/api/groups/${this.id}/events`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -280,7 +281,7 @@ class Group {
 
     async create_event_for_group(title: string, color: string, state: EventStateEnum = EventStateEnum.OPEN, description: string|null = null): Promise<Event | null> {
         try {
-            const response = await fetch(`/groups/${this.id}/events`, {
+            const response = await fetch(`/api/groups/${this.id}/events`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {

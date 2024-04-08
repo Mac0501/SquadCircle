@@ -19,7 +19,7 @@ class EventOption {
 
     static async get_event_option(id: number): Promise<EventOption | null> {
         try {
-            const response = await fetch(`/event_options/${id}`, {
+            const response = await fetch(`/api/event_options/${id}`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -40,7 +40,7 @@ class EventOption {
 
     async delete(): Promise<boolean> {
         try {
-            const response = await fetch(`/event_options/${this.id}`, {
+            const response = await fetch(`/api/event_options/${this.id}`, {
                 method: 'DELETE',
                 credentials: 'include',
                 headers: {
@@ -56,7 +56,7 @@ class EventOption {
 
     async update(data: EventOptionUpdateData): Promise<boolean> {
         try {
-            const response = await fetch(`/event_options/${this.id}`, {
+            const response = await fetch(`/api/event_options/${this.id}`, {
                 method: 'PUT',
                 credentials: 'include',
                 headers: {
@@ -79,7 +79,7 @@ class EventOption {
 
     async set_for_event(): Promise<boolean> {
         try {
-            const response = await fetch(`/event_options/${this.id}/set_for_event`, {
+            const response = await fetch(`/api/event_options/${this.id}/set_for_event`, {
                 method: 'PUT',
                 credentials: 'include',
                 headers: {
@@ -95,7 +95,7 @@ class EventOption {
 
     async get_user_event_option_responses(): Promise<UserEventOptionResponse[] | null> {
         try {
-            const response = await fetch(`/event_options/${this.id}/user_event_option_response`, {
+            const response = await fetch(`/api/event_options/${this.id}/user_event_option_response`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -116,7 +116,7 @@ class EventOption {
 
     async create_user_event_option_response(response: EventOptionResponseEnum): Promise<UserEventOptionResponse | null> {
         try {
-            const fetch_response = await fetch(`/event_options/${this.id}/user_event_option_response`, {
+            const fetch_response = await fetch(`/api/event_options/${this.id}/user_event_option_response`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {

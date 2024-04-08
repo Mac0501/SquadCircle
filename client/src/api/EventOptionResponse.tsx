@@ -16,7 +16,7 @@ class UserEventOptionResponse {
 
     static async get_user_event_option_response(id: number): Promise<UserEventOptionResponse | null> {
         try {
-            const response = await fetch(`/user_event_option_response/${id}`, {
+            const response = await fetch(`/api/user_event_option_response/${id}`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -37,7 +37,7 @@ class UserEventOptionResponse {
 
     async update(response: EventOptionResponseEnum): Promise<boolean> {
         try {
-            const fetch_response = await fetch(`/user_event_option_response/${this.id}`, {
+            const fetch_response = await fetch(`/api/user_event_option_response/${this.id}`, {
                 method: 'PUT',
                 credentials: 'include',
                 headers: {

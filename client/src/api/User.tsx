@@ -13,7 +13,7 @@ class User {
 
     static async get_user(id: number): Promise<User | null> {
         try {
-            const response = await fetch(`/users/${id}`, {
+            const response = await fetch(`/api/users/${id}`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -34,7 +34,7 @@ class User {
 
     static async get_users(): Promise<User[] | null> {
         try {
-            const response = await fetch('/users', {
+            const response = await fetch('/api/users', {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -55,7 +55,7 @@ class User {
 
     async delete(): Promise<boolean> {
         try {
-            const response = await fetch(`/users/${this.id}`, {
+            const response = await fetch(`/api/users/${this.id}`, {
                 method: 'DELETE',
                 credentials: 'include',
                 headers: {
@@ -71,7 +71,7 @@ class User {
 
     async get_groups(): Promise<Group[] | null> {
         try {
-            const response = await fetch(`/users/${this.id}/groups`, {
+            const response = await fetch(`/api/users/${this.id}/groups`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {

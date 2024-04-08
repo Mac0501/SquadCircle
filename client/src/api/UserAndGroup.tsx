@@ -11,7 +11,7 @@ class UserAndGroup {
 
     static async get_user_and_group(id: number): Promise<UserAndGroup | null> {
         try {
-            const response = await fetch(`/user_and_group/${id}`, {
+            const response = await fetch(`/api/user_and_group/${id}`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
