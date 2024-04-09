@@ -1,3 +1,4 @@
+from datetime import date
 from sanic import Blueprint
 from sanic.request import Request
 from sanic.response import json
@@ -14,7 +15,7 @@ invites = Blueprint("invites", url_prefix="/invites")
 @protected()
 @check_for_permission([UserGroupPermissionEnum.MANAGE_INVITES])
 async def get_invites(request: Request, my_user: User):
-    invites = await Invite.all()
+    invites = await Invite.filter(expiration_date__gte=date.today())
     return json([invite.to_dict() for invite in invites])
 
 
@@ -22,7 +23,7 @@ async def get_invites(request: Request, my_user: User):
 @protected()
 @check_for_permission([UserGroupPermissionEnum.MANAGE_INVITES])
 async def get_invite(request: Request, my_user: User, invite: Invite|None):
-    if invite:
+    if invite and not invite.is_expired():
         return json(invite.to_dict())
     else:
         return json({"error": f"Invite not found"}, status=404)
