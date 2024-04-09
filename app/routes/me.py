@@ -6,9 +6,12 @@ from sanic_jwt import protected
 from sanic.request import Request
 from sanic.response import json
 from tortoise.transactions import atomic
+from tortoise import connections
 from app.db.models import Group, User, UserAndGroup
 from app.utils.tools import filter_dict_by_keys
 from PIL import Image
+
+from app.utils.types import EventStateEnum
 
 me = Blueprint("me", url_prefix="/users/me")
 
@@ -112,3 +115,60 @@ async def upload_avatar(request: Request, my_user: User):
             return json({"error": "Avatar file not found in the request"}, status=400)
     else:
         return json({"error": f"User not found"}, status=404)
+
+
+@me.route("/events", methods=["GET"], name="get_me_events")
+@protected()
+async def get_me_events(request: Request, my_user: User):
+    conn = connections.get("default")
+    query_incomplete = f"""
+        SELECT e.id, e.title, e.color, e.description, e.state, e.group_id, e.choosen_event_option_id
+        FROM events e
+        JOIN groups g ON e.group_id = g.id
+        JOIN user_and_groups ug ON g.id = ug.group_id
+        LEFT JOIN user_event_option_responses ueor ON e.id = ueor.event_option_id AND ug.id = ueor.user_and_group_id
+        WHERE ug.user_id = {my_user.id} AND e.state = {EventStateEnum.OPEN} AND ueor.id IS NULL
+    """
+    incomplete_events = await conn.execute_query_dict(query_incomplete)
+    
+    query_other = f"""
+        SELECT e.id, e.title, e.color, e.description, e.state, e.group_id, e.choosen_event_option_id
+        FROM events e
+        JOIN groups g ON e.group_id = g.id
+        JOIN user_and_groups ug ON g.id = ug.group_id
+        LEFT JOIN user_event_option_responses ueor ON e.id = ueor.event_option_id AND ug.id = ueor.user_and_group_id
+        WHERE ug.user_id = {my_user.id} AND (e.state != 1 OR ueor.id IS NOT NULL)
+    """
+    other_events = await conn.execute_query_dict(query_other)
+    return json({"incomplete_events":incomplete_events, "other_events":other_events})
+
+
+@me.route("/groups/<group_id:int>/events", methods=["GET"], name="get_me_group_events")
+@protected()
+@atomic()
+async def get_me_group_events(request: Request, my_user: User, group: Group|None):
+    
+    if not group:
+        return json({"error": f"Group not found"}, status=404)
+
+    conn = connections.get("default")
+
+    query_incomplete = f"""
+    SELECT e.id, e.title, e.color, e.description, e.state, e.group_id, e.choosen_event_option_id
+    FROM events e
+    JOIN user_and_groups ug ON e.group_id = ug.group_id
+    LEFT JOIN user_event_option_responses ueor ON e.id = ueor.event_option_id AND ug.id = ueor.user_and_group_id
+    WHERE ug.user_id = {my_user.id} AND ug.group_id = {group.id} AND e.state = {EventStateEnum.OPEN} AND ueor.id IS NULL
+    """
+    incomplete_events = await conn.execute_query_dict(query_incomplete)
+    
+    query_other = f"""
+    SELECT e.id, e.title, e.color, e.description, e.state, e.group_id, e.choosen_event_option_id
+    FROM events e
+    JOIN user_and_groups ug ON e.group_id = ug.group_id
+    LEFT JOIN user_event_option_responses ueor ON e.id = ueor.event_option_id AND ug.id = ueor.user_and_group_id
+    WHERE ug.user_id = {my_user.id} AND ug.group_id = {group.id} AND (e.state != {EventStateEnum.OPEN} OR ueor.id IS NOT NULL)
+    """
+    other_events = await conn.execute_query_dict(query_other)
+    
+    return json({"incomplete_events":incomplete_events, "other_events":other_events})
