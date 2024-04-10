@@ -4,6 +4,7 @@ import User from "./User";
 import UserAndGroup from "./UserAndGroup";
 import UserGroupPermission from "./UserGroupPermission";
 import Event from "./Event";
+import Vote from "./Vote";
 
 class Group {
     id: number
@@ -297,6 +298,49 @@ class Group {
             }
         } catch (error) {
             console.error('Error creating event for group:', error);
+            return null;
+        }
+    }
+
+    async create_vote_for_group(title: string, multi_select: boolean = false): Promise<Vote | null> {
+        try {
+            const response = await fetch(`/api/groups/${this.id}/votes`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({"title": title, "multi_select": multi_select})
+            });
+            if (response.ok) {
+                const voteData = await response.json();
+                return new Vote(voteData.id, voteData.title, voteData.multi_select, voteData.group_id);
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error('Error creating vote for group:', error);
+            return null;
+        }
+    }
+
+    async get_all_votes_for_group(): Promise<Vote[] | null> {
+        try {
+            const response = await fetch(`/api/groups/${this.id}/events`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (response.ok) {
+                const voteData = await response.json();
+                return voteData.map((eventData: any) => new Vote(voteData.id, voteData.title, voteData.multi_select, voteData.group_id));
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error('Error fetching events for group:', error);
             return null;
         }
     }

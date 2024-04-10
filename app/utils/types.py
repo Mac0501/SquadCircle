@@ -16,3 +16,4 @@ class UserGroupPermissionEnum(IntEnum):
     MANAGE_USERS = 2
     MANAGE_INVITES = 3
     MANAGE_EVENTS = 4
+    MANAGE_VOTES = 5

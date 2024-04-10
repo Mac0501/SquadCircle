@@ -1,5 +1,5 @@
 import { EventOptionResponseEnum } from "../utils/types";
-import UserEventOptionResponse from "./EventOptionResponse";
+import UserEventOptionResponse from "./UserEventOptionResponse";
 
 class EventOption {
     id: number;

@@ -126,7 +126,8 @@ async def get_me_events(request: Request, my_user: User):
         FROM events e
         JOIN groups g ON e.group_id = g.id
         JOIN user_and_groups ug ON g.id = ug.group_id
-        LEFT JOIN user_event_option_responses ueor ON e.id = ueor.event_option_id AND ug.id = ueor.user_and_group_id
+        JOIN event_options eo ON eo.event_id = e.id
+        LEFT JOIN user_event_option_responses ueor ON eo.id = ueor.event_option_id AND ug.id = ueor.user_and_group_id
         WHERE ug.user_id = {my_user.id} AND e.state = {EventStateEnum.OPEN} AND ueor.id IS NULL
     """
     incomplete_events = await conn.execute_query_dict(query_incomplete)
@@ -136,7 +137,8 @@ async def get_me_events(request: Request, my_user: User):
         FROM events e
         JOIN groups g ON e.group_id = g.id
         JOIN user_and_groups ug ON g.id = ug.group_id
-        LEFT JOIN user_event_option_responses ueor ON e.id = ueor.event_option_id AND ug.id = ueor.user_and_group_id
+        JOIN event_options eo ON eo.event_id = e.id
+        LEFT JOIN user_event_option_responses ueor ON eo.id = ueor.event_option_id AND ug.id = ueor.user_and_group_id
         WHERE ug.user_id = {my_user.id} AND (e.state != 1 OR ueor.id IS NOT NULL)
     """
     other_events = await conn.execute_query_dict(query_other)
@@ -157,7 +159,8 @@ async def get_me_group_events(request: Request, my_user: User, group: Group|None
     SELECT e.id, e.title, e.color, e.description, e.state, e.group_id, e.choosen_event_option_id
     FROM events e
     JOIN user_and_groups ug ON e.group_id = ug.group_id
-    LEFT JOIN user_event_option_responses ueor ON e.id = ueor.event_option_id AND ug.id = ueor.user_and_group_id
+    JOIN event_options eo ON eo.event_id = e.id
+    LEFT JOIN user_event_option_responses ueor ON eo.id = ueor.event_option_id AND ug.id = ueor.user_and_group_id
     WHERE ug.user_id = {my_user.id} AND ug.group_id = {group.id} AND e.state = {EventStateEnum.OPEN} AND ueor.id IS NULL
     """
     incomplete_events = await conn.execute_query_dict(query_incomplete)
@@ -166,9 +169,71 @@ async def get_me_group_events(request: Request, my_user: User, group: Group|None
     SELECT e.id, e.title, e.color, e.description, e.state, e.group_id, e.choosen_event_option_id
     FROM events e
     JOIN user_and_groups ug ON e.group_id = ug.group_id
-    LEFT JOIN user_event_option_responses ueor ON e.id = ueor.event_option_id AND ug.id = ueor.user_and_group_id
+    JOIN event_options eo ON eo.event_id = e.id
+    LEFT JOIN user_event_option_responses ueor ON eo.id = ueor.event_option_id AND ug.id = ueor.user_and_group_id
     WHERE ug.user_id = {my_user.id} AND ug.group_id = {group.id} AND (e.state != {EventStateEnum.OPEN} OR ueor.id IS NOT NULL)
     """
     other_events = await conn.execute_query_dict(query_other)
     
     return json({"incomplete_events":incomplete_events, "other_events":other_events})
+
+
+@me.route("/votes", methods=["GET"], name="get_me_votes")
+@protected()
+async def get_me_votes(request: Request, my_user: User):
+    conn = connections.get("default")
+    query_incomplete = f"""
+        SELECT v.id, v.title, v.multi_select, v.group_id
+        FROM votes v
+        JOIN groups g ON v.group_id = g.id
+        JOIN user_and_groups ug ON g.id = ug.group_id
+        JOIN vote_options vo ON vo.vote_id = v.id
+        LEFT JOIN user_vote_option_responses uvor ON vo.id = uvor.vote_option_id AND ug.id = uvor.user_and_group_id
+        WHERE ug.user_id = {my_user.id} AND uvor.id IS NULL
+    """
+    incomplete_votes = await conn.execute_query_dict(query_incomplete)
+    
+    query_other = f"""
+        SELECT v.id, v.title, v.multi_select, v.group_id
+        FROM votes v
+        JOIN groups g ON v.group_id = g.id
+        JOIN user_and_groups ug ON g.id = ug.group_id
+        JOIN vote_options vo ON vo.vote_id = v.id
+        LEFT JOIN user_vote_option_responses uvor ON vo.id = uvor.vote_option_id AND ug.id = uvor.user_and_group_id
+        WHERE ug.user_id = {my_user.id} AND uvor.id IS NOT NULL
+    """
+    other_votes = await conn.execute_query_dict(query_other)
+    return json({"incomplete_votes":incomplete_votes, "other_votes":other_votes})
+
+
+@me.route("/groups/<group_id:int>/votes", methods=["GET"], name="get_me_group_votes")
+@protected()
+@atomic()
+async def get_me_group_votes(request: Request, my_user: User, group: Group|None):
+    
+    if not group:
+        return json({"error": f"Group not found"}, status=404)
+
+    conn = connections.get("default")
+
+    query_incomplete = f"""
+    SELECT v.id, v.title, v.multi_select, v.group_id
+    FROM votes v
+    JOIN user_and_groups ug ON v.group_id = ug.group_id
+    JOIN vote_options vo ON vo.vote_id = v.id
+    LEFT JOIN user_vote_option_responses uvor ON vo.id = uvor.vote_option_id AND ug.id = uvor.user_and_group_id
+    WHERE ug.user_id = {my_user.id} AND ug.group_id = {group.id} AND uvor.id IS NULL
+    """
+    incomplete_votes = await conn.execute_query_dict(query_incomplete)
+    
+    query_other = f"""
+    SELECT v.id, v.title, v.multi_select, v.group_id
+    FROM votes v
+    JOIN user_and_groups ug ON v.group_id = ug.group_id
+    JOIN vote_options vo ON vo.vote_id = v.id
+    LEFT JOIN user_vote_option_responses uvor ON vo.id = uvor.vote_option_id AND ug.id = uvor.user_and_group_id
+    WHERE ug.user_id = {my_user.id} AND ug.group_id = {group.id} AND uvor.id IS NOT NULL
+    """
+    other_votes = await conn.execute_query_dict(query_other)
+    
+    return json({"incomplete_votes":incomplete_votes, "other_votes":other_votes})

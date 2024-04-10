@@ -2,7 +2,9 @@ import hashlib
 from datetime import date
 from typing import Dict
 from tortoise import fields
+from tortoise import connections
 from tortoise.models import Model
+from tortoise.transactions import atomic
 from app.utils.tools import generate_random_hex
 from app.utils.types import EventStateEnum, EventOptionResponseEnum, UserGroupPermissionEnum
 
@@ -39,9 +41,11 @@ class Group(Model):
     id = fields.IntField(pk=True, autoincrement=True)
     name = fields.CharField(max_length=32, null=False, unique=True)
     description = fields.TextField(max_length=2000, null=True)
+    discord_webhook = fields.CharField(max_length=130, null=True)
 
     user_and_groups: fields.ReverseRelation["UserAndGroup"]
-    events: fields.ReverseRelation["Group"]
+    events: fields.ReverseRelation["Event"]
+    votes: fields.ReverseRelation["Vote"]
     invites: fields.ReverseRelation["Invite"]
     users: fields.ManyToManyRelation["User"] = fields.ManyToManyField(
         model_name="models.User",
@@ -78,10 +82,12 @@ class UserAndGroup(Model):
         null=False,
     )
     user_event_option_responses: fields.ReverseRelation["UserEventOptionResponse"]
+    user_vote_option_responses: fields.ReverseRelation["UserEventOptionResponse"]
     user_group_permissions: fields.ReverseRelation["UserGroupPermission"]
 
     class Meta:
         table = "user_and_groups"
+        unique_together = [("user_id", "group_id")]
 
     def to_dict(self) -> Dict[str, any]:
         return {"id":self.id, "user_id":self.user_id, "group_id":self.group_id}
@@ -102,6 +108,7 @@ class UserGroupPermission(Model):
     )
 
     class Meta:
+        unique_together = [("user_and_group_id", "permission")]
         table = "user_group_permissions"
 
     def to_dict(self) -> Dict[str, any]:
@@ -194,10 +201,96 @@ class UserEventOptionResponse(Model):
     )
 
     class Meta:
+        unique_together = [("event_option_id", "user_and_group_id")]
         table = "user_event_option_responses"
 
     def to_dict(self) -> Dict[str, any]:
         return {"id":self.id, "response":self.response, "event_option_id": self.event_option_id, "user_and_group_id":self.user_and_group_id}
+    
+    async def get_group_id(self) -> int:
+        user_and_group = await UserAndGroup.get(id=self.user_and_group_id)
+        return user_and_group.group_id
+
+
+class Vote(Model):
+    __parse_name__ = "vote"
+    id = fields.IntField(pk=True, autoincrement=True)
+    title = fields.CharField(max_length=100, null=False)
+    multi_select = fields.BooleanField(default=True,null=False)
+
+    group_id:int
+    group: fields.ForeignKeyRelation["Group"] = fields.ForeignKeyField(
+        "models.Group",
+        to_field="id",
+        related_name="votes",
+        on_delete=fields.CASCADE,
+    )
+    vote_options: fields.ReverseRelation["VoteOption"]
+
+    class Meta:
+        table = "votes"
+
+    def to_dict(self) -> Dict[str, any]:
+        return {"id":self.id, "title":self.title, "multi_select":self.multi_select, "group_id": self.group_id}
+
+    async def get_group_id(self) -> int:
+        return self.group_id
+
+
+class VoteOption(Model):
+    __parse_name__ = "vote_option"
+    id = fields.IntField(pk=True, autoincrement=True)
+    title = fields.CharField(max_length=100, null=False)
+
+    vote_id: int
+    vote: fields.ForeignKeyRelation["Vote"] = fields.ForeignKeyField(
+        "models.Vote",
+        to_field="id",
+        related_name="vote_options",
+        on_delete=fields.CASCADE,
+    )
+
+    user_vote_option_responses: fields.ReverseRelation["UserVoteOptionResponse"]
+
+    class Meta:
+        table = "vote_options"
+
+    def to_dict(self) -> Dict[str, any]:
+        return {
+            "id": self.id,
+            "title":self.title,
+            "vote_id": self.vote_id
+        }
+    
+    async def get_group_id(self) -> int:
+        vote = await Vote.get(id=self.vote_id)
+        return vote.group_id
+
+class UserVoteOptionResponse(Model):
+    __parse_name__ = "user_vote_option_response"
+    id = fields.IntField(pk=True, autoincrement=True)
+
+    vote_option_id: int
+    vote_option: fields.ForeignKeyRelation["VoteOption"] = fields.ForeignKeyField(
+        "models.VoteOption",
+        to_field="id",
+        related_name="user_vote_option_responses",
+        on_delete=fields.CASCADE,
+    )
+    user_and_group_id: int
+    user_and_group: fields.ForeignKeyRelation["UserAndGroup"] = fields.ForeignKeyField(
+        "models.UserAndGroup",
+        to_field="id",
+        related_name="user_vote_option_responses",
+        on_delete=fields.CASCADE,
+    )
+
+    class Meta:
+        unique_together = [("vote_option_id", "user_and_group_id")]
+        table = "user_vote_option_responses"
+
+    def to_dict(self) -> Dict[str, any]:
+        return {"id":self.id, "vote_option_id": self.vote_option_id, "user_and_group_id":self.user_and_group_id}
     
     async def get_group_id(self) -> int:
         user_and_group = await UserAndGroup.get(id=self.user_and_group_id)
@@ -233,3 +326,9 @@ class Invite(Model):
     @staticmethod
     def generate_code() -> str:
         return generate_random_hex(16)
+
+    @staticmethod
+    @atomic
+    async def delete_expired():
+        conn = connections.get("default")
+        await conn.execute_query("DELETE FROM invites WHERE expiration_date < CURRENT_DATE;")

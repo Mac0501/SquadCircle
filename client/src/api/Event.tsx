@@ -1,4 +1,5 @@
 import { EventStateEnum } from "../utils/types";
+import EventOption from "./EventOption";
 
 class Event {
     id: number
@@ -99,6 +100,48 @@ class Event {
         } catch (error) {
             console.error('Error updating event:', error);
             return false;
+        }
+    }
+
+    async get_event_options_for_event(): Promise<EventOption[] | null> {
+        try {
+            const response = await fetch(`/api/events/${this.id}/event_options`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (response.ok) {
+                const event_optionsData = await response.json();
+                return event_optionsData.map((event_optionData: any) => new EventOption(event_optionData.id, event_optionData.date, event_optionData.start_time, event_optionData.end_time, event_optionData.event_id));
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error('Error fetching events for group:', error);
+            return null;
+        }
+    }
+
+    async create_event_options_for_event(): Promise<EventOption | null> {
+        try {
+            const response = await fetch(`/api/events/${this.id}/event_options`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (response.ok) {
+                const event_optionData = await response.json();
+                return new EventOption(event_optionData.id, event_optionData.date, event_optionData.start_time, event_optionData.end_time, event_optionData.event_id);
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error('Error fetching events for group:', error);
+            return null;
         }
     }
 }

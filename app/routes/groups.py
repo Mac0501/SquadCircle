@@ -4,7 +4,7 @@ from sanic_jwt import protected
 from sanic.request import Request
 from sanic.response import json
 from tortoise.transactions import atomic
-from app.db.models import Event, Group, Invite, User, UserAndGroup, UserGroupPermission
+from app.db.models import Event, Group, Invite, User, UserAndGroup, UserGroupPermission, Vote
 from app.utils.decorators import check_for_permission, is_owner
 from app.utils.tools import filter_dict_by_keys
 from app.utils.types import UserGroupPermissionEnum
@@ -71,6 +71,7 @@ async def delete_group(request: Request, my_user: User, group: Group|None):
 async def get_group_invites(request: Request, my_user: User, group: Group|None):
     if not group:
         return json({"error": "Group not found"}, status=404)
+    await Invite.delete_expired()
     invites = await Invite.filter(expiration_date__gte=date.today(), group_id=group.id)
     return json([invite.to_dict() for invite in invites])
 
@@ -107,6 +108,29 @@ async def create_event_for_group(request: Request, my_user: User, group: Group|N
     data = filter_dict_by_keys(request.json, ["title", "color", "description", "state"], True)
     event = await Event.create(group_id=group.id, **data)
     return json(event.to_dict())
+
+
+@groups.route("/<group_id:int>/votes", methods=["GET"], name="get_all_vote_for_group")
+@protected()
+@check_for_permission()
+async def get_all_votes_for_group(request: Request, my_user: User, group: Group|None):
+    if not group:
+        return json({"error": "Group not found"}, status=404)
+    votes = await Vote.filter(group_id=group.id)
+    return json([vote.to_dict() for vote in votes])
+
+
+@groups.route("/<group_id:int>/votes", methods=["POST"], name="create_vote_for_group")
+@protected()
+@check_for_permission([UserGroupPermissionEnum.MANAGE_VOTES])
+@atomic()
+async def create_vote_for_group(request: Request, my_user: User, group: Group|None):
+    if not group:
+        return json({"error": "Group not found"}, status=404)
+    data = filter_dict_by_keys(request.json, ["title", "multi_select"], True)
+    vote = await Vote.create(group_id=group.id, **data)
+    return json(vote.to_dict())
+
 
 @groups.route("/<group_id:int>/users", methods=["Get"], name="get_group_users")
 @protected()

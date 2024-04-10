@@ -15,6 +15,7 @@ invites = Blueprint("invites", url_prefix="/invites")
 @protected()
 @check_for_permission([UserGroupPermissionEnum.MANAGE_INVITES])
 async def get_invites(request: Request, my_user: User):
+    await Invite.delete_expired()
     invites = await Invite.filter(expiration_date__gte=date.today())
     return json([invite.to_dict() for invite in invites])
 
@@ -26,6 +27,8 @@ async def get_invite(request: Request, my_user: User, invite: Invite|None):
     if invite and not invite.is_expired():
         return json(invite.to_dict())
     else:
+        if invite:
+            await invite.delete()
         return json({"error": f"Invite not found"}, status=404)
     
 @invites.route("/verify_code", methods=["POST"], name="verify_code_invite")
