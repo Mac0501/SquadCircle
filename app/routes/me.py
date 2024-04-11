@@ -7,7 +7,7 @@ from sanic.request import Request
 from sanic.response import json
 from tortoise.transactions import atomic
 from tortoise import connections
-from app.db.models import Group, User, UserAndGroup
+from app.db.models import Event, Group, User, UserAndGroup
 from app.utils.tools import filter_dict_by_keys
 from PIL import Image
 
@@ -120,6 +120,7 @@ async def upload_avatar(request: Request, my_user: User):
 @me.route("/events", methods=["GET"], name="get_me_events")
 @protected()
 async def get_me_events(request: Request, my_user: User):
+    await Event.update_state()
     conn = connections.get("default")
     query_incomplete = f"""
         SELECT e.id, e.title, e.color, e.description, e.state, e.group_id, e.choosen_event_option_id
@@ -153,6 +154,8 @@ async def get_me_group_events(request: Request, my_user: User, group: Group|None
     if not group:
         return json({"error": f"Group not found"}, status=404)
 
+    await Event.update_state()
+    
     conn = connections.get("default")
 
     query_incomplete = f"""

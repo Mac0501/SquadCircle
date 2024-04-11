@@ -123,6 +123,7 @@ class Event(Model):
     id = fields.IntField(pk=True, autoincrement=True)
     title = fields.CharField(max_length=100, null=False)
     color = fields.CharField(max_length=6, null=False)
+    vote_end_date = fields.DatetimeField(null=True)
     description = fields.TextField(max_length=2000, null=True)
     state = fields.IntEnumField(enum_type=EventStateEnum, null=False, default=EventStateEnum.OPEN)
 
@@ -145,6 +146,68 @@ class Event(Model):
 
     async def get_group_id(self) -> int:
         return self.group_id
+
+    @staticmethod
+    @atomic
+    async def update_state():
+        conn = connections.get("default")
+        await conn.execute_query(f"""
+            UPDATE events
+            SET state = {EventStateEnum.ACTIVE},
+                choosen_event_option_id = (
+                    SELECT event_option_id
+                    FROM (
+                        SELECT event_option_id, COUNT(*) AS response_count
+                        FROM user_event_option_responses
+                        INNER JOIN event_options ON user_event_option_responses.event_option_id = event_options.id
+                        WHERE response = {EventOptionResponseEnum.ACCEPTED}
+                        AND event_options.event_id = events.id
+                        GROUP BY event_option_id
+                        ORDER BY response_count DESC, event_option_id ASC
+                        LIMIT 1
+                    )
+                )
+            WHERE state = {EventStateEnum.OPEN}
+            AND choosen_event_option_id IS NULL
+            AND (
+                (events.vote_end_date IS NOT NULL AND events.vote_end_date <= DATETIME('now')) OR
+                events.vote_end_date IS NULL AND (
+                    SELECT DATETIME(MIN(event_options.date) || ' 23:00', '-1 day')
+                    FROM event_options
+                    WHERE event_options.event_id = events.id
+                )  <= DATETIME('now')
+            );
+        """)
+
+        await conn.execute_query(f"""
+            UPDATE events
+            SET state = (
+                CASE
+                    -- If choosen_event_option_id is set and the end time of the chosen event option is not over
+                    WHEN events.choosen_event_option_id IS NOT NULL AND (
+                        (eo.end_time IS NOT NULL AND DATETIME(eo.date || ' ' || eo.end_time) > DATETIME('now')) OR
+                        (eo.end_time IS NULL AND DATE(eo.date) = DATE('now'))
+                    )
+                    AND DATETIME(eo.date || ' ' || eo.start_time) < DATETIME('now')
+                    THEN {EventStateEnum.ACTIVE} -- Set state to ACTIVE
+                    -- If choosen_event_option is set but the event is over
+                    WHEN events.choosen_event_option_id IS NOT NULL AND (
+                        (eo.end_time IS NOT NULL AND DATETIME(eo.date || ' ' || eo.end_time) < DATETIME('now')) OR
+                        (eo.end_time IS NULL AND DATE(eo.date) < DATE('now'))
+                    )
+                    THEN {EventStateEnum.CLOSED} -- Set state to CLOSED
+                    ELSE events.state -- Keep the state unchanged
+                END
+            )
+            FROM (
+                SELECT events.id AS event_id, event_options.end_time, event_options.date, event_options.start_time
+                FROM events
+                LEFT JOIN event_options ON events.choosen_event_option_id = event_options.id
+                WHERE events.state IN ({EventStateEnum.OPEN}, {EventStateEnum.ACTIVE})
+            ) AS eo
+            WHERE events.id = eo.event_id;
+        """)
+
 
 
 class EventOption(Model):

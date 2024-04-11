@@ -2,6 +2,7 @@ from enum import IntEnum
 
 
 class EventStateEnum(IntEnum):
+    VOTING = 0
     OPEN = 1
     ACTIVE = 2
     CLOSED = 3

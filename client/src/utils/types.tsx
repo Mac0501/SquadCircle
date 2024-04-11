@@ -1,8 +1,9 @@
 enum EventStateEnum {
+    VOTING = 0,
     OPEN = 1,
     ACTIVE = 2,
     CLOSED = 3,
-    ARCHIVED = 4
+    ARCHIVED = 4,
 }
 
 enum EventOptionResponseEnum {
@@ -14,7 +15,8 @@ enum UserGroupPermissionEnum {
     ADMIN = 1,
     MANAGE_USERS = 2,
     MANAGE_INVITES = 3,
-    MANAGE_EVENTS = 4
+    MANAGE_EVENTS = 4,
+    MANAGE_VOTES = 5
 }
 
 export { EventStateEnum, EventOptionResponseEnum, UserGroupPermissionEnum };

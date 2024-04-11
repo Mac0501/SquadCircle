@@ -6,7 +6,7 @@ from tortoise.transactions import atomic
 from app.db.models import Event, EventOption, User
 from app.utils.decorators import check_for_permission
 from app.utils.tools import filter_dict_by_keys
-from app.utils.types import UserGroupPermissionEnum
+from app.utils.types import EventStateEnum, UserGroupPermissionEnum
 
 events = Blueprint("events", url_prefix="/events")
 
@@ -23,6 +23,7 @@ events = Blueprint("events", url_prefix="/events")
 @check_for_permission()
 async def get_event(request: Request, my_user: User, event: Event|None):
     if event:
+        await Event.update_state()
         return json(event.to_dict())
     else:
         return json({"error": "Event not found"}, status=404)
@@ -34,6 +35,8 @@ async def get_event(request: Request, my_user: User, event: Event|None):
 @atomic()
 async def update_event(request: Request, my_user: User, event: Event|None):
     if event:
+        if event.state == EventStateEnum.ARCHIVED:
+            return json({"error": f"The Event is Archived."}, status=403)
         await event.update_from_dict(filter_dict_by_keys(request.json, ["title", "color", "description", "state"]))
         await event.save()
         return json(event.to_dict())
@@ -69,6 +72,8 @@ async def get_event_event_options(request: Request, my_user: User, event: Event|
 @atomic()
 async def create_event_event_options(request: Request, my_user: User, event: Event|None):
     if event:
+        if event.state == EventStateEnum.ARCHIVED:
+            return json({"error": f"The Event is Archived."}, status=403)
         data = filter_dict_by_keys(request.json,["date", "start_time", "end_time"])
         event_option = await EventOption.create(event_id=event.id, **data)
         return json(event_option.to_dict())

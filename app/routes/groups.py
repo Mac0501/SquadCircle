@@ -94,6 +94,7 @@ async def create_group_invite(request: Request, my_user: User, group: Group|None
 async def get_all_events_for_group(request: Request, my_user: User, group: Group|None):
     if not group:
         return json({"error": "Group not found"}, status=404)
+    await Event.update_state()
     events = await Event.filter(group_id=group.id)
     return json([event.to_dict() for event in events])
 

@@ -13,8 +13,9 @@ CREATE TABLE IF NOT EXISTS "events" (
     "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     "title" VARCHAR(100) NOT NULL,
     "color" VARCHAR(6) NOT NULL,
+    "vote_end_date" TIMESTAMP,
     "description" TEXT,
-    "state" SMALLINT NOT NULL  DEFAULT 1 /* OPEN: 1\nACTIVE: 2\nCLOSED: 3\nARCHIVED: 4 */,
+    "state" SMALLINT NOT NULL  DEFAULT 1 /* VOTING: 0\nOPEN: 1\nACTIVE: 2\nCLOSED: 3\nARCHIVED: 4 */,
     "choosen_event_option_id" INT,
     "group_id" INT NOT NULL REFERENCES "groups" ("id") ON DELETE CASCADE
 );
