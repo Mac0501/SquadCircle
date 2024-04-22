@@ -11,3 +11,17 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+
+.icon-scale {
+  transition: transform 0.3s ease;
+}
+
+.icon-scale:hover {
+  transform: scale(1.2);
+}
+
+.avatar-blur {
+  filter: brightness(0.5); /* Adjust the blur intensity as needed */
+  transition: 0.2s;
+}

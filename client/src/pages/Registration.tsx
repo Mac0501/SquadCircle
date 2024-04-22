@@ -1,0 +1,127 @@
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { Form, Input, Button, message } from 'antd';
+import Auth from '../api/Auth';
+import Invite from '../api/Invites';
+
+const Registration = () => {
+  const { code } = useParams<{ code?: string }>(); // Note the '?' to mark the parameter as optional
+  const [loading, setLoading] = useState(false);
+  const [validInvite, setValidInvite] = useState<boolean>(); // undefined represents initial state
+  const [serverError, setServerError] = useState<string>(''); // State to hold server-side error message
+
+  useEffect(() => {
+    // Check if the code is valid when the component mounts
+    if (code) {
+      Invite.verifyCode(code)
+        .then((isValid) => {
+          setValidInvite(isValid);
+        })
+        .catch((error) => {
+          console.error('Error verifying invite code:', error);
+          message.error('An error occurred while verifying the invite code');
+        });
+    }
+  }, [code]);
+
+  const onFinish = async (values: { name: any; password: any; confirmPassword: any }) => {
+    const { name, password, confirmPassword } = values;
+    if (password !== confirmPassword) {
+      message.error('Passwords do not match. Please try again.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const isRegistered = await Auth.register(name, password, code || ''); // Provide a default value for code
+      if (isRegistered) {
+        window.location.href = '/';
+      }
+    } catch (error) {
+      console.error('Error during registration:', error);
+      if (error instanceof Error) {
+        // Handle specific error messages from the server
+        const errorMessage = error.message;
+        setServerError(errorMessage);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (validInvite === undefined) {
+    // While validation is in progress, return null to display nothing
+    return null;
+  }
+
+  if (!validInvite) {
+    // If the invite is not valid, display a message
+    return (
+      <div style={{ maxWidth: 400, margin: 'auto', marginTop: 100 }}>
+        <h2>Invalid Invite</h2>
+        <p>The invite you're trying to use is not valid. Please contact the administrator for assistance.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ maxWidth: 400, margin: 'auto', marginTop: 100 }}>
+      <h2>Registration</h2>
+      {serverError && (
+        <div style={{ marginBottom: 16 }}>
+          <p style={{ color: 'red' }}>{serverError}</p>
+        </div>
+      )}
+      <Form name="registration-form" onFinish={onFinish}>
+        <Form.Item
+          name="name"
+          rules={[
+            { required: true, message: 'Please enter your username' },
+            { max: 32, message: 'Username cannot be longer than 32 characters' },
+            { whitespace: true, message: 'Username cannot be only spaces' }
+          ]}
+        >
+          <Input placeholder="Username" />
+        </Form.Item>
+        <Form.Item
+          name="password"
+          rules={[
+            { required: true, message: 'Please enter your password' },
+            { min: 8, max: 16, message: 'Password must be between 8 and 16 characters' },
+            { whitespace: true, message: 'Password cannot be only spaces' }
+          ]}
+        >
+          <Input.Password placeholder="Password" />
+        </Form.Item>
+        <Form.Item
+          name="confirmPassword"
+          dependencies={['password']}
+          hasFeedback
+          rules={[
+            {
+              required: true,
+              message: 'Please confirm your password',
+            },
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!value || getFieldValue('password') === value) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error('The two passwords that you entered do not match'));
+              },
+            }),
+          ]}
+        >
+          <Input.Password placeholder="Confirm Password" />
+        </Form.Item>
+        <Form.Item>
+          <Button type="primary" htmlType="submit" loading={loading} style={{ width: '100%' }}>
+            Register
+          </Button>
+        </Form.Item>
+      </Form>
+    </div>
+  );
+};
+
+export default Registration;

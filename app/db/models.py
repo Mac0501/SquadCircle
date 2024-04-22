@@ -148,7 +148,6 @@ class Event(Model):
         return self.group_id
 
     @staticmethod
-    @atomic
     async def update_state():
         conn = connections.get("default")
         await conn.execute_query(f"""
@@ -391,7 +390,6 @@ class Invite(Model):
         return generate_random_hex(16)
 
     @staticmethod
-    @atomic
     async def delete_expired():
         conn = connections.get("default")
         await conn.execute_query("DELETE FROM invites WHERE expiration_date < CURRENT_DATE;")

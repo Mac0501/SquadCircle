@@ -4,11 +4,13 @@ class User {
     id: number
     name: string;
     owner: boolean;
+    avatar: string;
 
     constructor(id: number, name: string, owner: boolean) {
         this.id = id;
         this.name = name;
         this.owner = owner;
+        this.avatar = `/api/users/${id}/avatar`;
     }
 
     static async get_user(id: number): Promise<User | null> {

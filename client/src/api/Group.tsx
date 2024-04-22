@@ -75,8 +75,19 @@ class Group {
         }
     }
 
-    async update(data: GroupUpdateData): Promise<boolean> {
+    async update(name?:string, description?:string|null): Promise<boolean> {
         try {
+
+            const data: { name?: string; description?: string|null } = {};
+
+            if (name !== undefined && name !== '') {
+                data.name = name;
+            }
+
+            if (description !== undefined && description !== '') {
+                data.description = description;
+            }
+
             const response = await fetch(`/api/groups/${this.id}`, {
                 method: 'PUT',
                 credentials: 'include',
@@ -183,9 +194,9 @@ class Group {
         }
     }
 
-    async add_user(user: User): Promise<UserAndGroup | null> {
+    async add_user(user_id: number): Promise<UserAndGroup | null> {
         try {
-            const response = await fetch(`/api/groups/${this.id}/users/${user.id}`, {
+            const response = await fetch(`/api/groups/${this.id}/users/${user_id}`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -204,9 +215,9 @@ class Group {
         }
     }
 
-    async remove_user(user: User): Promise<boolean> {
+    async remove_user(user_id: number): Promise<boolean> {
         try {
-            const response = await fetch(`/api/groups/${this.id}/users/${user.id}`, {
+            const response = await fetch(`/api/groups/${this.id}/users/${user_id}`, {
                 method: 'DELETE',
                 credentials: 'include',
                 headers: {
@@ -220,9 +231,9 @@ class Group {
         }
     }
 
-    async add_group_user_permission(user: User, permission: UserGroupPermissionEnum): Promise<UserGroupPermission | null> {
+    async add_group_user_permission(user_id: number, permission: UserGroupPermissionEnum): Promise<UserGroupPermission | null> {
         try {
-            const response = await fetch(`/api/groups/${this.id}/users/${user.id}/permissions`, {
+            const response = await fetch(`/api/groups/${this.id}/users/${user_id}/permissions`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -242,9 +253,9 @@ class Group {
         }
     }
 
-    async remove_group_user_permission(user: User, permission: UserGroupPermissionEnum): Promise<boolean> {
+    async remove_group_user_permission(user_id: number, permission: UserGroupPermissionEnum): Promise<boolean> {
         try {
-            const response = await fetch(`/api/groups/${this.id}/users/${user.id}/permissions`, {
+            const response = await fetch(`/api/groups/${this.id}/users/${user_id}/permissions`, {
                 method: 'DELETE',
                 credentials: 'include',
                 headers: {
@@ -256,6 +267,26 @@ class Group {
         } catch (error) {
             console.error('Error removing permission:', error);
             return false;
+        }
+    }
+
+    async get_group_user_permissions(user_id: number): Promise<UserGroupPermissionEnum[]> {
+        try {
+            const response = await fetch(`/api/groups/${this.id}/users/${user_id}/permissions`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            });
+            if (response.ok) {
+                return await response.json();
+            } else {
+                return [];
+            }
+        } catch (error) {
+            console.error('Error removing permission:', error);
+            return [];
         }
     }
 
@@ -345,10 +376,5 @@ class Group {
         }
     }
 }
-
-type GroupUpdateData = {
-    name?: string;
-    description?: string|null;
-};
 
 export default Group;

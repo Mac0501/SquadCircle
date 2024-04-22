@@ -12,7 +12,7 @@ class Auth {
 
             if (!response.ok) {
                 const errorMessage = await response.json();
-                throw new Error(errorMessage);
+                throw new Error(errorMessage.reasons[0]);
             }
     
             return response.ok;
@@ -37,7 +37,7 @@ class Auth {
 
     static async register(name: string, password: string, code: string): Promise<boolean> {
         try {
-            const response = await fetch("/api/auth", {
+            const response = await fetch("/api/auth/register", {
                 method: "POST",
                 credentials: 'include',
                 headers: {

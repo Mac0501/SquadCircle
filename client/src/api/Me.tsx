@@ -6,11 +6,13 @@ class Me {
     id: number;
     name: string;
     owner: boolean;
+    avatar: string;
 
     constructor(id: number, name: string, owner: boolean) {
         this.id = id;
         this.name = name;
         this.owner = owner;
+        this.avatar = `/api/users/me/avatar`;
     }
 
     static async get_me(): Promise<Me | null> {
@@ -34,7 +36,7 @@ class Me {
         }
     }
 
-    static async update_me(name: string|null = null, password:string|null = null): Promise<boolean> {
+    async update_me(name: string|null = null, password:string|null = null): Promise<boolean> {
         const data: any = {};
 
         if (name !== null) {
@@ -52,11 +54,11 @@ class Me {
                 },
                 body: JSON.stringify(data)
             });
-            if (response.ok && this !== undefined) {
-                const meData = await response.json();
-                const updatedMe = new Me(meData.id, meData.name, meData.owner);
-                // Update properties of the current instance
-                Object.assign(this, updatedMe);
+            const meData = await response.json();
+            if(response.ok){
+                this.id = meData.id;
+                this.name = meData.name;
+                this.owner = meData.owner;
             }
             return response.ok;
         } catch (error) {
@@ -65,7 +67,7 @@ class Me {
         }
     }
 
-    static async get_me_groups(): Promise<Group[] | null> {
+    static async get_me_groups(): Promise<Group[]> {
         try {
             const response = await fetch(`/api/users/me/groups`, {
                 method: 'GET',
@@ -78,11 +80,11 @@ class Me {
                 const groupsData = await response.json();
                 return groupsData.map((groupData: any) => new Group(groupData.id, groupData.name, groupData.description));
             } else {
-                return null;
+                return [];
             }
         } catch (error) {
             console.error('Error fetching groups for current user:', error);
-            return null;
+            return [];
         }
     }
 
@@ -153,6 +155,22 @@ class Me {
             return response.ok;
         } catch (error) {
             console.error('Error uploading avatar:', error);
+            return false;
+        }
+    }
+
+    static async delete_avatar(): Promise<boolean> {
+        try {
+            const response = await fetch(`/api/users/me/avatar`, {
+                method: 'DELETE',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            return response.ok;
+        } catch (error) {
+            console.error('Error deleting avatar:', error);
             return false;
         }
     }

@@ -215,7 +215,7 @@ async def add_group_user_permission(request: Request, my_user: User, group: Grou
     if not group:
         return json({"error": f"Group not found"}, status=404)
     
-    if my_user.id == user.id:
+    if my_user.id == user.id and not my_user.owner:
         return json({"error": f"You are not allowed to access this enpoint."}, status=403)
     
     data = filter_dict_by_keys(request.json, ["permission"], True)
@@ -223,13 +223,15 @@ async def add_group_user_permission(request: Request, my_user: User, group: Grou
 
     user_and_group = await UserAndGroup.get_or_none(group=group, user=user).prefetch_related("user_group_permissions")
 
-    user_group_permission = await UserGroupPermission.get_or_none(user_and_group_id=user_and_group.id, permission=data_permission)
-    if user_group_permission:
-        return json({"error": f"User has permission allready"}, status=400)
-
-    my_user_and_group = await UserAndGroup.get_or_none(group=group, user=my_user).prefetch_related("user_group_permissions")
-
     if user_and_group:
+
+        user_group_permission = await UserGroupPermission.get_or_none(user_and_group_id=user_and_group.id, permission=data_permission)
+        if user_group_permission:
+            return json({"error": f"User has permission allready"}, status=400)
+
+        my_user_and_group = await UserAndGroup.get_or_none(group=group, user=my_user).prefetch_related("user_group_permissions")
+
+
         if my_user.owner:
             user_group_permission = await UserGroupPermission.create(user_and_group_id=user_and_group.id, permission=data_permission)
             return json(user_group_permission.to_dict())
@@ -262,7 +264,7 @@ async def remove_group_user_permission(request: Request, my_user: User, group: G
     if not group:
         return json({"error": f"Group not found"}, status=404)
     
-    if my_user.id == user.id:
+    if my_user.id == user.id and not my_user.owner:
         return json({"error": f"You are not allowed to access this enpoint."}, status=403)
     
     data = filter_dict_by_keys(request.json, ["permission"], True)
@@ -270,13 +272,15 @@ async def remove_group_user_permission(request: Request, my_user: User, group: G
 
     user_and_group = await UserAndGroup.get_or_none(group=group, user=user).prefetch_related("user_group_permissions")
 
-    user_group_permission = await UserGroupPermission.get_or_none(user_and_group_id=user_and_group.id, permission=data_permission)
-    if not user_group_permission:
-        return json({"error": f"User doesnt have permission allready"}, status=400)
-
-    my_user_and_group = await UserAndGroup.get_or_none(group=group, user=my_user).prefetch_related("user_group_permissions")
-
     if user_and_group:
+
+        user_group_permission = await UserGroupPermission.get_or_none(user_and_group_id=user_and_group.id, permission=data_permission)
+        if not user_group_permission:
+            return json({"error": f"User doesnt have permission allready"}, status=400)
+
+        my_user_and_group = await UserAndGroup.get_or_none(group=group, user=my_user).prefetch_related("user_group_permissions")
+
+
         if my_user.owner:
             await user_group_permission.delete()
             return json({"message": f"UserGroupPermission deleted successfully"})
@@ -294,5 +298,23 @@ async def remove_group_user_permission(request: Request, my_user: User, group: G
                         await user_group_permission.delete()
                         return json({"message": f"UserGroupPermission deleted successfully"})
         return json({"error": f"You are not allowed to access this enpoint."}, status=403)
+    else:
+        return json({"error": f"User is not in the Group"}, status=400)
+
+@groups.route("/<group_id:int>/users/<user_id:int>/permissions", methods=["GET"], name="get_user_groups_permissions")
+@protected()
+@check_for_permission([UserGroupPermissionEnum.MANAGE_USERS])
+async def get_user_groups_permissions(request: Request, my_user: User, group: Group|None, user: User|None):
+
+    if not user:
+        return json({"error": f"User not found"}, status=404)
+    
+    if not group:
+        return json({"error": f"Group not found"}, status=404)
+    
+
+    user_and_group = await UserAndGroup.get_or_none(user_id= user.id, group_id=group.id).prefetch_related("user_group_permissions")
+    if user_and_group:
+        return json([user_group_permission.permission for user_group_permission in user_and_group.user_group_permissions])
     else:
         return json({"error": f"User is not in the Group"}, status=400)

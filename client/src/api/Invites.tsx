@@ -69,6 +69,10 @@ class Invite {
         }
     }
 
+    get_link(): string{
+        return `${window.location.origin}/registration/${this.code}`
+    }
+
     static async verifyCode(code: string): Promise<boolean> {
         try {
             const response = await fetch('/api/invites/verify_code', {

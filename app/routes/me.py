@@ -115,6 +115,23 @@ async def upload_avatar(request: Request, my_user: User):
             return json({"error": "Avatar file not found in the request"}, status=400)
     else:
         return json({"error": f"User not found"}, status=404)
+    
+@me.route("/avatar", methods=["DELETE"], name="delete_avatar")
+@protected()
+async def delete_avatar(request: Request, my_user: User):
+    if my_user:
+        avatar_path = f"{request.app.ctx.Config['Resources']['users']}/{my_user.id}/avatar.webp"
+        if os.path.isfile(avatar_path):
+            try:
+                os.remove(avatar_path)
+                return json({"message": "Avatar deleted successfully"})
+            except Exception as e:
+                return json({"error": f"Failed to delete avatar: {str(e)}"}, status=500)
+        else:
+            return json({"error": "Avatar file not found"}, status=404)
+    else:
+        return json({"error": f"User not found"}, status=404)
+
 
 
 @me.route("/events", methods=["GET"], name="get_me_events")
@@ -146,7 +163,7 @@ async def get_me_events(request: Request, my_user: User):
     return json({"incomplete_events":incomplete_events, "other_events":other_events})
 
 
-@me.route("/groups/<group_id:int>/events", methods=["GET"], name="get_me_group_events")
+@me.route("/group/<group_id:int>/events", methods=["GET"], name="get_me_group_events")
 @protected()
 @atomic()
 async def get_me_group_events(request: Request, my_user: User, group: Group|None):
@@ -209,7 +226,7 @@ async def get_me_votes(request: Request, my_user: User):
     return json({"incomplete_votes":incomplete_votes, "other_votes":other_votes})
 
 
-@me.route("/groups/<group_id:int>/votes", methods=["GET"], name="get_me_group_votes")
+@me.route("/group/<group_id:int>/votes", methods=["GET"], name="get_me_group_votes")
 @protected()
 @atomic()
 async def get_me_group_votes(request: Request, my_user: User, group: Group|None):

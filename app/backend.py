@@ -32,7 +32,7 @@ my_views = (
     ('/register', Register),
 )
 
-initialize(app, authenticate=authenticate, secret=config["Statik"]["secret"], cookie_secure=True, cookie_secret=True, cookie_set=True, user_id="id", url_prefix="/api/auth", retrieve_user=retrieve_user, class_views=my_views)
+initialize(app, authenticate=authenticate, secret=config["Statik"]["secret"], cookie_secure=True, cookie_secret=True, cookie_set=True, user_id="id", url_prefix="/api/auth", retrieve_user=retrieve_user, class_views=my_views, expiration_delta=60*24*7)
 
 register_tortoise(app, config=TORTOISE_ORM, generate_schemas=False)
 
