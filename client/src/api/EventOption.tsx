@@ -7,14 +7,26 @@ class EventOption {
     start_time: string; // Assuming HH:MM:SS format
     end_time: string | null; // Assuming HH:MM:SS format or null
     event_id: number;
+    user_event_option_responses: UserEventOptionResponse[] | null;
 
-
-    constructor(id: number, date: string, start_time: string, end_time: string | null = null, event_id: number) {
+    constructor(id: number, date: string, start_time: string, end_time: string | null = null, event_id: number, user_event_option_responses: UserEventOptionResponse[] | null = null) {
         this.id = id;
         this.date = date;
         this.start_time = start_time;
         this.end_time = end_time;
         this.event_id = event_id;
+        this.user_event_option_responses = user_event_option_responses;
+    }
+
+    static fromJson(json: any): EventOption {
+        return new EventOption(
+            json.id,
+            json.date,
+            json.start_time,
+            json.end_time,
+            json.event_id,
+            json.user_event_option_responses ? json.user_event_option_responses.map((responseData: any) => UserEventOptionResponse.fromJson(responseData)) : null
+        );
     }
 
     static async get_event_option(id: number): Promise<EventOption | null> {
@@ -104,7 +116,7 @@ class EventOption {
             });
             if (response.ok) {
                 const responseData = await response.json();
-                return responseData.map((responseData: any) => new UserEventOptionResponse(responseData.id, responseData.response, responseData.event_option_id, responseData.user_and_group_id));
+                return responseData.map((responseData: any) => UserEventOptionResponse.fromJson(responseData));
             } else {
                 return null;
             }
@@ -126,7 +138,7 @@ class EventOption {
             });
             if (fetch_response.ok) {
                 const responseData = await fetch_response.json();
-                return new UserEventOptionResponse(responseData.id, responseData.response, responseData.event_option_id, responseData.user_and_group_id);
+                return UserEventOptionResponse.fromJson(responseData);
             } else {
                 return null;
             }

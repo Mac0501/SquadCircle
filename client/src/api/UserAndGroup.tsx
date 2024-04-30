@@ -9,6 +9,10 @@ class UserAndGroup {
         this.group_id = group_id;
     }
 
+    static fromJson(json: any): UserAndGroup {
+        return new UserAndGroup(json.id, json.user_id, json.group_id);
+    }
+
     static async get_user_and_group(id: number): Promise<UserAndGroup | null> {
         try {
             const response = await fetch(`/api/user_and_group/${id}`, {

@@ -1,6 +1,7 @@
 import Group from "./Group";
 import Event from "./Event";
 import UserGroupPermission from "./UserGroupPermission";
+import { UserGroupPermissionEnum } from "../utils/types";
 
 class Me {
     id: number;
@@ -268,6 +269,26 @@ class Me {
         } catch (error) {
             console.error('Error fetching votes for group:', error);
             return null;
+        }
+    }
+
+    static async get_group_permissions(group_id: number): Promise<UserGroupPermissionEnum[]> {
+        try {
+            const response = await fetch(`/api/users/me/group/${group_id}/permissions`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            });
+            if (response.ok) {
+                return await response.json();
+            } else {
+                return [];
+            }
+        } catch (error) {
+            console.error('Error removing permission:', error);
+            return [];
         }
     }
 }

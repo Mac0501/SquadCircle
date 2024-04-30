@@ -7,14 +7,24 @@ import Event from "./Event";
 import Vote from "./Vote";
 
 class Group {
-    id: number
+    id: number;
     name: string;
-    description: string|null;
+    description: string | null;
+    events: Event[] | null;
+    votes: Vote[] | null;
 
-    constructor(id: number, name: string, description: string|null = null) {
+    constructor(id: number, name: string, description: string | null = null, events: Event[] | null = null, votes: Vote[] | null = null) {
         this.id = id;
         this.name = name;
         this.description = description;
+        this.events = events;
+        this.votes = votes;
+    }
+
+    static fromJson(json: any): Group {
+        const events = json.events ? json.events.map((eventData: any) => Event.fromJson(eventData)) : null;
+        const votes = json.votes ? json.votes.map((voteData: any) => Vote.fromJson(voteData)) : null;
+        return new Group(json.id, json.name, json.description, events, votes);
     }
 
     static async get_group(id: number): Promise<Group | null> {
@@ -28,7 +38,7 @@ class Group {
             });
             if (response.ok) {
                 const groupData = await response.json();
-                return new Group(groupData.id, groupData.name, groupData.description);
+                return Group.fromJson(groupData);
             } else {
                 return null;
             }
@@ -49,7 +59,7 @@ class Group {
             });
             if (response.ok) {
                 const groupsData = await response.json();
-                return groupsData.map((groupData: any) => new Group(groupData.id, groupData.name, groupData.description));
+                return groupsData.map((groupData: any) => Group.fromJson(groupData));
             } else {
                 return null;
             }
@@ -301,17 +311,17 @@ class Group {
             });
             if (response.ok) {
                 const eventsData = await response.json();
-                return eventsData.map((eventData: any) => new Event(eventData.id, eventData.title, eventData.color, eventData.state, eventData.group_id, eventData.description, eventData.choosen_event_option_id));
+                return this.events = eventsData.map((eventData: any) => Event.fromJson(eventData));
             } else {
-                return null;
+                return this.events = null;
             }
         } catch (error) {
             console.error('Error fetching events for group:', error);
-            return null;
+            return this.events = null;
         }
     }
 
-    async create_event_for_group(title: string, color: string, state: EventStateEnum = EventStateEnum.OPEN, description: string|null = null): Promise<Event | null> {
+    async create_event_for_group(title: string, color: string, state: EventStateEnum = EventStateEnum.VOTING, description: string|null = null): Promise<Event | null> {
         try {
             const response = await fetch(`/api/groups/${this.id}/events`, {
                 method: 'POST',
@@ -319,11 +329,16 @@ class Group {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({"title": title, "color":color, "state":state, "description":description})
+                body: JSON.stringify({ "title": title, "color": color, "state": state, "description": description })
             });
             if (response.ok) {
                 const eventData = await response.json();
-                return new Event(eventData.id, eventData.title, eventData.color, eventData.state, eventData.group_id, eventData.description, eventData.choosen_event_option_id);
+                const newEvent = Event.fromJson(eventData);
+                // Add the new event to this.events
+                if (newEvent && this.events) {
+                    this.events.push(newEvent);
+                }
+                return newEvent;
             } else {
                 return null;
             }
@@ -331,7 +346,7 @@ class Group {
             console.error('Error creating event for group:', error);
             return null;
         }
-    }
+    }    
 
     async create_vote_for_group(title: string, multi_select: boolean = false): Promise<Vote | null> {
         try {
@@ -345,7 +360,11 @@ class Group {
             });
             if (response.ok) {
                 const voteData = await response.json();
-                return new Vote(voteData.id, voteData.title, voteData.multi_select, voteData.group_id);
+                const newVote = Vote.fromJson(voteData);
+                if (newVote && this.votes) {
+                    this.votes.push(newVote);
+                }
+                return newVote;
             } else {
                 return null;
             }
@@ -357,7 +376,7 @@ class Group {
 
     async get_all_votes_for_group(): Promise<Vote[] | null> {
         try {
-            const response = await fetch(`/api/groups/${this.id}/events`, {
+            const response = await fetch(`/api/groups/${this.id}/votes`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -366,7 +385,7 @@ class Group {
             });
             if (response.ok) {
                 const voteData = await response.json();
-                return voteData.map((eventData: any) => new Vote(voteData.id, voteData.title, voteData.multi_select, voteData.group_id));
+                return this.votes = voteData.map((voteData: any) => Vote.fromJson(voteData))
             } else {
                 return null;
             }

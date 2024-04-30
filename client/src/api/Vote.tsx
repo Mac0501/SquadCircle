@@ -1,16 +1,23 @@
 import VoteOption from "./VoteOption";
 
 class Vote {
-    id: number
+    id: number;
     title: string;
-    multi_select:boolean
+    multi_select: boolean;
     group_id: number;
+    vote_options: VoteOption[] | null;
 
-    constructor(id: number, title: string, multi_select: boolean=false, group_id: number) {
+    constructor(id: number, title: string, multi_select: boolean = false, group_id: number, vote_options: VoteOption[] | null = null) {
         this.id = id;
         this.title = title;
         this.multi_select = multi_select;
         this.group_id = group_id;
+        this.vote_options = vote_options;
+    }
+
+    static fromJson(json: any): Vote {
+        const vote_options = json.vote_options ? json.vote_options.map((vote_optionData: any) => new VoteOption(vote_optionData.id, vote_optionData.title, vote_optionData.vote_id)) : null;
+        return new Vote(json.id, json.title, json.multi_select, json.group_id, vote_options);
     }
 
     static async get_vote(id: number): Promise<Vote | null> {
@@ -114,18 +121,23 @@ class Vote {
         }
     }
 
-    async create_vote_options_for_vote(): Promise<VoteOption | null> {
+    async create_vote_options_for_vote(title: string): Promise<VoteOption | null> {
         try {
             const response = await fetch(`/api/votes/${this.id}/vote_options`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json'
-                }
+                },
+                body: JSON.stringify({ "title": title})
             });
             if (response.ok) {
                 const vote_optionData = await response.json();
-                return new VoteOption(vote_optionData.id, vote_optionData.title, vote_optionData.vote_id);
+                const newVoteOption = VoteOption.fromJson(vote_optionData);
+                if(this.vote_options !== null && newVoteOption){
+                    this.vote_options.push(newVoteOption)
+                }
+                return newVoteOption;
             } else {
                 return null;
             }

@@ -257,3 +257,18 @@ async def get_me_group_votes(request: Request, my_user: User, group: Group|None)
     other_votes = await conn.execute_query_dict(query_other)
     
     return json({"incomplete_votes":incomplete_votes, "other_votes":other_votes})
+
+
+@me.route("/group/<group_id:int>/permissions", methods=["GET"], name="get_me_group_permissions")
+@protected()
+async def get_me_group_permissions(request: Request, my_user: User, group: Group|None):
+    
+    if not group:
+        return json({"error": f"Group not found"}, status=404)
+    
+
+    user_and_group = await UserAndGroup.get_or_none(user_id= my_user.id, group_id=group.id).prefetch_related("user_group_permissions")
+    if user_and_group:
+        return json([user_group_permission.permission for user_group_permission in user_and_group.user_group_permissions])
+    else:
+        return json({"error": f"User is not in the Group"}, status=400)

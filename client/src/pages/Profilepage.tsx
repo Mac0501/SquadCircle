@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, Input, message, Modal, Button, Row } from 'antd';
+import { Form, Input, message, Modal, Button, Row, Typography } from 'antd';
 import { UploadOutlined, DeleteOutlined, LogoutOutlined, LoadingOutlined } from '@ant-design/icons';
 import Me from '../api/Me';
 import UserAvatar from '../components/UserAvatar';
@@ -47,6 +47,7 @@ const ProfilePage: React.FC<{ me: Me; setSidabarAvatarKey: React.Dispatch<React.
     // Handle avatar upload
     const handleAvatarUpload = async (file: File) => {
         setUploading(true)
+        setHover(false)
         try {
             const success = await Me.upload_avatar(file);
             if (success) {
@@ -66,6 +67,7 @@ const ProfilePage: React.FC<{ me: Me; setSidabarAvatarKey: React.Dispatch<React.
 
     // Handle avatar deletion
     const handleAvatarDelete = async () => {
+        setHover(false)
         try {
             const success = await Me.delete_avatar();
             if (success) {
@@ -129,7 +131,7 @@ const ProfilePage: React.FC<{ me: Me; setSidabarAvatarKey: React.Dispatch<React.
 
     return (
         <div>
-            <Row gutter={[16, 16]} justify="center">
+            <Row justify="center">
             <div style={{
             position: 'relative',
             display: 'inline-block'
@@ -149,7 +151,7 @@ const ProfilePage: React.FC<{ me: Me; setSidabarAvatarKey: React.Dispatch<React.
                         }}>
                     <LoadingOutlined style={{ fontSize: '30px', color: 'white' }} spin />
                     </div>)}
-                    {hover && (
+                    {hover && !uploading && (
                         <div style={{
                             position: 'absolute',
                             top: '50%',
@@ -166,17 +168,32 @@ const ProfilePage: React.FC<{ me: Me; setSidabarAvatarKey: React.Dispatch<React.
                     )}
                 </div>
             </Row>
-            <Row gutter={[16, 16]} justify="center">
-                <Input
-                    placeholder="Name"
-                    variant='borderless'
-                    value={nameEdit}
-                    onChange={(e) => setNameEdit(e.target.value)}
-                    onBlur={handleNameBlur}
-                    style={{ textAlign: "center", fontSize: '16px', width:'auto' }}
-                />
+            <Row justify="center">
+
+                <Typography.Title 
+                    editable={{ 
+                        onChange: (e) => {
+                            setNameEdit(e);
+                        },
+                        onEnd: () => {
+                            handleNameBlur();
+                        },
+                        maxLength:32,
+                        onCancel: () => {
+                            handleNameBlur();
+                        },
+                    }} 
+                    level={5} 
+                    style={{ 
+                        fontSize: '16px', 
+                        width:'auto', 
+                        marginTop:"10px"
+                    }}
+                >
+                    {nameEdit}
+                </Typography.Title>
             </Row>
-            <Row gutter={[16, 16]} justify="center">
+            <Row justify="center">
                 <Button style={{ marginTop: '10px' }} onClick={() => setPasswordModalVisible(true)}>
                     Change Password
                 </Button>
@@ -224,7 +241,7 @@ const ProfilePage: React.FC<{ me: Me; setSidabarAvatarKey: React.Dispatch<React.
                     </Form>
                 </Modal>
             </Row>
-            <Row gutter={[16, 16]} justify="center">
+            <Row justify="center">
                 <Button style={{ marginTop: '10px' }} type="primary" danger icon={<LogoutOutlined />} onClick={handleLogout}>
                     Logout
                 </Button>

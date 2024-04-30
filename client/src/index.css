@@ -25,3 +25,29 @@ code {
   filter: brightness(0.5); /* Adjust the blur intensity as needed */
   transition: 0.2s;
 }
+
+.test-idiot {
+  height: 100% !important;
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #ddd;
+  border-radius: 5px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #999;
+  border-radius: 5px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}

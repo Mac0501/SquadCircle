@@ -4,9 +4,10 @@ from sanic_jwt import protected
 from sanic.request import Request
 from sanic.response import json
 from tortoise.transactions import atomic
-from app.db.models import Event, Group, Invite, User, UserAndGroup, UserGroupPermission, Vote
+from app.db.models import Event, EventOption, Group, Invite, User, UserAndGroup, UserEventOptionResponse, UserGroupPermission, UserVoteOptionResponse, Vote, VoteOption
 from app.utils.decorators import check_for_permission, is_owner
 from app.utils.tools import filter_dict_by_keys
+from tortoise.query_utils import Prefetch
 from app.utils.types import UserGroupPermissionEnum
 
 groups = Blueprint("groups", url_prefix="/groups")
@@ -94,8 +95,14 @@ async def create_group_invite(request: Request, my_user: User, group: Group|None
 async def get_all_events_for_group(request: Request, my_user: User, group: Group|None):
     if not group:
         return json({"error": "Group not found"}, status=404)
+    events = await Event.filter(group_id=group.id).prefetch_related(
+        Prefetch("event_options", queryset=EventOption.all().prefetch_related(
+            Prefetch("user_event_option_responses", queryset=UserEventOptionResponse.all().prefetch_related(
+                "user_and_group"
+            ))
+        ))
+    )
     await Event.update_state()
-    events = await Event.filter(group_id=group.id)
     return json([event.to_dict() for event in events])
 
 
@@ -117,7 +124,14 @@ async def create_event_for_group(request: Request, my_user: User, group: Group|N
 async def get_all_votes_for_group(request: Request, my_user: User, group: Group|None):
     if not group:
         return json({"error": "Group not found"}, status=404)
-    votes = await Vote.filter(group_id=group.id)
+
+    votes = await Vote.filter(group_id=group.id).prefetch_related(
+        Prefetch("vote_options", queryset=VoteOption.all().prefetch_related(
+            Prefetch("user_vote_option_responses", queryset=UserVoteOptionResponse.all().prefetch_related(
+                "user_and_group"
+            ))
+        ))
+    )
     return json([vote.to_dict() for vote in votes])
 
 

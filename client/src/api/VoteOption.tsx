@@ -4,33 +4,18 @@ class VoteOption {
     id: number;
     title: string;
     vote_id: number;
+    user_vote_option_responses: UserVoteOptionResponse[] | null;
 
-
-    constructor(id: number, title: string, vote_id: number) {
+    constructor(id: number, title: string, vote_id: number, user_vote_option_responses: UserVoteOptionResponse[] | null = null) {
         this.id = id;
         this.title = title;
         this.vote_id = vote_id;
+        this.user_vote_option_responses = user_vote_option_responses;
     }
 
-    static async get_vote_option(id: number): Promise<VoteOption | null> {
-        try {
-            const response = await fetch(`/api/vote_options/${id}`, {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            if (response.ok) {
-                const vote_optionData = await response.json();
-                return new VoteOption(vote_optionData.id, vote_optionData.title, vote_optionData.vote_id);
-            } else {
-                return null;
-            }
-        } catch (error) {
-            console.error('Error fetching vote_option:', error);
-            return null;
-        }
+    static fromJson(json: any): VoteOption {
+        const user_vote_option_responses = json.user_vote_option_responses ? json.user_vote_option_responses.map((responseData: any) => UserVoteOptionResponse.fromJson(responseData)) : null;
+        return new VoteOption(json.id, json.title, json.vote_id, user_vote_option_responses);
     }
 
     async delete(): Promise<boolean> {
@@ -81,7 +66,7 @@ class VoteOption {
             });
             if (response.ok) {
                 const responseData = await response.json();
-                return responseData.map((responseData: any) => new UserVoteOptionResponse(responseData.id, responseData.vote_option_id, responseData.user_and_group_id));
+                return responseData.map((responseData: any) => UserVoteOptionResponse.fromJson(responseData));
             } else {
                 return null;
             }
@@ -102,7 +87,7 @@ class VoteOption {
             });
             if (response.ok) {
                 const responseData = await response.json();
-                return new UserVoteOptionResponse(responseData.id, responseData.vote_option_id, responseData.user_and_group_id);
+                return UserVoteOptionResponse.fromJson(responseData);
             } else {
                 return null;
             }
@@ -129,19 +114,24 @@ class VoteOption {
         }
     }
 
-    async toggel_user_vote_option_response(): Promise<boolean> {
+    async toggel_user_vote_option_response(): Promise<UserVoteOptionResponse|null> {
         try {
-            const response = await fetch(`/api/vote_options/${this.id}/user_vote_option_response`, {
+            const response = await fetch(`/api/vote_options/${this.id}/user_vote_option_response/toggel`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json'
                 }
             });
-            return response.ok;
+            if (response.ok) {
+                const responseData = await response.json();
+                return UserVoteOptionResponse.fromJson(responseData);
+            } else {
+                return null;
+            }
         } catch (error) {
             console.error('Error creating user vote option response:', error);
-            return false;
+            return null;
         }
     }
 }

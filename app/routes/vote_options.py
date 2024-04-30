@@ -65,23 +65,25 @@ async def get_user_vote_option_responses(request: Request, my_user: User, vote_o
 @atomic()
 async def create_user_vote_option_response(request: Request, my_user: User, vote_option: VoteOption|None):
     
+
+    if not vote_option:
+        return json({"error": f"VoteOption not found"}, status=404)
+    
     conn = connections.get("default")
     delete_incomplete = f"""
-    DELETE FROM user_vote_option_response
+    DELETE FROM user_vote_option_responses
     WHERE user_and_group_id IN (
         SELECT uag.id
-        FROM user_and_group AS uag
-        INNER JOIN vote_option AS vo ON uag.group_id = vo.vote_id
+        FROM user_and_groups AS uag
+        INNER JOIN vote_options AS vo ON vo.vote_id = {vote_option.id}
+        INNER JOIN votes AS v ON v.id = {vote_option.vote_id}
         WHERE uag.user_id = {my_user.id}
-        AND vo.id != {vote_option.id}
-        AND vo.multi_select = 0
+        AND vo.vote_id == {vote_option.vote_id}
+        AND v.multi_select = 0
     );
     """
 
     await conn.execute_query(delete_incomplete)
-
-    if not vote_option:
-        return json({"error": f"VoteOption not found"}, status=404)
     
     await vote_option.fetch_related("vote")
     user_and_group = await UserAndGroup.get_or_none(user_id=my_user.id, group_id=vote_option.vote.group_id)
@@ -142,14 +144,15 @@ async def create_user_vote_option_response_toggel(request: Request, my_user: Use
     else:
         conn = connections.get("default")
         delete_incomplete = f"""
-        DELETE FROM user_vote_option_response
+        DELETE FROM user_vote_option_responses
         WHERE user_and_group_id IN (
             SELECT uag.id
-            FROM user_and_group AS uag
-            INNER JOIN vote_option AS vo ON uag.group_id = vo.vote_id
+            FROM user_and_groups AS uag
+            INNER JOIN vote_options AS vo ON vo.vote_id = {vote_option.id}
+            INNER JOIN votes AS v ON v.id = {vote_option.vote_id}
             WHERE uag.user_id = {my_user.id}
-            AND vo.id != {vote_option.id}
-            AND vo.multi_select = 0
+            AND vo.vote_id == {vote_option.vote_id}
+            AND v.multi_select = 0
         );
         """
         await conn.execute_query(delete_incomplete)

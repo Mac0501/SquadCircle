@@ -132,7 +132,7 @@ const UsersGroupPage: React.FC<UsersProps> = ({ me, group, users, members, mePer
                 await group.add_group_user_permission(aktMember.id, permission);
             });
             selectedMember.remove_permissions.forEach(async (permission: UserGroupPermissionEnum) => {
-                await group.add_group_user_permission(aktMember.id, permission);
+                await group.remove_group_user_permission(aktMember.id, permission);
             });
         }
     };

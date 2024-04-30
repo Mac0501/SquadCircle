@@ -142,7 +142,18 @@ class Event(Model):
         table = "events"
 
     def to_dict(self) -> Dict[str, any]:
-        return {"id":self.id, "title":self.title, "color":self.color, "description":self.description, "state":self.state, "group_id": self.group_id, "choosen_event_option_id":self.choosen_event_option_id}
+        event_options_dict = [event_option.to_dict() for event_option in getattr(self, 'event_options', [])] if self.event_options._fetched else None
+        return {
+            "id": self.id,
+            "title": self.title,
+            "color": self.color,
+            "vote_end_date": self.vote_end_date.strftime("%H:%M:%S") if self.vote_end_date else None,
+            "description": self.description,
+            "state": self.state,
+            "group_id": self.group_id,
+            "choosen_event_option_id": self.choosen_event_option_id,
+            "event_options": event_options_dict
+        }
 
     async def get_group_id(self) -> int:
         return self.group_id
@@ -150,6 +161,7 @@ class Event(Model):
     @staticmethod
     async def update_state():
         conn = connections.get("default")
+        
         await conn.execute_query(f"""
             UPDATE events
             SET state = {EventStateEnum.ACTIVE},
@@ -230,12 +242,14 @@ class EventOption(Model):
         table = "event_options"
 
     def to_dict(self) -> Dict[str, any]:
+        user_event_option_responses_dict = [user_event_option_responses.to_dict() for user_event_option_responses in getattr(self, 'user_event_option_responses', [])] if self.user_event_option_responses._fetched else None
         return {
             "id": self.id,
             "date": self.date.isoformat(),
             "start_time": self.start_time.strftime("%H:%M:%S"),
             "end_time": self.end_time.strftime("%H:%M:%S") if self.end_time else None,
-            "event_id": self.event_id
+            "event_id": self.event_id,
+            "user_event_option_responses": user_event_option_responses_dict
         }
     
     async def get_group_id(self) -> int:
@@ -267,7 +281,11 @@ class UserEventOptionResponse(Model):
         table = "user_event_option_responses"
 
     def to_dict(self) -> Dict[str, any]:
-        return {"id":self.id, "response":self.response, "event_option_id": self.event_option_id, "user_and_group_id":self.user_and_group_id}
+        user_and_group_dict = None
+        if self.user_and_group:
+            user_and_group_dict = self.user_and_group.to_dict()
+
+        return {"id":self.id, "response":self.response, "event_option_id": self.event_option_id, "user_and_group_id":self.user_and_group_id, "user_and_group":user_and_group_dict}
     
     async def get_group_id(self) -> int:
         user_and_group = await UserAndGroup.get(id=self.user_and_group_id)
@@ -293,7 +311,14 @@ class Vote(Model):
         table = "votes"
 
     def to_dict(self) -> Dict[str, any]:
-        return {"id":self.id, "title":self.title, "multi_select":self.multi_select, "group_id": self.group_id}
+        vote_options_dict = [vote_option.to_dict() for vote_option in getattr(self, 'vote_options', [])] if self.vote_options._fetched else None
+        return {
+            "id":self.id, 
+            "title":self.title, 
+            "multi_select":self.multi_select, 
+            "group_id": self.group_id,
+            "vote_options": vote_options_dict
+            }
 
     async def get_group_id(self) -> int:
         return self.group_id
@@ -318,10 +343,12 @@ class VoteOption(Model):
         table = "vote_options"
 
     def to_dict(self) -> Dict[str, any]:
+        user_vote_option_responses_dict = [user_vote_option_responses.to_dict() for user_vote_option_responses in getattr(self, 'user_vote_option_responses', [])] if self.user_vote_option_responses._fetched else None
         return {
             "id": self.id,
             "title":self.title,
-            "vote_id": self.vote_id
+            "vote_id": self.vote_id,
+            "user_vote_option_responses": user_vote_option_responses_dict
         }
     
     async def get_group_id(self) -> int:
@@ -352,7 +379,10 @@ class UserVoteOptionResponse(Model):
         table = "user_vote_option_responses"
 
     def to_dict(self) -> Dict[str, any]:
-        return {"id":self.id, "vote_option_id": self.vote_option_id, "user_and_group_id":self.user_and_group_id}
+        user_and_group_dict = None
+        if self.user_and_group:
+            user_and_group_dict = self.user_and_group.to_dict()
+        return {"id":self.id, "vote_option_id": self.vote_option_id, "user_and_group_id":self.user_and_group_id, "user_and_group":user_and_group_dict}
     
     async def get_group_id(self) -> int:
         user_and_group = await UserAndGroup.get(id=self.user_and_group_id)

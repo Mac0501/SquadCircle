@@ -13,6 +13,10 @@ class User {
         this.avatar = `/api/users/${id}/avatar`;
     }
 
+    static fromJson(json: any): User {
+        return new User(json.id, json.name, json.owner);
+    }
+
     static async get_user(id: number): Promise<User | null> {
         try {
             const response = await fetch(`/api/users/${id}`, {
@@ -24,7 +28,7 @@ class User {
             });
             if (response.ok) {
                 const userData = await response.json();
-                return new User(userData.id, userData.name, userData.owner);
+                return User.fromJson(userData);
             } else {
                 return null;
             }
@@ -45,7 +49,7 @@ class User {
             });
             if (response.ok) {
                 const usersData = await response.json();
-                return usersData.map((userData: any) => new User(userData.id, userData.name, userData.owner));
+                return usersData.map((userData: any) => User.fromJson(userData));
             } else {
                 return null;
             }
@@ -82,7 +86,7 @@ class User {
             });
             if (response.ok) {
                 const groupsData = await response.json();
-                return groupsData.map((groupData: any) => new Group(groupData.id, groupData.name, groupData.description));
+                return groupsData.map((groupData: any) => Group.fromJson(groupData));
             } else {
                 return null;
             }

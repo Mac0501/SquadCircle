@@ -13,7 +13,6 @@ const UserAvatar: React.FC<UserAvatarProps> = ({ user, size=30 }) => {
 
     const handleAvatarError = () => {
         setAvatarError(true);
-        console.log("me")
         return true;
     };
 

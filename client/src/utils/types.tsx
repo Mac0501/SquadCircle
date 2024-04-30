@@ -19,4 +19,16 @@ enum UserGroupPermissionEnum {
     MANAGE_VOTES = 5
 }
 
-export { EventStateEnum, EventOptionResponseEnum, UserGroupPermissionEnum };
+enum EventColorEnum {
+    RASSPBERRY = 'ff686b',
+    ROSE = 'ef91b6',
+    LILAC = 'e192ff',
+    BABY_BLUE = 'b2cefe',
+    LAVENDER = 'ba97fb',
+    MINT = 'a3ffda',
+    SEA_GREEN = 'abe5aa',
+    CORAL = 'f4946a',
+    PEACH = 'f7b869',
+}
+
+export { EventStateEnum, EventOptionResponseEnum, UserGroupPermissionEnum, EventColorEnum };

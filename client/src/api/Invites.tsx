@@ -11,6 +11,15 @@ class Invite {
         this.group_id = group_id;
     }
 
+    static fromJson(json: any): Invite {
+        return new Invite(
+            json.id,
+            json.code,
+            json.expiration_date,
+            json.group_id
+        );
+    }
+
     static async get_invite(id: number): Promise<Invite | null> {
         try {
             const response = await fetch(`/api/invites/${id}`, {
@@ -22,7 +31,7 @@ class Invite {
             });
             if (response.ok) {
                 const inviteData = await response.json();
-                return new Invite(inviteData.id, inviteData.code, inviteData.expiration_date, inviteData.group_id);
+                return Invite.fromJson(inviteData);
             } else {
                 return null;
             }
@@ -43,7 +52,7 @@ class Invite {
             });
             if (response.ok) {
                 const invitesData = await response.json();
-                return invitesData.map((inviteData: any) => new Invite(inviteData.id, inviteData.code, inviteData.expiration_date, inviteData.group_id));
+                return invitesData.map((inviteData: any) => Invite.fromJson(inviteData));
             } else {
                 return null;
             }
