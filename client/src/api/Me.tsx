@@ -2,6 +2,7 @@ import Group from "./Group";
 import Event from "./Event";
 import UserGroupPermission from "./UserGroupPermission";
 import { UserGroupPermissionEnum } from "../utils/types";
+import Vote from "./Vote";
 
 class Me {
     id: number;
@@ -188,8 +189,8 @@ class Me {
             if (response.ok) {
                 const user_eventsData = await response.json();
                 const { incomplete_events, other_events } = user_eventsData;
-                const incompleteEventsArray: Event[] = incomplete_events.map((eventData: any) => new Event(eventData.id, eventData.title, eventData.color, eventData.state, eventData.group_id, eventData.description, eventData.choosen_event_option_id));
-                const otherEventsArray: Event[] = other_events.map((eventData: any) => new Event(eventData.id, eventData.title, eventData.color, eventData.state, eventData.group_id, eventData.description, eventData.choosen_event_option_id));
+                const incompleteEventsArray: Event[] = incomplete_events.map((eventData: any) => Event.fromJson(eventData));
+                const otherEventsArray: Event[] = other_events.map((eventData: any) => Event.fromJson(eventData));
                 return { incomplete_events: incompleteEventsArray, other_events: otherEventsArray };
             } else {
                 return null;
@@ -200,7 +201,7 @@ class Me {
         }
     }
 
-    static async get_me_group_events(group_id: number): Promise<UserEventsResponse | null> {
+    static async get_me_group_events(group_id: number, allEvents: Event[]): Promise<{ meGroupEvents: Event[] | null, meGroupCalender: Event[] | null }> {
         try {
             const response = await fetch(`/api/users/me/group/${group_id}/events`, {
                 method: 'GET',
@@ -212,17 +213,31 @@ class Me {
             if (response.ok) {
                 const user_eventsData = await response.json();
                 const { incomplete_events, other_events } = user_eventsData;
-                const incompleteEventsArray: Event[] = incomplete_events.map((eventData: any) => new Event(eventData.id, eventData.title, eventData.color, eventData.state, eventData.group_id, eventData.description, eventData.choosen_event_option_id));
-                const otherEventsArray: Event[] = other_events.map((eventData: any) => new Event(eventData.id, eventData.title, eventData.color, eventData.state, eventData.group_id, eventData.description, eventData.choosen_event_option_id));
-                return { incomplete_events: incompleteEventsArray, other_events: otherEventsArray };
+    
+                // Filter and match incomplete events
+                const incompleteEventsArray: Event[] = incomplete_events.map((eventData: any) => {
+                    const matchedEvent = allEvents.find(event => event.id === eventData.id);
+                    if (matchedEvent) return matchedEvent;
+                    return null;
+                }).filter(Boolean);
+    
+                // Filter and match other events
+                const otherEventsArray: Event[] = other_events.map((eventData: any) => {
+                    const matchedEvent = allEvents.find(event => event.id === eventData.event_id);
+                    if (matchedEvent) return matchedEvent;
+                    return null;
+                }).filter(Boolean);
+    
+                return { meGroupEvents: incompleteEventsArray, meGroupCalender: otherEventsArray };
             } else {
-                return null;
+                return { meGroupEvents: null, meGroupCalender: null };
             }
         } catch (error) {
             console.error('Error fetching events for group:', error);
-            return null;
+            return { meGroupEvents: null, meGroupCalender: null };
         }
     }
+    
 
     static async get_me_votes(): Promise<UserVotesResponse | null> {
         try {
@@ -236,8 +251,8 @@ class Me {
             if (response.ok) {
                 const user_votesData = await response.json();
                 const { incomplete_votes, other_votes } = user_votesData;
-                const incompleteVotesArray: Event[] = incomplete_votes.map((voteData: any) => new Event(voteData.id, voteData.title, voteData.color, voteData.state, voteData.group_id, voteData.description, voteData.choosen_event_option_id));
-                const otherVotesArray: Event[] = other_votes.map((voteData: any) => new Event(voteData.id, voteData.title, voteData.color, voteData.state, voteData.group_id, voteData.description, voteData.choosen_event_option_id));
+                const incompleteVotesArray: Vote[] = incomplete_votes.map((voteData: any) => new Vote(voteData.id, voteData.title, voteData.multi_select, voteData.group_id, voteData.description));
+                const otherVotesArray: Vote[] = other_votes.map((voteData: any) => Vote.fromJson(voteData));
                 return { incomplete_votes: incompleteVotesArray, other_votes: otherVotesArray };
             } else {
                 return null;
@@ -248,7 +263,7 @@ class Me {
         }
     }
 
-    static async get_me_group_votes(group_id: number): Promise<UserVotesResponse | null> {
+    static async get_me_group_votes(group_id: number, allVotes: Vote[]): Promise<Vote[] | null> {
         try {
             const response = await fetch(`/api/users/me/group/${group_id}/votes`, {
                 method: 'GET',
@@ -259,10 +274,15 @@ class Me {
             });
             if (response.ok) {
                 const user_votesData = await response.json();
-                const { incomplete_votes, other_votes } = user_votesData;
-                const incompleteVotesArray: Event[] = incomplete_votes.map((voteData: any) => new Event(voteData.id, voteData.title, voteData.color, voteData.state, voteData.group_id, voteData.description, voteData.choosen_event_option_id));
-                const otherVotesArray: Event[] = other_votes.map((voteData: any) => new Event(voteData.id, voteData.title, voteData.color, voteData.state, voteData.group_id, voteData.description, voteData.choosen_event_option_id));
-                return { incomplete_votes: incompleteVotesArray, other_votes: otherVotesArray };
+                const { incomplete_votes } = user_votesData;
+    
+                // Filter and match incomplete votes
+                const incompleteVotesArray: Vote[] = incomplete_votes.map((voteData: any) => {
+                    const matchedVote = allVotes.find(vote => vote.id === voteData.id);
+                    return matchedVote;
+                }).filter(Boolean);
+    
+                return incompleteVotesArray;
             } else {
                 return null;
             }
@@ -300,8 +320,8 @@ interface UserEventsResponse  {
 }
 
 interface UserVotesResponse  {
-    incomplete_votes: Event[];
-    other_votes: Event[];
+    incomplete_votes: Vote[];
+    other_votes: Vote[];
 }
 
 export default Me;

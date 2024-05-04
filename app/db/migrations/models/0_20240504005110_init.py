@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS "events" (
     "title" VARCHAR(100) NOT NULL,
     "color" VARCHAR(6) NOT NULL,
     "vote_end_date" TIMESTAMP,
+    "created" TIMESTAMP NOT NULL  DEFAULT CURRENT_TIMESTAMP,
     "description" TEXT,
     "state" SMALLINT NOT NULL  DEFAULT 1 /* VOTING: 0\nOPEN: 1\nACTIVE: 2\nCLOSED: 3\nARCHIVED: 4 */,
     "choosen_event_option_id" INT,
@@ -60,6 +61,7 @@ CREATE TABLE IF NOT EXISTS "user_group_permissions" (
 CREATE TABLE IF NOT EXISTS "votes" (
     "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     "title" VARCHAR(100) NOT NULL,
+    "created" TIMESTAMP NOT NULL  DEFAULT CURRENT_TIMESTAMP,
     "multi_select" INT NOT NULL  DEFAULT 1,
     "group_id" INT NOT NULL REFERENCES "groups" ("id") ON DELETE CASCADE
 );

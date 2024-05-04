@@ -3,21 +3,23 @@ import VoteOption from "./VoteOption";
 class Vote {
     id: number;
     title: string;
+    created: Date;
     multi_select: boolean;
     group_id: number;
     vote_options: VoteOption[] | null;
 
-    constructor(id: number, title: string, multi_select: boolean = false, group_id: number, vote_options: VoteOption[] | null = null) {
+    constructor(id: number, title: string, created: Date, multi_select: boolean = false, group_id: number, vote_options: VoteOption[] | null = null) {
         this.id = id;
         this.title = title;
+        this.created = created;
         this.multi_select = multi_select;
         this.group_id = group_id;
         this.vote_options = vote_options;
     }
 
     static fromJson(json: any): Vote {
-        const vote_options = json.vote_options ? json.vote_options.map((vote_optionData: any) => new VoteOption(vote_optionData.id, vote_optionData.title, vote_optionData.vote_id)) : null;
-        return new Vote(json.id, json.title, json.multi_select, json.group_id, vote_options);
+        const vote_options = json.vote_options ? json.vote_options.map((vote_optionData: any) => VoteOption.fromJson(vote_optionData)) : null;
+        return new Vote(json.id, json.title, new Date(json.created), json.multi_select, json.group_id, vote_options);
     }
 
     static async get_vote(id: number): Promise<Vote | null> {
@@ -31,7 +33,7 @@ class Vote {
             });
             if (response.ok) {
                 const voteData = await response.json();
-                return new Vote(voteData.id, voteData.title, voteData.multi_select, voteData.group_id);
+                return Vote.fromJson(voteData);
             } else {
                 return null;
             }
@@ -52,7 +54,7 @@ class Vote {
             });
             if (response.ok) {
                 const votesData = await response.json();
-                return votesData.map((voteData: any) => new Vote(voteData.id, voteData.title, voteData.multi_select, voteData.group_id));
+                return votesData.map((voteData: any) => Vote.fromJson(voteData));
             } else {
                 return null;
             }

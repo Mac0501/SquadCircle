@@ -124,6 +124,7 @@ class Event(Model):
     title = fields.CharField(max_length=100, null=False)
     color = fields.CharField(max_length=6, null=False)
     vote_end_date = fields.DatetimeField(null=True)
+    created = fields.DatetimeField(auto_now_add=True)
     description = fields.TextField(max_length=2000, null=True)
     state = fields.IntEnumField(enum_type=EventStateEnum, null=False, default=EventStateEnum.OPEN)
 
@@ -148,6 +149,7 @@ class Event(Model):
             "title": self.title,
             "color": self.color,
             "vote_end_date": self.vote_end_date.strftime("%H:%M:%S") if self.vote_end_date else None,
+            "created": self.created.strftime("%Y-%m-%d %H:%M:%S"),
             "description": self.description,
             "state": self.state,
             "group_id": self.group_id,
@@ -164,29 +166,55 @@ class Event(Model):
         
         await conn.execute_query(f"""
             UPDATE events
-            SET state = {EventStateEnum.ACTIVE},
+            SET state = {EventStateEnum.OPEN},
                 choosen_event_option_id = (
-                    SELECT event_option_id
-                    FROM (
-                        SELECT event_option_id, COUNT(*) AS response_count
-                        FROM user_event_option_responses
-                        INNER JOIN event_options ON user_event_option_responses.event_option_id = event_options.id
-                        WHERE response = {EventOptionResponseEnum.ACCEPTED}
-                        AND event_options.event_id = events.id
-                        GROUP BY event_option_id
-                        ORDER BY response_count DESC, event_option_id ASC
-                        LIMIT 1
+                    SELECT COALESCE(
+                        (
+                            SELECT event_option_id
+                            FROM (
+                                SELECT event_option_id, COUNT(*) AS response_count
+                                FROM user_event_option_responses
+                                INNER JOIN event_options ON user_event_option_responses.event_option_id = event_options.id
+                                WHERE response = {EventOptionResponseEnum.ACCEPTED}
+                                AND event_options.event_id = events.id
+                                GROUP BY event_option_id
+                                ORDER BY response_count DESC, event_option_id ASC
+                                LIMIT 1
+                            )
+                        ),
+                        (
+                            SELECT event_option_id
+                            FROM (
+                                SELECT event_option_id, COUNT(*) AS response_count
+                                FROM user_event_option_responses
+                                INNER JOIN event_options ON user_event_option_responses.event_option_id = event_options.id
+                                WHERE response = {EventOptionResponseEnum.DENIED}
+                                AND event_options.event_id = events.id
+                                GROUP BY event_option_id
+                                ORDER BY response_count ASC, event_option_id ASC
+                                LIMIT 1
+                            )
+                        ),
+                        (
+                            SELECT id as event_option_id
+                            FROM event_options
+                            WHERE event_options.event_id = events.id
+                            LIMIT 1
+                        )
                     )
                 )
-            WHERE state = {EventStateEnum.OPEN}
+            WHERE state = {EventStateEnum.VOTING}
             AND choosen_event_option_id IS NULL
             AND (
-                (events.vote_end_date IS NOT NULL AND events.vote_end_date <= DATETIME('now')) OR
-                events.vote_end_date IS NULL AND (
-                    SELECT DATETIME(MIN(event_options.date) || ' 23:00', '-1 day')
-                    FROM event_options
-                    WHERE event_options.event_id = events.id
-                )  <= DATETIME('now')
+                (events.vote_end_date IS NOT NULL AND events.vote_end_date <= DATETIME('now'))
+                OR
+                (
+                    events.vote_end_date IS NULL AND (
+                        SELECT DATETIME(MIN(event_options.date) || ' 23:00', '-1 day')
+                        FROM event_options
+                        WHERE event_options.event_id = events.id
+                    )  <= DATETIME('now')
+                )
             );
         """)
 
@@ -296,6 +324,7 @@ class Vote(Model):
     __parse_name__ = "vote"
     id = fields.IntField(pk=True, autoincrement=True)
     title = fields.CharField(max_length=100, null=False)
+    created = fields.DatetimeField(auto_now_add=True)
     multi_select = fields.BooleanField(default=True,null=False)
 
     group_id:int
@@ -315,6 +344,7 @@ class Vote(Model):
         return {
             "id":self.id, 
             "title":self.title, 
+            "created": self.created.strftime("%Y-%m-%d %H:%M:%S"),
             "multi_select":self.multi_select, 
             "group_id": self.group_id,
             "vote_options": vote_options_dict

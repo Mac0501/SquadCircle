@@ -3,6 +3,7 @@ import { Form, Input, message, Modal, Button, Row, Typography } from 'antd';
 import { UploadOutlined, DeleteOutlined, LogoutOutlined, LoadingOutlined } from '@ant-design/icons';
 import Me from '../api/Me';
 import UserAvatar from '../components/UserAvatar';
+import Auth from '../api/Auth';
 
 const ProfilePage: React.FC<{ me: Me; setSidabarAvatarKey: React.Dispatch<React.SetStateAction<number>> }> = ({ me, setSidabarAvatarKey }) => {
     const [nameEdit, setNameEdit] = useState<string>(me.name);
@@ -84,11 +85,9 @@ const ProfilePage: React.FC<{ me: Me; setSidabarAvatarKey: React.Dispatch<React.
         }
     };
 
-    const handleLogout = () => {
-        document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-
-        // Redirect to the login page
-        //window.location.href = "/login";
+    const handleLogout = async () => {
+        await Auth.logout()
+        window.location.href = "/login"
     };
 
     const handleNameBlur = async () => {
@@ -172,16 +171,12 @@ const ProfilePage: React.FC<{ me: Me; setSidabarAvatarKey: React.Dispatch<React.
 
                 <Typography.Title 
                     editable={{ 
+                        enterIcon: null,
                         onChange: (e) => {
                             setNameEdit(e);
-                        },
-                        onEnd: () => {
                             handleNameBlur();
                         },
                         maxLength:32,
-                        onCancel: () => {
-                            handleNameBlur();
-                        },
                     }} 
                     level={5} 
                     style={{ 

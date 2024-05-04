@@ -7,7 +7,7 @@ from tortoise.contrib.sanic import register_tortoise
 
 from app.db.Aerich import TORTOISE_ORM
 from app.utils.config import load_config, setup, create_owner
-from app.utils.auth import authenticate, retrieve_user, Register
+from app.utils.auth import Logout, authenticate, retrieve_user, Register
 from app.utils.tools import process_match
 
 setup()
@@ -30,6 +30,7 @@ Extend(app)
 
 my_views = (
     ('/register', Register),
+    ('/logout', Logout),
 )
 
 initialize(app, authenticate=authenticate, secret=config["Statik"]["secret"], cookie_secure=True, cookie_secret=True, cookie_set=True, user_id="id", url_prefix="/api/auth", retrieve_user=retrieve_user, class_views=my_views, expiration_delta=60*24*7)

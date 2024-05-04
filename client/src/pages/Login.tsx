@@ -1,9 +1,28 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Form, Input, Button, message } from 'antd';
 import Auth from '../api/Auth';
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
+  const [checkedVerification, setCheckedVerification] = useState(false);
+
+
+  useEffect(() => {
+    const checkVerification = async () => {
+      try {
+        const isVerified = await Auth.verify();
+        if (isVerified) {
+          window.location.href = '/'; // Redirect to homepage if verified
+        }
+        setCheckedVerification(!isVerified)
+      } catch (error) {
+        console.error('Error checking verification:', error);
+        message.error('An error occurred while checking verification status');
+      }
+    };
+
+    checkVerification(); // Call the function when the component mounts
+  }, []);
 
   const onFinish = async (values: { name: any; password: any; }) => {
     setLoading(true);
@@ -29,6 +48,10 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  if(!checkedVerification){
+    return null;
+  }
 
   return (
     <div style={{ maxWidth: 400, margin: 'auto', marginTop: 100 }}>

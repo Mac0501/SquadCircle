@@ -9,6 +9,25 @@ const Registration = () => {
   const [loading, setLoading] = useState(false);
   const [validInvite, setValidInvite] = useState<boolean>(); // undefined represents initial state
   const [serverError, setServerError] = useState<string>(''); // State to hold server-side error message
+  const [checkedVerification, setCheckedVerification] = useState(false);
+
+
+  useEffect(() => {
+    const checkVerification = async () => {
+      try {
+        const isVerified = await Auth.verify();
+        if (isVerified) {
+          window.location.href = '/'; // Redirect to homepage if verified
+        }
+        setCheckedVerification(!isVerified)
+      } catch (error) {
+        console.error('Error checking verification:', error);
+        message.error('An error occurred while checking verification status');
+      }
+    };
+
+    checkVerification(); // Call the function when the component mounts
+  }, []);
 
   useEffect(() => {
     // Check if the code is valid when the component mounts
@@ -49,7 +68,7 @@ const Registration = () => {
     }
   };
 
-  if (validInvite === undefined) {
+  if (validInvite === undefined || !checkedVerification) {
     // While validation is in progress, return null to display nothing
     return null;
   }

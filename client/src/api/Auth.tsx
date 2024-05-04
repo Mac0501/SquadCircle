@@ -35,6 +35,19 @@ class Auth {
         }
     }
 
+    static async logout() : Promise<boolean> {
+        try {
+            const response = await fetch("/api/auth/logout", {
+                method: "POST",
+                credentials: 'include',
+            });
+            return response.ok;
+        } catch (error) {
+            console.error("Error verifying:", error);
+            return false;
+        }
+    }
+
     static async register(name: string, password: string, code: string): Promise<boolean> {
         try {
             const response = await fetch("/api/auth/register", {

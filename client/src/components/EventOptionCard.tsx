@@ -56,6 +56,22 @@ async function create_user_event_option_response(event_option_id: number, respon
     }
 }
 
+async function set_for_event(event_option_id:number): Promise<boolean> {
+    try {
+        const response = await fetch(`/api/event_options/${event_option_id}/set_for_event`, {
+            method: 'PUT',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        return response.ok;
+    } catch (error) {
+        console.error('Error setting event option for event:', error);
+        return false;
+    }
+}
+
 const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, mePermissions, editable = false, onSet, onEdit, onDelete, members, event_state }) => {
     const [deleteConfirmVisibleEventOption, setDeleteConfirmVisibleEventOption] = useState<boolean>(false);
     const [editModalVisibleEventOption, setEditModalVisibleEventOption] = useState<boolean>(false);
@@ -115,6 +131,13 @@ const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, meP
         }
     };
 
+    const onCheckOption = async () =>{
+        if (event_option.id !== null){
+            const worked = await set_for_event(event_option.id)
+            if(onSet && event_option.id !== null && worked){onSet(event_option.id)}
+        }
+    }
+
 
     return (
         <div>
@@ -125,7 +148,7 @@ const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, meP
                         <CheckCircleOutlined key="set"/>
                     ) : (
                         <Tooltip title="Set this event option as chosen." trigger="hover">
-                            <CheckCircleOutlined key="set" onClick={() => {if(onSet && event_option.id !== null){onSet(event_option.id)}}}/>
+                            <CheckCircleOutlined key="set" onClick={() => {onCheckOption()}}/>
                         </Tooltip>
                     ),
                     <Tooltip title="Edit this event option." trigger="hover">

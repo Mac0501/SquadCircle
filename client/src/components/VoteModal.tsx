@@ -107,6 +107,7 @@ const VoteModal: React.FC<VoteModalProps> = ({ me, mePermissions, visible, onFin
                 newVote = new Vote(
                     vote.id,
                     vote.title,
+                    vote.created,
                     vote.multi_select,
                     vote.group_id,
                     []
@@ -218,12 +219,6 @@ const VoteModal: React.FC<VoteModalProps> = ({ me, mePermissions, visible, onFin
         if (vote?.multi_select === false && userVoteOptionResponse !== null){
             for (const vo of editVote.vote_options) {
                 if(vo.id !== userVoteOptionResponse.vote_option_id){
-                    const remove__user_vote_option_response_vo = vo.user_vote_option_responses?.filter(response =>response.user_and_group?.user_id === me.id)
-                    if (remove__user_vote_option_response_vo !== undefined){
-                        remove__user_vote_option_response_vo.forEach(async (remove_response)=>{
-                            await remove_response.delete();
-                        })
-                    }
                     const new__user_vote_option_response_vo = vo.user_vote_option_responses?.filter(response =>response.user_and_group?.user_id !== me.id)
                     vo.user_vote_option_responses = new__user_vote_option_response_vo ? new__user_vote_option_response_vo : [];
                 }

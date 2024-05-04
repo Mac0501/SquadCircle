@@ -14,21 +14,12 @@ import EventsGroupPage from './GroupPages/EventsGroupPage';
 import EventModal from '../components/EventModal';
 import VotesGroupPage from './GroupPages/VotesGroupPage';
 import VoteModal from '../components/VoteModal';
+import OverviewGroupPage from './GroupPages/OverviewGroupPage';
 const { TabPane } = Tabs;
 
   interface GroupProps {
     me: Me;
     group: Group;
-  }
-
-  interface UserEventsResponse  {
-    incomplete_events: Event[];
-    other_events: Event[];
-  }
-
-  interface UserVotesResponse  {
-    incomplete_votes: Event[];
-    other_votes: Event[];
   }
 
   const GroupPage: React.FC<GroupProps> = ({ me, group }) => {
@@ -39,52 +30,76 @@ const { TabPane } = Tabs;
     const [events, setEvents] = useState<Event[] | null>();
     const [votes, setVotes] = useState<Vote[] | null>();
     const [invites, setInvites] = useState<Invite[] | null>();
-    const [meGroupEvents, setMeGroupEvents] = useState<UserEventsResponse | null>();
-    const [meGroupVotes, setMeGroupVotes] = useState<UserVotesResponse | null>();
+    const [meGroupEvents, setMeGroupEvents] = useState<Event[] | null>();
+    const [meGroupVotes, setMeGroupVotes] = useState<Vote[] | null>();
+    const [meGroupCalender, setMeGroupCalender] = useState<Event[] | null>();
     const [eventModalVisible, setEventModalVisible] = useState<boolean>(false);
     const [voteModalVisible, setVoteModalVisible] = useState<boolean>(false);
 
     useEffect(() => {
-        Me.get_group_permissions(group.id).then((permissionData: UserGroupPermissionEnum[]) => {
-            setMePermissions(permissionData);
-        });
-        Me.get_me_group_events(group.id).then((meGroupEventsData: UserEventsResponse | null) => {
-            setMeGroupEvents(meGroupEventsData);
-        });
-        Me.get_me_group_votes(group.id).then((meGroupVotesData: UserVotesResponse | null) => {
-            setMeGroupVotes(meGroupVotesData);
-        });
-        group.get_users().then((membersData: User[] | null) => {
-            setMembers(membersData);
-        });
-        group.get_all_events_for_group().then((eventData: Event[] | null) => {
-            setEvents(eventData);
-        });
-        group.get_all_votes_for_group().then((voteData: Vote[] | null) => {
-            setVotes(voteData);
-        });
-    }, [group, me.id]);
+        if(mePermissions === undefined){
+            setMePermissions([])
+            Me.get_group_permissions(group.id).then((permissionData: UserGroupPermissionEnum[]) => {
+                setMePermissions(permissionData);
+            });
+        }
+        if(events === undefined){
+            setEvents(null);
+            group.get_all_events_for_group().then((eventData: Event[] | null) => {
+                setEvents(eventData);
+            });
+        }   
+        if(votes === undefined){
+            setVotes(null);
+            group.get_all_votes_for_group().then((voteData: Vote[] | null) => {
+                setVotes(voteData);
+            });
+        }
+        if(events && meGroupEvents === undefined && meGroupCalender === undefined){
+            Me.get_me_group_events(group.id, events ? events : []).then((meGroupEventsData) => {
+                setMeGroupEvents(meGroupEventsData.meGroupEvents);
+                setMeGroupCalender(meGroupEventsData.meGroupCalender);
+            });
+        }
+        if(votes && meGroupVotes === undefined){
+            Me.get_me_group_votes(group.id, votes).then((incompleteVotesData) => {
+                setMeGroupVotes(incompleteVotesData);
+            });
+        }
+        if(members === undefined){
+            setMembers(null);
+            group.get_users().then((membersData: User[] | null) => {
+                setMembers(membersData);
+            });
+        }
+    }, [events, group, me.id, votes]);
     
     useEffect(() => {
         if (mePermissions !== undefined) {
             if (me.owner || mePermissions.includes(UserGroupPermissionEnum.ADMIN) || mePermissions.includes(UserGroupPermissionEnum.MANAGE_USERS)) {
-                User.get_users().then((userData: User[] | null) => {
-                    setUsers(userData);
-                });
+                if(users === undefined){
+                    setUsers(null);
+                    User.get_users().then((userData: User[] | null) => {
+                        setUsers(userData);
+                    });
+                }
             }
             else{
                 setUsers(null);
             }
             if (me.owner || mePermissions.includes(UserGroupPermissionEnum.ADMIN) || mePermissions.includes(UserGroupPermissionEnum.MANAGE_INVITES)) {
-                group.get_invites().then((inviteData: Invite[] | null) => {
-                    setInvites(inviteData);
-                });
+                if(invites === undefined){
+                    setInvites(null);
+                    group.get_invites().then((inviteData: Invite[] | null) => {
+                        setInvites(inviteData);
+                    });
+                }
             }
             else{
                 setInvites(null);
             }
         }
-    }, [group, mePermissions, me.owner]);
+    }, [group, mePermissions, me.owner, users, invites]);
     
 
     const handleCloseEventModal = () => {
@@ -150,7 +165,7 @@ const { TabPane } = Tabs;
                 }
                 >            
                 <TabPane tab="Overview" key="1">
-                    <div>lol</div>
+                    <OverviewGroupPage me={me} group={group} toDoVotes={meGroupVotes ? meGroupVotes : []} toDoEvents={meGroupEvents ? meGroupEvents : []} calenderEvents={meGroupCalender ? meGroupCalender : []}  members={members ? members : []} mePermissions={mePermissions} />
                 </TabPane>
                 <TabPane tab="Members" key="2">
                     <UsersGroupPage me={me} group={group} users={users ? users : []} members={members ? members : []} mePermissions={mePermissions}/>

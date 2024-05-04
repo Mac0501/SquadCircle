@@ -7,7 +7,7 @@ from sanic.request import Request
 from sanic.response import json
 from tortoise.transactions import atomic
 from tortoise import connections
-from app.db.models import Event, Group, User, UserAndGroup
+from app.db.models import Event, EventOption, Group, User, UserAndGroup, UserEventOptionResponse
 from app.utils.tools import filter_dict_by_keys
 from PIL import Image
 
@@ -138,26 +138,42 @@ async def delete_avatar(request: Request, my_user: User):
 @protected()
 async def get_me_events(request: Request, my_user: User):
     await Event.update_state()
+
     conn = connections.get("default")
     query_incomplete = f"""
-        SELECT e.id, e.title, e.color, e.description, e.state, e.group_id, e.choosen_event_option_id
+        SELECT e.id, e.title, e.color, e.vote_end_date, e.description, e.state, e.choosen_event_option_id, e.group_id
         FROM events e
-        JOIN groups g ON e.group_id = g.id
-        JOIN user_and_groups ug ON g.id = ug.group_id
-        JOIN event_options eo ON eo.event_id = e.id
-        LEFT JOIN user_event_option_responses ueor ON eo.id = ueor.event_option_id AND ug.id = ueor.user_and_group_id
-        WHERE ug.user_id = {my_user.id} AND e.state = {EventStateEnum.OPEN} AND ueor.id IS NULL
+        JOIN user_and_groups uag ON uag.group_id = e.group_id
+        WHERE
+            uag.user_id = {my_user.id} AND
+            e.state = {EventStateEnum.VOTING} AND
+            (SELECT COUNT(eo.id) from event_options eo WHERE eo.event_id = e.id) 
+                >
+            (SELECT COUNT(ug.id) from event_options eo
+                LEFT JOIN user_event_option_responses ueor ON ueor.event_option_id = eo.id
+                LEFT JOIN user_and_groups ug ON ug.id = ueor.user_and_group_id AND ug.user_id = {my_user.id}
+                WHERE eo.event_id = e.id)
     """
     incomplete_events = await conn.execute_query_dict(query_incomplete)
     
     query_other = f"""
-        SELECT e.id, e.title, e.color, e.description, e.state, e.group_id, e.choosen_event_option_id
+        SELECT e.id AS event_id,
+            e.title,
+            e.color,
+            e.vote_end_date,
+            e.description,
+            e.state,
+            e.group_id,
+            e.choosen_event_option_id,
+            eo.date AS event_option_date
         FROM events e
-        JOIN groups g ON e.group_id = g.id
-        JOIN user_and_groups ug ON g.id = ug.group_id
-        JOIN event_options eo ON eo.event_id = e.id
-        LEFT JOIN user_event_option_responses ueor ON eo.id = ueor.event_option_id AND ug.id = ueor.user_and_group_id
-        WHERE ug.user_id = {my_user.id} AND (e.state != 1 OR ueor.id IS NOT NULL)
+        JOIN event_options eo ON e.choosen_event_option_id = eo.id
+        JOIN user_and_groups ug ON e.group_id = ug.group_id
+        WHERE e.choosen_event_option_id IS NOT NULL
+        AND (DATE(eo.date) >= DATE('now', 'start of month')
+            AND DATE(eo.date) <= DATE('now', 'start of month', '+1 month'))
+        AND ug.user_id = {my_user.id}
+        ORDER BY eo.date;
     """
     other_events = await conn.execute_query_dict(query_other)
     return json({"incomplete_events":incomplete_events, "other_events":other_events})
@@ -176,22 +192,40 @@ async def get_me_group_events(request: Request, my_user: User, group: Group|None
     conn = connections.get("default")
 
     query_incomplete = f"""
-    SELECT e.id, e.title, e.color, e.description, e.state, e.group_id, e.choosen_event_option_id
-    FROM events e
-    JOIN user_and_groups ug ON e.group_id = ug.group_id
-    JOIN event_options eo ON eo.event_id = e.id
-    LEFT JOIN user_event_option_responses ueor ON eo.id = ueor.event_option_id AND ug.id = ueor.user_and_group_id
-    WHERE ug.user_id = {my_user.id} AND ug.group_id = {group.id} AND e.state = {EventStateEnum.OPEN} AND ueor.id IS NULL
+    SELECT e.id, e.title, e.color, e.vote_end_date, e.description, e.state, e.choosen_event_option_id, e.group_id
+        FROM events e
+        JOIN user_and_groups uag ON uag.group_id = e.group_id
+        WHERE
+            uag.user_id = {my_user.id} AND
+            e.group_id = {group.id} AND
+            e.state = {EventStateEnum.VOTING} AND
+            (SELECT COUNT(eo.id) from event_options eo WHERE eo.event_id = e.id) 
+                >
+            (SELECT COUNT(ug.id) from event_options eo
+                LEFT JOIN user_event_option_responses ueor ON ueor.event_option_id = eo.id
+                LEFT JOIN user_and_groups ug ON ug.id = ueor.user_and_group_id AND ug.user_id = {my_user.id}
+                WHERE eo.event_id = e.id AND ug.group_id = {group.id})
     """
     incomplete_events = await conn.execute_query_dict(query_incomplete)
     
     query_other = f"""
-    SELECT e.id, e.title, e.color, e.description, e.state, e.group_id, e.choosen_event_option_id
-    FROM events e
-    JOIN user_and_groups ug ON e.group_id = ug.group_id
-    JOIN event_options eo ON eo.event_id = e.id
-    LEFT JOIN user_event_option_responses ueor ON eo.id = ueor.event_option_id AND ug.id = ueor.user_and_group_id
-    WHERE ug.user_id = {my_user.id} AND ug.group_id = {group.id} AND (e.state != {EventStateEnum.OPEN} OR ueor.id IS NOT NULL)
+    SELECT e.id AS event_id,
+            e.title,
+            e.color,
+            e.vote_end_date,
+            e.description,
+            e.state,
+            e.group_id,
+            e.choosen_event_option_id,
+            eo.date AS event_option_date
+        FROM events e
+        JOIN event_options eo ON e.choosen_event_option_id = eo.id
+        JOIN user_and_groups ug ON e.group_id = ug.group_id
+        WHERE e.choosen_event_option_id IS NOT NULL
+        AND (DATE(eo.date) >= DATE('now', 'start of month')
+            AND DATE(eo.date) <= DATE('now', 'start of month', '+1 month'))
+        AND ug.user_id = {my_user.id} AND e.group_id = {group.id}
+        ORDER BY eo.date;
     """
     other_events = await conn.execute_query_dict(query_other)
     
@@ -205,11 +239,17 @@ async def get_me_votes(request: Request, my_user: User):
     query_incomplete = f"""
         SELECT v.id, v.title, v.multi_select, v.group_id
         FROM votes v
-        JOIN groups g ON v.group_id = g.id
-        JOIN user_and_groups ug ON g.id = ug.group_id
-        JOIN vote_options vo ON vo.vote_id = v.id
-        LEFT JOIN user_vote_option_responses uvor ON vo.id = uvor.vote_option_id AND ug.id = uvor.user_and_group_id
-        WHERE ug.user_id = {my_user.id} AND uvor.id IS NULL
+        JOIN user_and_groups uag ON uag.group_id = v.group_id
+        WHERE
+            uag.user_id = {my_user.id}
+            AND NOT EXISTS (
+                SELECT 1
+                FROM vote_options vo
+                JOIN user_vote_option_responses uvor ON uvor.vote_option_id = vo.id
+                JOIN user_and_groups ug ON ug.id = uvor.user_and_group_id
+                WHERE vo.vote_id = v.id
+                AND ug.user_id = {my_user.id}
+            );
     """
     incomplete_votes = await conn.execute_query_dict(query_incomplete)
     
@@ -239,10 +279,19 @@ async def get_me_group_votes(request: Request, my_user: User, group: Group|None)
     query_incomplete = f"""
     SELECT v.id, v.title, v.multi_select, v.group_id
     FROM votes v
-    JOIN user_and_groups ug ON v.group_id = ug.group_id
-    JOIN vote_options vo ON vo.vote_id = v.id
-    LEFT JOIN user_vote_option_responses uvor ON vo.id = uvor.vote_option_id AND ug.id = uvor.user_and_group_id
-    WHERE ug.user_id = {my_user.id} AND ug.group_id = {group.id} AND uvor.id IS NULL
+    JOIN user_and_groups uag ON uag.group_id = v.group_id
+    WHERE
+        uag.user_id = {my_user.id}
+        AND v.group_id = {group.id}
+        AND NOT EXISTS (
+            SELECT 1
+            FROM vote_options vo
+            JOIN user_vote_option_responses uvor ON uvor.vote_option_id = vo.id
+            JOIN user_and_groups ug ON ug.id = uvor.user_and_group_id
+            WHERE vo.vote_id = v.id
+            AND ug.group_id = {group.id}
+            AND ug.user_id = {my_user.id}
+        );
     """
     incomplete_votes = await conn.execute_query_dict(query_incomplete)
     

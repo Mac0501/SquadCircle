@@ -1,4 +1,4 @@
-import { Button, DatePicker, List, Modal, Select, Typography } from "antd";
+import { Badge, Button, DatePicker, List, Modal, Select, Typography } from "antd";
 import { useEffect, useState } from "react";
 import Event from "../api/Event";
 import EventOption from "../api/EventOption";
@@ -137,6 +137,7 @@ const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onF
                     event.title,
                     event.color,
                     event.vote_end_date,
+                    event.created,
                     event.state,
                     event.group_id,
                     event.description,
@@ -366,17 +367,33 @@ const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onF
                         dataSource={editEvent ? editEvent.event_options ? editEvent.event_options : [] : []}
                         renderItem={(event_option: EventOptionProp, index: number) => (
                             <List.Item>
-                                <EventOptionCard
-                                    key={index} 
-                                    me={me} 
-                                    onSet={(id:number)=> setEditEvent({...editEvent, choosen_event_option_id: id})} 
-                                    onEdit={(editedEventOption:EventOptionProp)=>{handleUpdateEventOption(editedEventOption, index)}}
-                                    onDelete={(deletedEventOption:EventOptionProp)=>{handleDeleteEventOption(deletedEventOption, index)}}
-                                    event_option={event_option}
-                                    mePermissions={mePermissions}
-                                    { ...(allowedToEdit ? { editable: true } : {})}
-                                    members={members}
-                                    event_state={event ? event.state : EventStateEnum.VOTING}/>
+                                {editEvent.choosen_event_option_id !== null && event_option.id === editEvent.choosen_event_option_id ? (
+                                    <Badge.Ribbon text="Chosen" color="#108ee9" placement="start">
+                                        <EventOptionCard
+                                            key={index} 
+                                            me={me}
+                                            onSet={(id:number)=> setEditEvent({...editEvent, choosen_event_option_id: id})} 
+                                            onEdit={(editedEventOption:EventOptionProp)=>{handleUpdateEventOption(editedEventOption, index)}}
+                                            onDelete={(deletedEventOption:EventOptionProp)=>{handleDeleteEventOption(deletedEventOption, index)}}
+                                            event_option={event_option}
+                                            mePermissions={mePermissions}
+                                            { ...(allowedToEdit ? { editable: true } : {})}
+                                            members={members}
+                                            event_state={event ? event.state : EventStateEnum.VOTING}/>
+                                    </Badge.Ribbon>
+                                ) : (
+                                    <EventOptionCard
+                                        key={index} 
+                                        me={me}
+                                        onSet={(id:number)=> setEditEvent({...editEvent, choosen_event_option_id: id})} 
+                                        onEdit={(editedEventOption:EventOptionProp)=>{handleUpdateEventOption(editedEventOption, index)}}
+                                        onDelete={(deletedEventOption:EventOptionProp)=>{handleDeleteEventOption(deletedEventOption, index)}}
+                                        event_option={event_option}
+                                        mePermissions={mePermissions}
+                                        { ...(allowedToEdit ? { editable: true } : {})}
+                                        members={members}
+                                        event_state={event ? event.state : EventStateEnum.VOTING}/>
+                                )}
                             </List.Item>
                         )}
                     />

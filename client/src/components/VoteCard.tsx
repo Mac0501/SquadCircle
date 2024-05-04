@@ -54,6 +54,7 @@ const VoteCard: React.FC<VoteCardProps> = ({ me, vote, mePermissions, group, mem
             const updatedVote = new Vote(
                 currentVote.id,
                 currentVote.title,
+                currentVote.created,
                 currentVote.multi_select,
                 currentVote.group_id,
                 currentVote.vote_options
@@ -61,12 +62,6 @@ const VoteCard: React.FC<VoteCardProps> = ({ me, vote, mePermissions, group, mem
     
             for (const vo of updatedVote.vote_options!) {
                 if(vo.id !== userVoteOptionResponse.vote_option_id){
-                    const remove__user_vote_option_response_vo = vo.user_vote_option_responses?.filter(response =>response.user_and_group?.user_id === me.id)
-                    if (remove__user_vote_option_response_vo !== undefined){
-                        remove__user_vote_option_response_vo.forEach(async (remove_response)=>{
-                            await remove_response.delete();
-                        })
-                    }
                     const new__user_vote_option_response_vo = vo.user_vote_option_responses?.filter(response =>response.user_and_group?.user_id !== me.id)
                     vo.user_vote_option_responses = new__user_vote_option_response_vo ? new__user_vote_option_response_vo : [];
                 }
@@ -82,6 +77,7 @@ const VoteCard: React.FC<VoteCardProps> = ({ me, vote, mePermissions, group, mem
                 extra={<Typography.Link onClick={handleOpenVoteModal}><InfoCircleOutlined style={{ fontSize: '18px' }}/></Typography.Link>}
                 // style={{ borderTopWidth:'5px', borderTopColor:`#${vote.color}` }}
             >   
+                <div style={{height:"360px" , maxHeight:"360px"}}>
                 {vote.multi_select ? (
                     "Select atleast one option."
                 ) : (
@@ -111,6 +107,7 @@ const VoteCard: React.FC<VoteCardProps> = ({ me, vote, mePermissions, group, mem
                             </List.Item>
                         )}
                     />
+                </div>
                 </div>
             </Card>
             <VoteModal me={me} mePermissions={mePermissions} vote={vote} visible={voteModalVisible} onFinish={handleFinishVote} onDelete={handleDeleteVote} onCancel={handleCloseVoteModal} group={group} members={members}/>

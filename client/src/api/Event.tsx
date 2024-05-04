@@ -6,17 +6,19 @@ class Event {
     title: string;
     color: string;
     vote_end_date: string|null;
+    created: Date;
     state: EventStateEnum;
     group_id: number;
     description: string|null;
     choosen_event_option_id: number|null;
     event_options: EventOption[]|null;
 
-    constructor(id: number, title: string, color: string, vote_end_date: string|null, state: EventStateEnum, group_id: number, description: string|null = null, choosen_event_option_id: number|null = null, event_options: EventOption[]|null = null) { // Updated constructor
+    constructor(id: number, title: string, color: string, vote_end_date: string|null, created:Date, state: EventStateEnum, group_id: number, description: string|null = null, choosen_event_option_id: number|null = null, event_options: EventOption[]|null = null) { // Updated constructor
         this.id = id;
         this.title = title;
         this.color = color;
         this.vote_end_date = vote_end_date;
+        this.created = created;
         this.state = state;
         this.group_id = group_id;
         this.description = description;
@@ -31,12 +33,20 @@ class Event {
             json.title,
             json.color,
             json.vote_end_date,
+            new Date(json.created),
             json.state,
             json.group_id,
             json.description,
             json.choosen_event_option_id,
             event_options,
         );
+    }
+
+    get choosen_event_option(): EventOption | null {
+        if (this.event_options && this.choosen_event_option_id) {
+            return this.event_options.find(option => option.id === this.choosen_event_option_id) || null;
+        }
+        return null;
     }
 
     static async get_event(id: number): Promise<Event | null> {

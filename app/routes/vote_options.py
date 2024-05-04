@@ -69,26 +69,24 @@ async def create_user_vote_option_response(request: Request, my_user: User, vote
     if not vote_option:
         return json({"error": f"VoteOption not found"}, status=404)
     
+    await vote_option.fetch_related("vote")
+    user_and_group = await UserAndGroup.get_or_none(user_id=my_user.id, group_id=vote_option.vote.group_id)
+    if not user_and_group:
+        return json({"error": f"User is not in Group"}, status=404)
+
     conn = connections.get("default")
     delete_incomplete = f"""
-    DELETE FROM user_vote_option_responses
-    WHERE user_and_group_id IN (
-        SELECT uag.id
-        FROM user_and_groups AS uag
-        INNER JOIN vote_options AS vo ON vo.vote_id = {vote_option.id}
+    DELETE FROM user_vote_option_responses AS uvor
+    WHERE uvor.user_and_group_id = {user_and_group.id} AND uvor.vote_option_id IN (
+        SELECT vo.id
+        FROM vote_options AS vo
         INNER JOIN votes AS v ON v.id = {vote_option.vote_id}
-        WHERE uag.user_id = {my_user.id}
-        AND vo.vote_id == {vote_option.vote_id}
+        WHERE vo.vote_id == {vote_option.vote_id}
         AND v.multi_select = 0
     );
     """
 
     await conn.execute_query(delete_incomplete)
-    
-    await vote_option.fetch_related("vote")
-    user_and_group = await UserAndGroup.get_or_none(user_id=my_user.id, group_id=vote_option.vote.group_id)
-    if not user_and_group:
-        return json({"error": f"User is not in Group"}, status=404)
 
     user_vote_option_response = await UserVoteOptionResponse.get_or_none(vote_option_id=vote_option.id, user_and_group_id=user_and_group.id)
     if user_vote_option_response:
@@ -144,14 +142,12 @@ async def create_user_vote_option_response_toggel(request: Request, my_user: Use
     else:
         conn = connections.get("default")
         delete_incomplete = f"""
-        DELETE FROM user_vote_option_responses
-        WHERE user_and_group_id IN (
-            SELECT uag.id
-            FROM user_and_groups AS uag
-            INNER JOIN vote_options AS vo ON vo.vote_id = {vote_option.id}
+        DELETE FROM user_vote_option_responses AS uvor
+        WHERE uvor.user_and_group_id = {user_and_group.id} AND uvor.vote_option_id IN (
+            SELECT vo.id
+            FROM vote_options AS vo
             INNER JOIN votes AS v ON v.id = {vote_option.vote_id}
-            WHERE uag.user_id = {my_user.id}
-            AND vo.vote_id == {vote_option.vote_id}
+            WHERE vo.vote_id == {vote_option.vote_id}
             AND v.multi_select = 0
         );
         """

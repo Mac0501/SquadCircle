@@ -1,10 +1,11 @@
+from sanic import Request
 from sanic_jwt import exceptions
 from app.db.models import Invite, User, UserAndGroup
 from sanic.response import json
 from sanic_jwt import BaseEndpoint
 
 class Register(BaseEndpoint):
-    async def post(self, request, *args, **kwargs):
+    async def post(self, request: Request, *args, **kwargs):
         code = request.json.get("code", None)
         if not code:
             return json({'message': 'Missing invite code'}, status=400)
@@ -47,6 +48,14 @@ class Register(BaseEndpoint):
                 config=self.config)
             
             return response
+
+class Logout(BaseEndpoint):
+    async def post(self, request: Request, *args, **kwargs):
+        response = json({"message": "Logged out successfully"})
+        if "access_token" in request.cookies:
+            response.delete_cookie("access_token")
+            
+        return response
 
 async def retrieve_user(request, payload, *args, **kwargs):
     if payload:
