@@ -15,6 +15,7 @@ import EventModal from '../components/EventModal';
 import VotesGroupPage from './GroupPages/VotesGroupPage';
 import VoteModal from '../components/VoteModal';
 import OverviewGroupPage from './GroupPages/OverviewGroupPage';
+import { useLocation, useNavigate } from 'react-router-dom';
 const { TabPane } = Tabs;
 
   interface GroupProps {
@@ -36,6 +37,11 @@ const { TabPane } = Tabs;
     const [eventModalVisible, setEventModalVisible] = useState<boolean>(false);
     const [voteModalVisible, setVoteModalVisible] = useState<boolean>(false);
 
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const currentPath = location.pathname;
+
     useEffect(() => {
         if(mePermissions === undefined){
             setMePermissions([])
@@ -43,13 +49,13 @@ const { TabPane } = Tabs;
                 setMePermissions(permissionData);
             });
         }
-        if(events === undefined){
+        if(group !== undefined && events === undefined){
             setEvents(null);
             group.get_all_events_for_group().then((eventData: Event[] | null) => {
                 setEvents(eventData);
             });
         }   
-        if(votes === undefined){
+        if(group !== undefined && votes === undefined){
             setVotes(null);
             group.get_all_votes_for_group().then((voteData: Vote[] | null) => {
                 setVotes(voteData);
@@ -107,6 +113,10 @@ const { TabPane } = Tabs;
     };
 
     const handleFinishEvent = (eventData: Event) => {
+        if (group.events === null){
+            const tempEvents = events ? events : []
+            setEvents([eventData ,...tempEvents])
+        }
         setEventModalVisible(false);
     };
 
@@ -119,6 +129,10 @@ const { TabPane } = Tabs;
     };
 
     const handleFinishVote = (voteData: Vote) => {
+        if (group.votes === null){
+            const tempVotes = votes ? votes : []
+            setVotes([voteData ,...tempVotes])
+        }
         setVoteModalVisible(false);
     };
 
@@ -134,14 +148,14 @@ const { TabPane } = Tabs;
     return (
         <div>
             <Tabs
-                defaultActiveKey="1"
-                activeKey={activeTab}
-                onChange={(key) => {
-                    setActiveTab(key);
+                activeKey={currentPath}
+                onChange={(path) => {
+                    navigate(path);
+                    setActiveTab(path);
                 }}
                 tabBarExtraContent={
                     <>
-                    {(activeTab === "3" && (me.owner || mePermissions.includes(UserGroupPermissionEnum.ADMIN) || mePermissions.includes(UserGroupPermissionEnum.MANAGE_EVENTS))) && (
+                    {(activeTab === `/group/${group.id}/events` && (me.owner || mePermissions.includes(UserGroupPermissionEnum.ADMIN) || mePermissions.includes(UserGroupPermissionEnum.MANAGE_EVENTS))) && (
                         <Button
                         type="primary"
                         onClick={() => {
@@ -151,7 +165,7 @@ const { TabPane } = Tabs;
                         Add Event
                         </Button>
                     )}
-                    {(activeTab === "4" && (me.owner || mePermissions.includes(UserGroupPermissionEnum.ADMIN) || mePermissions.includes(UserGroupPermissionEnum.MANAGE_VOTES))) && (
+                    {(activeTab === `/group/${group.id}/votes` && (me.owner || mePermissions.includes(UserGroupPermissionEnum.ADMIN) || mePermissions.includes(UserGroupPermissionEnum.MANAGE_VOTES))) && (
                         <Button
                         type="primary"
                         onClick={() => {
@@ -164,20 +178,20 @@ const { TabPane } = Tabs;
                     </>
                 }
                 >            
-                <TabPane tab="Overview" key="1">
+                <TabPane tab="Overview" key={`/group/${group.id}`}>
                     <OverviewGroupPage me={me} group={group} toDoVotes={meGroupVotes ? meGroupVotes : []} toDoEvents={meGroupEvents ? meGroupEvents : []} calenderEvents={meGroupCalender ? meGroupCalender : []}  members={members ? members : []} mePermissions={mePermissions} />
                 </TabPane>
-                <TabPane tab="Members" key="2">
+                <TabPane tab="Members" key={`/group/${group.id}/members`}>
                     <UsersGroupPage me={me} group={group} users={users ? users : []} members={members ? members : []} mePermissions={mePermissions}/>
                 </TabPane>
-                <TabPane tab="Events" key="3">
+                <TabPane tab="Events" key={`/group/${group.id}/events`}>
                     <EventsGroupPage me={me} group={group} events={events ? events : []} members={members ? members : []} mePermissions={mePermissions} />
                 </TabPane>
-                <TabPane tab="Votes" key="4">
+                <TabPane tab="Votes" key={`/group/${group.id}/votes`}>
                     <VotesGroupPage me={me} group={group} votes={votes ? votes : []} members={members ? members : []} mePermissions={mePermissions} />
                 </TabPane>
                 {(me.owner || mePermissions.includes(UserGroupPermissionEnum.ADMIN) || mePermissions.includes(UserGroupPermissionEnum.MANAGE_INVITES)) &&
-                    <TabPane tab="Invites" key="5">
+                    <TabPane tab="Invites" key={`/group/${group.id}/invites`}>
                         <InvitesGroupPage group={group} invites={invites ? invites : []}/>
                     </TabPane>
                 }

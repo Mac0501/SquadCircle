@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Me from '../../api/Me';
 import Group from '../../api/Group';
 import { UserGroupPermissionEnum } from '../../utils/types';
@@ -16,7 +16,11 @@ interface VotesGroupPageProps {
 }
 
 const VotesGroupPage: React.FC<VotesGroupPageProps> = ({ me, group, votes, members, mePermissions }) =>  {
-    const [votesList, setVotesList] = useState<Vote[]>(votes);
+    const [votesList, setVotesList] = useState<Vote[]>([]);
+
+    useEffect(() => {
+        setVotesList(votes);
+    }, [votes]);
 
     const handleDeleteVote = async (deletedVote: Vote) => {
         const updatedVotesList = votesList.filter(vote => vote.id !== deletedVote.id);

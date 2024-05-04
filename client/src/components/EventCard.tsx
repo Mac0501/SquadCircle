@@ -25,9 +25,12 @@ const EventCard: React.FC<EventCardProps> = ({ me, event, mePermissions, group, 
     const [descriptionExpanded, setDescriptionExpanded] = useState<boolean>(false);
     const [eventModalVisible, setEventModalVisible] = useState<boolean>(false);
     const [currentEvent, setCurrentEvent] = useState<Event>(event);
+    const [isNew, setIsNew] = useState<boolean>(false);
 
     useEffect(() => {
         setCurrentEvent(event); 
+        const differenceInDays = Math.ceil((Date.now() - event.created.getTime()) / (1000 * 60 * 60 * 24));
+        setIsNew(differenceInDays <= 7);
     }, [event]);
 
     const handleOpenEventModal = () => {
@@ -56,6 +59,11 @@ const EventCard: React.FC<EventCardProps> = ({ me, event, mePermissions, group, 
 
     return (
         <div>
+            <Badge
+                count={isNew ? "New" : 0}
+                className='newBadge'
+                style={{ backgroundColor: '#52c41a', paddingRight:"4px", paddingLeft:"4px", display:"unset"}}
+            >
             <Card 
                 title={event.title}
                 extra={<Typography.Link onClick={handleOpenEventModal}><InfoCircleOutlined style={{ fontSize: '18px' }}/></Typography.Link>}
@@ -102,6 +110,7 @@ const EventCard: React.FC<EventCardProps> = ({ me, event, mePermissions, group, 
                     )}
                 </div>
             </Card>
+            </Badge>
             <EventModal me={me} mePermissions={mePermissions} event={event} visible={eventModalVisible} onFinish={handleFinishEvent} onDelete={handleDeleteEvent} onCancel={handleCloseEventModal} group={group} members={members}/>
         </div>
     );

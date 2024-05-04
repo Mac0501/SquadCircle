@@ -5,9 +5,10 @@ import UserAvatar from '../../components/UserAvatar';
 
 interface UsersProps {
     users: User[];
+    onUpdate: (updatedUsers: User[]) => void
 }
 
-const UsersAdminPage: React.FC<UsersProps> = ({ users }) => {
+const UsersAdminPage: React.FC<UsersProps> = ({ users, onUpdate}) => {
     const [deleteUser, setDeleteUser] = useState<User | null>(null);
     const [deleteConfirmVisible, setDeleteConfirmVisible] = useState<boolean>(false);
     const [updatedUsers, setUpdatedUsers] = useState<User[]>(users);
@@ -52,6 +53,7 @@ const UsersAdminPage: React.FC<UsersProps> = ({ users }) => {
             if (deleted) {
                 // Remove the deleted user from the list
                 const updatedUsers = users.filter(user => user.id !== deleteUser.id);
+                onUpdate(updatedUsers);
                 setUpdatedUsers(updatedUsers);
             }
         }

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Tabs } from 'antd';
 import Me from '../api/Me';
 import User from '../api/User';
 import Invite from '../api/Invites';
@@ -8,48 +7,54 @@ import Group from '../api/Group';
 import GroupsAdminPage from './AdminPages/GroupsAdminPage';
 import InvitesAdminPage from './AdminPages/InvitesAdminPage';
 import Loading from '../components/Loading';
-const { TabPane } = Tabs;
+import CustomTab from '../components/CustomTab';
 
-  interface AdminProps {
-    me: Me;
+interface AdminProps {
+  me: Me;
+}
+
+const Admin: React.FC<AdminProps> = ({ me }) => {
+  const [users, setUsers] = useState<User[] | null>(null);
+  const [groups, setGroups] = useState<Group[] | null>(null);
+  const [invites, setInvites] = useState<Invite[] | null>(null);
+
+  useEffect(() => {
+    User.get_users().then(setUsers);
+    Group.get_groups().then(setGroups);
+    Invite.get_invites().then(setInvites);
+  }, []);
+
+  const handleUserUpdate = (updatedUsers: User[]) => {
+    setUsers(updatedUsers);
   }
 
-  const Admin: React.FC<AdminProps> = ({ me }) => {
-    const [users, setUsers] = useState<User[] | null>(null);
-    const [groups, setGroups] = useState<Group[] | null>(null);
-    const [invites, setInvites] = useState<Invite[] | null>(null);
+  if(users === null || groups === null || invites === null){
+    return <Loading/>
+  }
 
-    useEffect(() => {
-        User.get_users().then((usersData: React.SetStateAction<User[] | null>) => {
-            setUsers(usersData);
-        });
-        Group.get_groups().then((groupsData: React.SetStateAction<Group[] | null>) => {
-            setGroups(groupsData);
-        });
-        Invite.get_invites().then((inviteData: React.SetStateAction<Invite[] | null>) => {
-            setInvites(inviteData);
-        });
-      }, []);
-
-    if(users === null || groups === null || invites === null){
-        return <Loading/>
+  const elements = [
+    {
+      tabTitle: 'Users',
+      path: '/admin/users',
+      tabBody: <UsersAdminPage users={users} onUpdate={handleUserUpdate} />
+    },
+    {
+      tabTitle: 'Groups',
+      path: '/admin/groups',
+      tabBody: <GroupsAdminPage groups={groups} users={users} />
+    },
+    {
+      tabTitle: 'Invites',
+      path: '/admin/invites',
+      tabBody: <InvitesAdminPage invites={invites} groups={groups} />
     }
+  ];
 
-    return (
-        <div>
-        <Tabs defaultActiveKey="1">
-            <TabPane tab="Users" key="1">
-                <UsersAdminPage users={users}/>
-            </TabPane>
-            <TabPane tab="Groups" key="2">
-                <GroupsAdminPage groups={groups} users={users}/>
-            </TabPane>
-            <TabPane tab="Invites" key="3">
-                <InvitesAdminPage invites={invites} groups={groups}/>
-            </TabPane>
-        </Tabs>
-        </div>
-    );
+  return (
+    <div>
+      <CustomTab elements={elements} />
+    </div>
+  );
 };
 
 export default Admin;

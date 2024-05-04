@@ -311,7 +311,9 @@ class Group {
             });
             if (response.ok) {
                 const eventsData = await response.json();
-                return this.events = eventsData.map((eventData: any) => Event.fromJson(eventData));
+                const tempEvents = eventsData.map((eventData: any) => Event.fromJson(eventData));
+                this.events = tempEvents.sort((a: Event, b: Event) => b.created.getTime() - a.created.getTime());
+                return this.events;
             } else {
                 return this.events = null;
             }
@@ -336,7 +338,7 @@ class Group {
                 const newEvent = Event.fromJson(eventData);
                 // Add the new event to this.events
                 if (newEvent && this.events) {
-                    this.events.push(newEvent);
+                    this.events.unshift(newEvent);
                 }
                 return newEvent;
             } else {
@@ -362,7 +364,7 @@ class Group {
                 const voteData = await response.json();
                 const newVote = Vote.fromJson(voteData);
                 if (newVote && this.votes) {
-                    this.votes.push(newVote);
+                    this.votes.unshift(newVote);
                 }
                 return newVote;
             } else {
@@ -385,7 +387,7 @@ class Group {
             });
             if (response.ok) {
                 const voteData = await response.json();
-                return this.votes = voteData.map((voteData: any) => Vote.fromJson(voteData))
+                return this.votes = voteData.map((voteData: any) => Vote.fromJson(voteData)).sort((a: Vote, b: Vote) => b.created.getTime() - a.created.getTime());
             } else {
                 return null;
             }

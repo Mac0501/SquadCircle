@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {  useEffect, useState } from 'react';
 import Me from '../../api/Me';
 import Group from '../../api/Group';
 import Event from '../../api/Event';
@@ -16,8 +16,13 @@ interface EventsGroupPageProps {
 }
 
 const EventsGroupPage: React.FC<EventsGroupPageProps> = ({ me, group, events, members, mePermissions }) =>  {
-    const [eventsList, setEventsList] = useState<Event[]>(events);
+    const [eventsList, setEventsList] = useState<Event[]>([]);
 
+    // Update eventsList when events prop change
+    useEffect(() => {
+        setEventsList(events);
+    }, [events]);
+    
     const handleDeleteEvent = async (deletedEvent: Event) => {
         // Remove the deleted event from the events list
         const updatedEventsList = eventsList.filter(event => event.id !== deletedEvent.id);

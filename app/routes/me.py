@@ -241,6 +241,7 @@ async def get_me_votes(request: Request, my_user: User):
         FROM votes v
         JOIN user_and_groups uag ON uag.group_id = v.group_id
         WHERE
+            v.created >= datetime('now', '-7 days') AND
             uag.user_id = {my_user.id}
             AND NOT EXISTS (
                 SELECT 1
@@ -281,6 +282,7 @@ async def get_me_group_votes(request: Request, my_user: User, group: Group|None)
     FROM votes v
     JOIN user_and_groups uag ON uag.group_id = v.group_id
     WHERE
+        v.created >= datetime('now', '-7 days') AND
         uag.user_id = {my_user.id}
         AND v.group_id = {group.id}
         AND NOT EXISTS (

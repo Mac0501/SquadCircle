@@ -47,6 +47,7 @@ interface EventOptionProp {
 
 const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onFinish, onDelete, onCancel, event, group, members }) => {
     const [descriptionExpanded, setDescriptionExpanded] = useState<boolean>(false);
+    const [finishingModalEvent, setFinishingModalEvent] = useState<boolean>(false);
     const [deleteConfirmVisibleEvent, setDeleteConfirmVisibleEvent] = useState<boolean>(false);
     const [createModalVisibleEventOption, setCreateModalVisibleEventOption] = useState<boolean>(false);
     const [editEvent, setEditEvent] = useState<EventProps>({ id: null, title: null, color: EventColorEnum.SEA_GREEN, vote_end_date: null, state: null, group_id: null, description: null, choosen_event_option_id:null, event_options: [], updated_event_options: [], remove_event_options: []});
@@ -121,6 +122,7 @@ const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onF
     }
 
     const handleFinish = async() => {
+        setFinishingModalEvent(true)
         let newEvent: Event | null;
         if(editEvent.title !== null && editEvent.color !== null){
             if(event===undefined){
@@ -181,6 +183,7 @@ const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onF
                 }
             }  
         }
+        setFinishingModalEvent(false)
     };
 
     const handleCancel = () =>{
@@ -271,7 +274,7 @@ const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onF
                                     <Button onClick={handleCancel} key="back" style={{marginRight:'5px'}}>
                                         Cancel
                                     </Button>
-                                    <Button type="primary" onClick={handleFinish} key="submit" disabled={(editEvent.title === null || editEvent.title.length === 0 || editEvent.event_options.length === 0)}>
+                                    <Button type="primary" onClick={handleFinish} key="submit" disabled={(editEvent.title === null || editEvent.title.length === 0 || editEvent.event_options.length === 0)} loading={finishingModalEvent}>
                                         Save
                                     </Button>
                                 </div>

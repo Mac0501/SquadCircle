@@ -72,7 +72,7 @@ const ProtectedRoute: React.FC = () => {
 
       const items: MenuItem[] = [
         getItem(getAvatarContent(), 'profile'),
-        ...(me && me.owner ? [getItem("Admin", 'admin')] : []),
+        ...(me && me.owner ? [getItem("Admin", 'admin/users')] : []),
         getItem('Groups', 'grp', null, [
             ...groups.map(group => getItem(group.name, `group/${group.id}`))
         ], 'group'),
@@ -163,9 +163,10 @@ const ProtectedRoute: React.FC = () => {
                   <Route path={`/`} element={<Navigate to="/homepage" replace={true} />} />
                   <Route path={`/homepage`} element={<Homepage/>} />
                   <Route path={`/profile`} element={<ProfilePage me={me} setSidabarAvatarKey={setAvatarKey}/>} />
-                  <Route path="/admin" element={<Admin me={me} />} />
+                  <Route path={`/admin`} element={<Navigate to="/admin/users" replace={true} />} />
+                  <Route path={`/admin/*`} element={me.owner ? <Admin me={me} /> : <Navigate to="/homepage" replace={true} />} />
                   {groups.map(group => (
-                    <Route key={`group/${group.id}`} path={`/group/${group.id}`} element={<GroupPage key={group.id} me={me} group={group} />} />
+                    <Route key={`group/${group.id}`} path={`/group/${group.id}/*`} element={<GroupPage key={group.id} me={me} group={group} />} />
                   ))}
                 </Routes>
               </Content>

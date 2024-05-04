@@ -45,6 +45,7 @@ const GroupsAdminPage: React.FC<GroupsAdminPageProps> = ({ groups, users }) => {
     const [deleteConfirmVisibleGroup, setDeleteConfirmVisibleGroup] = useState<boolean>(false);
     const [removeConfirmVisibleMember, setRemoveConfirmVisibleMember] = useState<boolean>(false);
     const [updatedGroups, setUpdatedGroups] = useState<Group[]>(groups);
+    const [finishingModalGroup, setFinishingModalGroup] = useState<boolean>(false);
     const [editModalVisibleGroup, setEditModalVisibleGroup] = useState<boolean>(false);
     const [editModalVisibleMember, setEditModalVisibleMember] = useState<boolean>(false);
     const [editGroup, setEditGroup] = useState<GroupProps>({ id: null, name: null, description: null, members: [], added_members: [], remove_members: [], add_permissions: {}, remove_permissions: {} });
@@ -123,6 +124,20 @@ const GroupsAdminPage: React.FC<GroupsAdminPageProps> = ({ groups, users }) => {
             ),
         },
     ];
+
+    const isNameAlreadyExists = (nameToCheck:string|null) => {
+        if(nameToCheck === null){
+            return true;
+        }
+        // Iterate over the existing groups
+        for (const group of groups) {
+            // Compare the name of each group with the name to check
+            if (group.name === nameToCheck && group.id !== editGroup.id) {
+                return true; // Name already exists
+            }
+        }
+        return false; // Name does not exist
+    };
 
 
     ///handle delete group
@@ -228,6 +243,7 @@ const GroupsAdminPage: React.FC<GroupsAdminPageProps> = ({ groups, users }) => {
 
     const handleEditGroup = async () => {
         // Perform validation if needed
+        setFinishingModalGroup(true)
         if (editGroup.name !== null) {
             let newSelectedGroup: Group | null;
             if (selectedGroup) {
@@ -272,6 +288,7 @@ const GroupsAdminPage: React.FC<GroupsAdminPageProps> = ({ groups, users }) => {
                 }, 500);
             }
         }
+        setFinishingModalGroup(false)
         handleEditModalCloseGroup();
     };
 
@@ -492,10 +509,10 @@ const GroupsAdminPage: React.FC<GroupsAdminPageProps> = ({ groups, users }) => {
                 open={editModalVisibleGroup}
                 onOk={handleEditGroup}
                 onCancel={handleEditModalCloseGroup}
-                okButtonProps={{ disabled: !(editGroup.name !== null && editGroup.name.length > 0) }}
+                okButtonProps={{ disabled: !(editGroup.name !== null && editGroup.name.length > 0 && !isNameAlreadyExists(editGroup.name)), loading: finishingModalGroup}}
             >
                 <Form layout="vertical">
-                    <Form.Item label="Name">
+                    <Form.Item label="Name" validateStatus={isNameAlreadyExists(editGroup.name) ? 'error' : ''} help={isNameAlreadyExists(editGroup.name) ? 'A Group with this name allready exists' : ''}>
                         <Input 
                             value={editGroup?.name || ''} 
                             maxLength={2000} 

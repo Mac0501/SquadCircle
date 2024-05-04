@@ -45,7 +45,9 @@ const OverviewGroupPage: React.FC<OverviewGroupPageProps> = ({ me, group, toDoVo
     const lastDayOfMonth = dayjs().endOf('month');
 
     // Merge votes and events, sort by ID
-    const mergedItems = [...votesList, ...eventsList].sort((a, b) => a.id - b.id);
+    const mergedItems = [...votesList, ...eventsList].sort((a, b) => {
+        return b.created.getTime() - a.created.getTime();
+    });
 
     const renderEmptyHeader: HeaderRender<dayjs.Dayjs> = ({ value, onChange }) => null;
 

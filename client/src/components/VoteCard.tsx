@@ -3,7 +3,7 @@ import Me from '../api/Me';
 import Vote from '../api/Vote';
 import { UserGroupPermissionEnum } from '../utils/types';
 import { InfoCircleOutlined } from '@ant-design/icons';
-import { Card, List, Typography } from 'antd';
+import { Badge, Card, List, Typography } from 'antd';
 import VoteOption from '../api/VoteOption';
 import VoteOptionCard from './VoteOptionCard';
 import VoteModal from './VoteModal';
@@ -25,9 +25,12 @@ interface VoteCardProps {
 const VoteCard: React.FC<VoteCardProps> = ({ me, vote, mePermissions, group, members, onDelete }) =>  {
     const [voteModalVisible, setVoteModalVisible] = useState<boolean>(false);
     const [currentVote, setCurrentVote] = useState<Vote>(vote);
+    const [isNew, setIsNew] = useState<boolean>(false);
 
     useEffect(() => {
-        setCurrentVote(vote); 
+        setCurrentVote(vote);
+        const differenceInDays = Math.ceil((Date.now() - vote.created.getTime()) / (1000 * 60 * 60 * 24));
+        setIsNew(differenceInDays <= 7);
     }, [vote]);
 
     const handleOpenVoteModal = () => {
@@ -72,44 +75,50 @@ const VoteCard: React.FC<VoteCardProps> = ({ me, vote, mePermissions, group, mem
 
     return (
         <div>
-            <Card 
-                title={vote.title}
-                extra={<Typography.Link onClick={handleOpenVoteModal}><InfoCircleOutlined style={{ fontSize: '18px' }}/></Typography.Link>}
-                // style={{ borderTopWidth:'5px', borderTopColor:`#${vote.color}` }}
-            >   
-                <div style={{height:"360px" , maxHeight:"360px"}}>
-                {vote.multi_select ? (
-                    "Select atleast one option."
-                ) : (
-                    "Select one option."
-                )}
-                <div style={{ maxHeight: '300px', overflowY: 'auto', padding: '5px' }}>
-                    <List
-                        grid={{
-                            xs: 1,
-                            sm: 1,
-                            md: 1,
-                            lg: 1,
-                            xl: 1,
-                            xxl: 1,
-                        }}
-                        dataSource={currentVote.vote_options ? currentVote.vote_options : []}
-                        renderItem={(vote_option: VoteOption) => (
-                            <List.Item>
-                                <VoteOptionCard
-                                    key={vote_option.id}
-                                    me={me}
-                                    vote_option={vote_option}
-                                    mePermissions={mePermissions}
-                                    onCheck={(userVoteOptionResponse: UserVoteOptionResponse|null)=>{handleCheckVoteOption(userVoteOptionResponse)}}
-                                    members={members}
-                                />
-                            </List.Item>
-                        )}
-                    />
-                </div>
-                </div>
-            </Card>
+            <Badge
+                count={isNew ? "New" : 0}
+                className='newBadge'
+                style={{ backgroundColor: '#52c41a', paddingRight:"4px", paddingLeft:"4px", display:"unset"}}
+            >
+                <Card 
+                    title={vote.title}
+                    extra={<Typography.Link onClick={handleOpenVoteModal}><InfoCircleOutlined style={{ fontSize: '18px' }}/></Typography.Link>}
+                    // style={{ borderTopWidth:'5px', borderTopColor:`#${vote.color}` }}
+                >   
+                    <div style={{height:"360px" , maxHeight:"360px"}}>
+                    {vote.multi_select ? (
+                        "Select atleast one option."
+                    ) : (
+                        "Select one option."
+                    )}
+                        <div style={{ maxHeight: '300px', overflowY: 'auto', padding: '5px' }}>
+                            <List
+                                grid={{
+                                    xs: 1,
+                                    sm: 1,
+                                    md: 1,
+                                    lg: 1,
+                                    xl: 1,
+                                    xxl: 1,
+                                }}
+                                dataSource={currentVote.vote_options ? currentVote.vote_options : []}
+                                renderItem={(vote_option: VoteOption) => (
+                                    <List.Item>
+                                        <VoteOptionCard
+                                            key={vote_option.id}
+                                            me={me}
+                                            vote_option={vote_option}
+                                            mePermissions={mePermissions}
+                                            onCheck={(userVoteOptionResponse: UserVoteOptionResponse|null)=>{handleCheckVoteOption(userVoteOptionResponse)}}
+                                            members={members}
+                                        />
+                                    </List.Item>
+                                )}
+                            />
+                        </div>
+                    </div>
+                </Card>
+            </Badge>
             <VoteModal me={me} mePermissions={mePermissions} vote={vote} visible={voteModalVisible} onFinish={handleFinishVote} onDelete={handleDeleteVote} onCancel={handleCloseVoteModal} group={group} members={members}/>
         </div>
     );

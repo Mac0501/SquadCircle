@@ -40,6 +40,7 @@ interface VoteOptionProp {
 
 const VoteModal: React.FC<VoteModalProps> = ({ me, mePermissions, visible, onFinish, onDelete, onCancel, vote, group, members }) => {
     const [deleteConfirmVisibleVote, setDeleteConfirmVisibleVote] = useState<boolean>(false);
+    const [finishingModalVote, setFinishingModalVote] = useState<boolean>(false);
     const [createModalVisibleVoteOption, setCreateModalVisibleVoteOption] = useState<boolean>(false);
     const [editVote, setEditVote] = useState<VoteProps>({ id: null, title: null, multi_select: false, group_id: null, vote_options: [], updated_vote_options: [], remove_vote_options: []});
     const [createVoteOption, setCreateVoteOption] = useState<VoteOptionProp>({ id: null, title: '', vote_id:vote ? vote.id : null, user_vote_option_responses:[]});
@@ -95,6 +96,7 @@ const VoteModal: React.FC<VoteModalProps> = ({ me, mePermissions, visible, onFin
     }
 
     const handleFinish = async() => {
+        setFinishingModalVote(true);
         let newVote: Vote | null;
         if(editVote.title !== null){
             if(vote===undefined){
@@ -147,6 +149,7 @@ const VoteModal: React.FC<VoteModalProps> = ({ me, mePermissions, visible, onFin
                 }
             }  
         }
+        setFinishingModalVote(false);
     };
 
     const handleCancel = () =>{
@@ -249,7 +252,7 @@ const VoteModal: React.FC<VoteModalProps> = ({ me, mePermissions, visible, onFin
                                     <Button onClick={handleCancel} key="back" style={{marginRight:'5px'}}>
                                         Cancel
                                     </Button>
-                                    <Button type="primary" onClick={handleFinish} key="submit" disabled={(editVote.title === null || editVote.title?.length === 0 || editVote.vote_options?.length === 0)}>
+                                    <Button type="primary" onClick={handleFinish} key="submit" disabled={(editVote.title === null || editVote.title?.length === 0 || editVote.vote_options?.length === 0)} loading={finishingModalVote}>
                                         Save
                                     </Button>
                                 </div>
