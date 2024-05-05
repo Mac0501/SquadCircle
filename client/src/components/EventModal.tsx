@@ -1,4 +1,4 @@
-import { Badge, Button, DatePicker, List, Modal, Select, Typography } from "antd";
+import { Badge, Button, DatePicker, List, Modal, Select, TimePicker, Typography } from "antd";
 import { useEffect, useState } from "react";
 import Event from "../api/Event";
 import EventOption from "../api/EventOption";
@@ -52,6 +52,7 @@ const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onF
     const [createModalVisibleEventOption, setCreateModalVisibleEventOption] = useState<boolean>(false);
     const [editEvent, setEditEvent] = useState<EventProps>({ id: null, title: null, color: EventColorEnum.SEA_GREEN, vote_end_date: null, state: null, group_id: null, description: null, choosen_event_option_id:null, event_options: [], updated_event_options: [], remove_event_options: []});
     const [createEventOption, setCreateEventOption] = useState<EventOptionProp>({ id: null, date: dayjs().add(1, 'day').format('YYYY-MM-DD'), start_time:"12:00:00", end_time: null, event_id:event ? event.id : null, user_event_option_responses:[]});
+    const [editModalEventOptionOKButton, setEditModalEventOptionOKButton] = useState<boolean>(!(createEventOption.end_time === null || dayjs(createEventOption.start_time, 'HH:mm:ss').isBefore(dayjs(createEventOption.end_time, 'HH:mm:ss'))));
     const [changed, setChanged] = useState<boolean>(event === undefined);
     const allowedToEdit = (me.owner || mePermissions.includes(UserGroupPermissionEnum.ADMIN) || mePermissions.includes(UserGroupPermissionEnum.MANAGE_EVENTS));
 
@@ -251,6 +252,40 @@ const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onF
             });
         }
     };
+
+
+    const disabledTime = (now: dayjs.Dayjs) => {
+        const startTime = dayjs(createEventOption.start_time, 'HH:mm:ss');
+    
+        // Disable hours from 0 to the current hour
+        const disabledHours = () => {
+            const hours = [];
+            const startHour = startTime.hour();
+            for (let i = 0; i < startHour; i++) {
+                hours.push(i);
+            }
+            return hours;
+        }
+    
+        // Disable minutes if the hour is the current hour
+        const disabledMinutes = (selectedHour: number) => {
+            if (selectedHour === startTime.hour()) {
+                const minutes = [];
+                const startMinute = startTime.minute();
+                for (let i = 0; i < startMinute; i++) {
+                    minutes.push(i);
+                }
+                return minutes;
+            }
+            // Return an empty array if minutes are not disabled
+            return [];
+        }
+    
+        return {
+            disabledHours,
+            disabledMinutes,
+        };
+    };
     
     return (
         <div>
@@ -356,7 +391,7 @@ const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onF
                         Add Event-Option
                     </Button>
                 )}
-                <div style={{ maxHeight: '300px', overflowY: 'scroll', overflowX: 'clip', padding: '5px' }}>
+                <div style={{ maxHeight: '300px', overflowY: 'auto', overflowX: 'clip', padding: '5px' }}>
                     <List
                         grid={{
                             gutter: 16,
@@ -375,7 +410,7 @@ const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onF
                                         <EventOptionCard
                                             key={index} 
                                             me={me}
-                                            onSet={(id:number)=> setEditEvent({...editEvent, choosen_event_option_id: id})} 
+                                            onSet={(id:number)=> {setEditEvent({...editEvent, choosen_event_option_id: id}); if(event){event.choosen_event_option_id = id}}} 
                                             onEdit={(editedEventOption:EventOptionProp)=>{handleUpdateEventOption(editedEventOption, index)}}
                                             onDelete={(deletedEventOption:EventOptionProp)=>{handleDeleteEventOption(deletedEventOption, index)}}
                                             event_option={event_option}
@@ -388,7 +423,7 @@ const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onF
                                     <EventOptionCard
                                         key={index} 
                                         me={me}
-                                        onSet={(id:number)=> setEditEvent({...editEvent, choosen_event_option_id: id})} 
+                                        onSet={(id:number)=> {setEditEvent({...editEvent, choosen_event_option_id: id}); if(event){event.choosen_event_option_id = id}}} 
                                         onEdit={(editedEventOption:EventOptionProp)=>{handleUpdateEventOption(editedEventOption, index)}}
                                         onDelete={(deletedEventOption:EventOptionProp)=>{handleDeleteEventOption(deletedEventOption, index)}}
                                         event_option={event_option}
@@ -410,37 +445,51 @@ const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onF
                     setCreateModalVisibleEventOption(false);
                 }}
                 onCancel={()=>{setCreateModalVisibleEventOption(false);}}
-                okButtonProps={{ disabled: !(createEventOption.end_time === null || dayjs(createEventOption.start_time, 'HH:mm:ss').isBefore(dayjs(createEventOption.end_time, 'HH:mm:ss'))) }}
+                okButtonProps={{ disabled: editModalEventOptionOKButton }}
             >
                 <div style={{ display: "flex", flexDirection:"column", alignItems: "start", justifyContent: "start", height:"100%", gap:'10px' }}>
                     <div>
                         <span style={{marginRight:"5px"}}>Date:</span>
-                        <DatePicker allowClear={false} defaultValue={dayjs(createEventOption.date, 'YYYY-MM-DD')} minDate={tomorrow} onChange={(date, dateString) => {
-                            if (typeof dateString === 'string') {
-                                createEventOption.date = dateString;
-                            }
-                        }} />
+                        <DatePicker 
+                            allowClear={false} 
+                            defaultValue={dayjs(createEventOption.date, 'YYYY-MM-DD')} 
+                            minDate={tomorrow} 
+                            onChange={(date, dateString) => {
+                                if (typeof dateString === 'string') {
+                                    createEventOption.date = dateString;
+                                }
+                            }}/>
                     </div>
                     <div>
                         <span style={{marginRight:"5px"}}>Start Time:</span>
-                    <DatePicker allowClear={false} picker="time" defaultValue={dayjs(createEventOption.start_time, 'HH:mm:ss')} onChange={(startTime, startTimeString) => {
-                        if (typeof startTimeString === 'string') {
-                            createEventOption.start_time = startTimeString;
-                        }
-                    }} />
+                        <TimePicker allowClear={false} changeOnScroll needConfirm={false} showNow={false} defaultValue={dayjs(createEventOption.start_time, 'HH:mm:ss')} format={'HH:mm'} onChange={(startTime, startTimeString) => {
+                            if (typeof startTimeString === 'string') {
+                                createEventOption.start_time = `${startTimeString}:00`;
+                            }
+                            setEditModalEventOptionOKButton(!(createEventOption.end_time === null || dayjs(createEventOption.start_time, 'HH:mm:ss').isBefore(dayjs(createEventOption.end_time, 'HH:mm:ss'))))
+                        }} />
                     </div>
                     <div>
                         <span style={{marginRight:"5px"}}>End Time:</span>
-                    <DatePicker allowClear={true}  picker="time" defaultValue={dayjs(createEventOption.end_time, 'HH:mm:ss')}  onChange={(endTime, endTimeString) => {
-                        if (typeof endTimeString === 'string') {
-                            if(endTime===null){
-                                createEventOption.end_time = null;
+                        <TimePicker
+                            allowClear
+                            changeOnScroll
+                            needConfirm={false}
+                            showNow={false}
+                            defaultValue={
+                                createEventOption.end_time !== null
+                                    ? dayjs(createEventOption.end_time, 'HH:mm:ss')
+                                    : null
                             }
-                            else{
-                                createEventOption.end_time = endTimeString;
-                            }
-                        }
-                    }} />
+                            format="HH:mm"
+                            onChange={(endTime, endTimeString) => {
+                                if (typeof endTimeString === 'string') {
+                                    createEventOption.end_time = endTime !== null ? `${endTimeString}:00` : null;
+                                }
+                                setEditModalEventOptionOKButton(!(createEventOption.end_time === null || dayjs(createEventOption.start_time, 'HH:mm:ss').isBefore(dayjs(createEventOption.end_time, 'HH:mm:ss'))))
+                            }}
+                            disabledTime={(date) => disabledTime(date)}
+                        />
                     </div>
                 </div>
             </Modal>

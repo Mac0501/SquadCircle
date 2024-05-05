@@ -47,6 +47,9 @@ async def get_group(request: Request, my_user: User, group: Group|None):
 async def update_group(request: Request, my_user: User, group: Group|None):
     data = filter_dict_by_keys(request.json, ["name", "description"])
     if group:
+        checkName = await Group.check_name_exists(data["name"], group.id)
+        if checkName:
+            return json({"error": f"Name already in use."}, status=400)
         await group.update_from_dict(data)
         await group.save()
         return json(group.to_dict())

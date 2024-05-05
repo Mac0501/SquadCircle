@@ -16,6 +16,7 @@ import VotesGroupPage from './GroupPages/VotesGroupPage';
 import VoteModal from '../components/VoteModal';
 import OverviewGroupPage from './GroupPages/OverviewGroupPage';
 import { useLocation, useNavigate } from 'react-router-dom';
+import SettingsGroupPage from './GroupPages/SettingsGroupPage';
 const { TabPane } = Tabs;
 
   interface GroupProps {
@@ -78,6 +79,7 @@ const { TabPane } = Tabs;
                 setMembers(membersData);
             });
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [events, group, me.id, votes]);
     
     useEffect(() => {
@@ -195,6 +197,9 @@ const { TabPane } = Tabs;
                         <InvitesGroupPage group={group} invites={invites ? invites : []}/>
                     </TabPane>
                 }
+                <TabPane tab="Settings" key={`/group/${group.id}/settings`}>
+                    <SettingsGroupPage me={me} group={group} mePermissions={mePermissions} />
+                </TabPane>
             </Tabs>
             <EventModal me={me} mePermissions={mePermissions} visible={eventModalVisible} onFinish={handleFinishEvent} onDelete={handleDeleteEvent} onCancel={handleCloseEventModal} group={group} members={members ? members : []}/>
             <VoteModal me={me} mePermissions={mePermissions} visible={voteModalVisible} onFinish={handleFinishVote} onDelete={handleDeleteVote} onCancel={handleCloseVoteModal} group={group} members={members ? members : []}/>

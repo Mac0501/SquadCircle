@@ -5,6 +5,7 @@ import UserAndGroup from "./UserAndGroup";
 import UserGroupPermission from "./UserGroupPermission";
 import Event from "./Event";
 import Vote from "./Vote";
+import { message } from "antd";
 
 class Group {
     id: number;
@@ -110,7 +111,10 @@ class Group {
                 const groupData = await response.json();
                 this.name = groupData.name;
                 this.description = groupData.description;;
-            }
+            } else if (response.status === 400) {
+            const errorMessage = await response.json();
+            message.error(errorMessage.error)
+        }
             return response.ok;
         } catch (error) {
             console.error('Error updating group:', error);

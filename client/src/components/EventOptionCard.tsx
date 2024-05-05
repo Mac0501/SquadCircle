@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import Me from '../api/Me';
 import { EventOptionResponseEnum, EventStateEnum, UserGroupPermissionEnum } from '../utils/types';
 import { CheckCircleOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Card, DatePicker, Modal, Progress, Radio, RadioChangeEvent, Tooltip } from 'antd';
+import { Card, DatePicker, Modal, Progress, Radio, RadioChangeEvent, TimePicker, Tooltip } from 'antd';
 import EventOption from '../api/EventOption';
 import User from '../api/User';
 import UserEventOptionResponse from '../api/UserEventOptionResponse';
 import dayjs from 'dayjs';
+import { displayDate, displayTime } from '../utils/formatDisplayes';
 
 interface EventOptionCardProps {
     me: Me,
@@ -74,6 +75,7 @@ async function set_for_event(event_option_id:number): Promise<boolean> {
 
 const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, mePermissions, editable = false, onSet, onEdit, onDelete, members, event_state }) => {
     const [deleteConfirmVisibleEventOption, setDeleteConfirmVisibleEventOption] = useState<boolean>(false);
+    const [editModalEventOptionOKButton, setEditModalEventOptionOKButton] = useState<boolean>(!(event_option.end_time === null || dayjs(event_option.start_time, 'HH:mm:ss').isBefore(dayjs(event_option.end_time, 'HH:mm:ss'))));
     const [editModalVisibleEventOption, setEditModalVisibleEventOption] = useState<boolean>(false);
     const [choosenOption, setChoosenOption] = useState<UserEventOptionResponse|null>(() => {
         const userEventOptionResponse = event_option.user_event_option_responses?.find(response => {
@@ -84,7 +86,9 @@ const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, meP
     });
 
     const [acceptedCount, setAcceptedCount] = useState<number>(0);
-    const [deniedCount, setDeniedCount] = useState<number>(0);
+    const [deniedCount, setDeniedCount] = useState<number>(0)
+
+    const oldEventOptionData = {date: event_option.date, start_time: event_option.start_time, end_time:event_option.end_time}
 
     useEffect(() => {
         // Calculate counts of ACCEPTED and DENIED responses when component mounts
@@ -138,6 +142,39 @@ const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, meP
         }
     }
 
+    const disabledTime = (now: dayjs.Dayjs) => {
+        const startTime = dayjs(event_option.start_time, 'HH:mm:ss');
+    
+        // Disable hours from 0 to the current hour
+        const disabledHours = () => {
+            const hours = [];
+            const startHour = startTime.hour();
+            for (let i = 0; i < startHour; i++) {
+                hours.push(i);
+            }
+            return hours;
+        }
+    
+        // Disable minutes if the hour is the current hour
+        const disabledMinutes = (selectedHour: number) => {
+            if (selectedHour === startTime.hour()) {
+                const minutes = [];
+                const startMinute = startTime.minute();
+                for (let i = 0; i < startMinute; i++) {
+                    minutes.push(i);
+                }
+                return minutes;
+            }
+            // Return an empty array if minutes are not disabled
+            return [];
+        }
+    
+        return {
+            disabledHours,
+            disabledMinutes,
+        };
+    };
+    
 
     return (
         <div>
@@ -161,8 +198,8 @@ const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, meP
             >
                 <div style={{ display: "flex", flexDirection:"column", alignItems: "center", justifyContent: "center", height:"100%" }}>
                     <div style={{ display: "flex", flexDirection:"column", flex: 1, alignItems:"center", justifyContent:"center" }}>
-                        <h1 style={{ marginBottom:"4px" }} >{event_option.date}</h1>
-                        <div>{event_option.start_time} {event_option.end_time && ` - ${event_option.end_time}`}</div>
+                        <h1 style={{ marginBottom:"4px" }} >{displayDate(event_option.date)}</h1>
+                        <div>{displayTime(event_option.start_time)} {event_option.end_time && ` - ${displayTime(event_option.end_time)}`}</div>
                     </div>
                     <div style={{ display: "flex", flex: 1, height:"100%", alignItems:"center", justifyContent:"center", marginTop:"16px" }}>
                         <Radio.Group
@@ -201,8 +238,8 @@ const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, meP
                     }
                     setEditModalVisibleEventOption(false);
                 }}
-                onCancel={()=>{setEditModalVisibleEventOption(false);}}
-                okButtonProps={{ disabled: !(event_option.end_time === null || dayjs(event_option.start_time, 'HH:mm:ss').isBefore(dayjs(event_option.end_time, 'HH:mm:ss'))) }}
+                onCancel={()=>{setEditModalVisibleEventOption(false); event_option.date = oldEventOptionData.date; event_option.start_time = oldEventOptionData.start_time; event_option.end_time = oldEventOptionData.end_time;}}
+                okButtonProps={{ disabled: editModalEventOptionOKButton }}
             >
                 <div style={{ display: "flex", flexDirection:"column", alignItems: "start", justifyContent: "start", height:"100%", gap:'10px' }}>
                     <div>
@@ -215,24 +252,34 @@ const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, meP
                     </div>
                     <div>
                         <span style={{marginRight:"5px"}}>Start Time:</span>
-                    <DatePicker allowClear={false} picker="time" defaultValue={dayjs(event_option.start_time, 'HH:mm:ss')} onChange={(startTime, startTimeString) => {
-                        if (typeof startTimeString === 'string') {
-                            event_option.start_time = startTimeString;
-                        }
-                    }} />
+                        <TimePicker allowClear={false} changeOnScroll needConfirm={false} showNow={false} defaultValue={dayjs(event_option.start_time, 'HH:mm:ss')} format={'HH:mm'} onChange={(startTime, startTimeString) => {
+                            if (typeof startTimeString === 'string') {
+                                event_option.start_time = `${startTimeString}:00`;
+                            }
+                            setEditModalEventOptionOKButton(!(event_option.end_time === null || dayjs(event_option.start_time, 'HH:mm:ss').isBefore(dayjs(event_option.end_time, 'HH:mm:ss'))))
+                        }} />
                     </div>
                     <div>
                         <span style={{marginRight:"5px"}}>End Time:</span>
-                    <DatePicker allowClear={true}  picker="time" defaultValue={dayjs(event_option.end_time, 'HH:mm:ss')}  onChange={(endTime, endTimeString) => {
-                        if (typeof endTimeString === 'string') {
-                            if(endTime===null){
-                                event_option.end_time = null;
+                        <TimePicker
+                            allowClear
+                            changeOnScroll
+                            needConfirm={false}
+                            showNow={false}
+                            defaultValue={
+                                event_option.end_time !== null
+                                    ? dayjs(event_option.end_time, 'HH:mm:ss')
+                                    : null
                             }
-                            else{
-                                event_option.end_time = endTimeString;
-                            }
-                        }
-                    }} />
+                            format="HH:mm"
+                            onChange={(endTime, endTimeString) => {
+                                if (typeof endTimeString === 'string') {
+                                    event_option.end_time = endTime !== null ? `${endTimeString}:00` : null;
+                                }
+                                setEditModalEventOptionOKButton(!(event_option.end_time === null || dayjs(event_option.start_time, 'HH:mm:ss').isBefore(dayjs(event_option.end_time, 'HH:mm:ss'))))
+                            }}
+                            disabledTime={(date) => disabledTime(date)}
+                        />
                     </div>
                 </div>
             </Modal>

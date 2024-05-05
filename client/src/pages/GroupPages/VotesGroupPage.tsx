@@ -28,23 +28,27 @@ const VotesGroupPage: React.FC<VotesGroupPageProps> = ({ me, group, votes, membe
     };
 
     return (
-        <List
-            grid={{
-                gutter: 16,
-                xs: 1,
-                sm: 2,
-                md: 2,
-                lg: 2,
-                xl: 3,
-                xxl: 3,
-            }}
-            dataSource={votesList}
-            renderItem={(vote: Vote) => (
-                <List.Item>
-                    <VoteCard me={me} vote={vote} mePermissions={mePermissions} group={group} members={members} onDelete={handleDeleteVote}/>
-                </List.Item>
-            )}
-        />
+        <>
+        {votesList.length > 0 && (
+            <List
+                grid={{
+                    gutter: 16,
+                    xs: 1,
+                    sm: 2,
+                    md: 2,
+                    lg: 2,
+                    xl: 3,
+                    xxl: 3,
+                }}
+                dataSource={votesList}
+                renderItem={(vote: Vote) => (
+                    <List.Item>
+                        <VoteCard me={me} vote={vote} mePermissions={mePermissions} group={group} members={members} onDelete={handleDeleteVote}/>
+                    </List.Item>
+                )}
+            />
+        )}
+        </>
     );
 };
 

@@ -3,6 +3,7 @@ import { Form, Button, TableProps, Table, Modal, Select, Space} from 'antd';
 
 import Invite from '../../api/Invites';
 import Group from '../../api/Group';
+import { displayDateTime } from '../../utils/formatDisplayes';
 
 interface InvitesAdminPageProps {
     invites: Invite[];
@@ -34,6 +35,7 @@ interface InvitesAdminPageProps {
           dataIndex: 'expiration_date',
           key: 'expiration_date',
           align: 'center',
+          render: (text: string) => (displayDateTime(text))
       },
       {
         title: 'Group',

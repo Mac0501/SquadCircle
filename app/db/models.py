@@ -63,6 +63,11 @@ class Group(Model):
     
     async def get_group_id(self) -> int:
         return self.id
+    
+    @staticmethod
+    async def check_name_exists(name: str, group_id: int) -> bool:
+        group = await Group.get_or_none(name=name)
+        return (group != None and group.id != group_id)
 
 class UserAndGroup(Model):
     __parse_name__ = "user_and_group"
@@ -113,7 +118,7 @@ class UserGroupPermission(Model):
 
     def to_dict(self) -> Dict[str, any]:
         return {"id":self.id, "permission":self.permission, "user_and_group_id":self.user_and_group_id}
-
+    
     async def get_group_id(self) -> int:
         user_and_group = await UserAndGroup.get(id=self.user_and_group_id)
         return user_and_group.group_id

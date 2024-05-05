@@ -58,7 +58,7 @@ const UsersGroupPage: React.FC<UsersProps> = ({ me, group, users, members, mePer
             hidden: !(me.owner || mePermissions.includes(UserGroupPermissionEnum.ADMIN) || mePermissions.includes(UserGroupPermissionEnum.MANAGE_USERS)),
             render: (text: string, record: User) => (
                 <Space size="middle">
-                    <Button type="primary" onClick={() => handleEditModalOpenMember(record)}>
+                    <Button type="primary" disabled={!(me.owner || record.id !== me.id)} onClick={() => handleEditModalOpenMember(record)}>
                         Edit
                     </Button>
                     <Button type="primary" danger onClick={() => handleRemoveMember(record)}>
@@ -255,10 +255,10 @@ const UsersGroupPage: React.FC<UsersProps> = ({ me, group, users, members, mePer
                     )}
                     <Form.Item name="checkbox-group" label="Permissions">
                         <Space direction="vertical">
-                            <Checkbox checked={selectedMember.permissions.includes(UserGroupPermissionEnum.ADMIN)} style={{ lineHeight: '32px' }} onChange={() => permissionChange(UserGroupPermissionEnum.ADMIN)}>
+                            <Checkbox disabled={!me.owner} checked={selectedMember.permissions.includes(UserGroupPermissionEnum.ADMIN)} style={{ lineHeight: '32px' }} onChange={() => permissionChange(UserGroupPermissionEnum.ADMIN)}>
                                 Admin
                             </Checkbox>
-                            <Checkbox checked={selectedMember.permissions.includes(UserGroupPermissionEnum.MANAGE_USERS)} style={{ lineHeight: '32px' }} onChange={() => permissionChange(UserGroupPermissionEnum.MANAGE_USERS)}>
+                            <Checkbox disabled={!mePermissions.includes(UserGroupPermissionEnum.ADMIN)} checked={selectedMember.permissions.includes(UserGroupPermissionEnum.MANAGE_USERS)} style={{ lineHeight: '32px' }} onChange={() => permissionChange(UserGroupPermissionEnum.MANAGE_USERS)}>
                                 Manage Users
                             </Checkbox>
                             <Checkbox checked={selectedMember.permissions.includes(UserGroupPermissionEnum.MANAGE_EVENTS)} style={{ lineHeight: '32px' }} onChange={() => permissionChange(UserGroupPermissionEnum.MANAGE_EVENTS)}>

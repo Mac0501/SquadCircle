@@ -30,23 +30,27 @@ const EventsGroupPage: React.FC<EventsGroupPageProps> = ({ me, group, events, me
     };
 
     return (
-        <List
-            grid={{
-                gutter: 16,
-                xs: 1,
-                sm: 2,
-                md: 2,
-                lg: 2,
-                xl: 3,
-                xxl: 3,
-            }}
-            dataSource={eventsList}
-            renderItem={(event: Event) => (
-                <List.Item>
-                    <EventCard me={me} event={event} mePermissions={mePermissions} group={group} members={members} onDelete={handleDeleteEvent}/>
-                </List.Item>
-            )}
-        />
+        <>
+        {eventsList.length > 0 && (
+            <List
+                grid={{
+                    gutter: 16,
+                    xs: 1,
+                    sm: 2,
+                    md: 2,
+                    lg: 2,
+                    xl: 3,
+                    xxl: 3,
+                }}
+                dataSource={eventsList}
+                renderItem={(event: Event) => (
+                    <List.Item>
+                        <EventCard me={me} event={event} mePermissions={mePermissions} group={group} members={members} onDelete={handleDeleteEvent}/>
+                    </List.Item>
+                )}
+            />
+        )}
+        </>
     );
 };
 

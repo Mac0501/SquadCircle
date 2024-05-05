@@ -10,6 +10,7 @@ import VoteCard from '../../components/VoteCard';
 import EventCard from '../../components/EventCard';
 import dayjs, { Dayjs } from 'dayjs';
 import { CalendarProps, HeaderRender } from 'antd/es/calendar/generateCalendar';
+import { displayDate } from '../../utils/formatDisplayes';
 
 interface OverviewGroupPageProps {
     me: Me,
@@ -27,7 +28,6 @@ const OverviewGroupPage: React.FC<OverviewGroupPageProps> = ({ me, group, toDoVo
     const [dayModalEventList, setDayModalEventList] = useState<Event[]>([]);
     const [dayModalTitle, setDayModalTitle] = useState<string>();
     const [dayModalVisible, setDayModalVisible] = useState<boolean>(false);
-    const [eventsCalenderList, setEventsCalenderList] = useState<Event[]>(calenderEvents);
 
     const handleDeleteVote = async (deletedVote: Vote) => {
         const updatedVotesList = votesList.filter(vote => vote.id !== deletedVote.id);
@@ -53,7 +53,7 @@ const OverviewGroupPage: React.FC<OverviewGroupPageProps> = ({ me, group, toDoVo
 
     const dateCellRender = (value: Dayjs) => {
         const formattedDate = value.format('YYYY-MM-DD');
-        const listData = eventsCalenderList.filter(event => {
+        const listData = calenderEvents.filter(event => {
             const chosenOption = event.choosen_event_option;
             return chosenOption && dayjs(chosenOption.date).format('YYYY-MM-DD') === formattedDate;
         });
@@ -70,7 +70,7 @@ const OverviewGroupPage: React.FC<OverviewGroupPageProps> = ({ me, group, toDoVo
 
     const onSelect = (value: Dayjs) => {
         const formattedDate = value.format('YYYY-MM-DD');
-        const listData = eventsCalenderList.filter(event => {
+        const listData = calenderEvents.filter(event => {
             const chosenOption = event.choosen_event_option;
             return chosenOption && dayjs(chosenOption.date).format('YYYY-MM-DD') === formattedDate;
         });
@@ -132,7 +132,7 @@ const OverviewGroupPage: React.FC<OverviewGroupPageProps> = ({ me, group, toDoVo
         )}
         <Calendar validRange={[firstDayOfMonth,lastDayOfMonth]} headerRender={renderEmptyHeader} cellRender={cellRender} onSelect={onSelect}/>
         <Modal
-              title={dayModalTitle}
+              title={displayDate(dayModalTitle ? dayModalTitle: "")}
               open={dayModalVisible}
               onOk={() => setDayModalVisible(false)}
               onCancel={() => setDayModalVisible(false)}
@@ -144,31 +144,33 @@ const OverviewGroupPage: React.FC<OverviewGroupPageProps> = ({ me, group, toDoVo
                 </div>
                 }
           >
-              <List
-                grid={{
-                    gutter: 16,
-                    xs: 1,
-                    sm: 1,
-                    md: 1,
-                    lg: 1,
-                    xl: 1,
-                    xxl: 1,
-                }}
-                dataSource={dayModalEventList}
-                renderItem={(event: Event) => (
-                    <List.Item>
-                        <Card 
-                            style={{ borderLeftWidth:'5px', borderLeftColor:`#${event.color}` }}>
-                            <div style={{ display: "flex", flexDirection:"column", alignItems: "start", justifyContent: "start", height:"100%", width:"100%", gap:'5px' }}>
-                                <h3 style={{ margin: "0px", width:"100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                    {event.title}
-                                </h3>
-                                <span>{event.choosen_event_option?.start_time} {event.choosen_event_option?.end_time && ` - ${event.choosen_event_option?.end_time}`}</span>
-                            </div>
-                        </Card>
-                    </List.Item>
-                )}
-            />
+            <div style={{ maxHeight: '70vh', overflowY: 'auto', overflowX: 'clip', padding: '5px' }}>
+                <List
+                    grid={{
+                        gutter: 16,
+                        xs: 1,
+                        sm: 1,
+                        md: 1,
+                        lg: 1,
+                        xl: 1,
+                        xxl: 1,
+                    }}
+                    dataSource={dayModalEventList}
+                    renderItem={(event: Event) => (
+                        <List.Item>
+                            <Card 
+                                style={{ borderLeftWidth:'5px', borderLeftColor:`#${event.color}` }}>
+                                <div style={{ display: "flex", flexDirection:"column", alignItems: "start", justifyContent: "start", height:"100%", width:"100%", gap:'5px' }}>
+                                    <h3 style={{ margin: "0px", width:"100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                        {event.title}
+                                    </h3>
+                                    <span>{event.choosen_event_option?.start_time} {event.choosen_event_option?.end_time && ` - ${event.choosen_event_option?.end_time}`}</span>
+                                </div>
+                            </Card>
+                        </List.Item>
+                    )}
+                />
+            </div>
           </Modal>
     </div>
     );

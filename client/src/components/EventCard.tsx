@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Me from '../api/Me';
 import Event from '../api/Event';
-import { UserGroupPermissionEnum } from '../utils/types';
+import { EventStateEnum, UserGroupPermissionEnum } from '../utils/types';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import { Badge, Card, List, Typography } from 'antd';
 import EventOption from '../api/EventOption';
@@ -30,7 +30,7 @@ const EventCard: React.FC<EventCardProps> = ({ me, event, mePermissions, group, 
     useEffect(() => {
         setCurrentEvent(event); 
         const differenceInDays = Math.ceil((Date.now() - event.created.getTime()) / (1000 * 60 * 60 * 24));
-        setIsNew(differenceInDays <= 7);
+        setIsNew(!(differenceInDays > 7 || event.state !== EventStateEnum.VOTING));
     }, [event]);
 
     const handleOpenEventModal = () => {
