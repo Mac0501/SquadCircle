@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import Me from '../api/Me';
 import { EventOptionResponseEnum, EventStateEnum, UserGroupPermissionEnum } from '../utils/types';
 import { CheckCircleOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Card, DatePicker, Modal, Progress, Radio, RadioChangeEvent, TimePicker, Tooltip } from 'antd';
+import { Card, DatePicker, Modal, Progress, Radio, RadioChangeEvent, TimePicker, Tooltip, Typography, Button, Collapse } from 'antd';
 import EventOption from '../api/EventOption';
 import User from '../api/User';
 import UserEventOptionResponse from '../api/UserEventOptionResponse';
 import dayjs from 'dayjs';
 import { displayDate, displayTime } from '../utils/formatDisplayes';
+import UserAvatar from './UserAvatar';
 
 interface EventOptionCardProps {
     me: Me,
@@ -75,6 +76,7 @@ async function set_for_event(event_option_id:number): Promise<boolean> {
 
 const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, mePermissions, editable = false, onSet, onEdit, onDelete, members, event_state }) => {
     const [deleteConfirmVisibleEventOption, setDeleteConfirmVisibleEventOption] = useState<boolean>(false);
+    const [showEventOptionVoteList, setShowEventOptionVoteList] = useState<boolean>(false);
     const [editModalEventOptionOKButton, setEditModalEventOptionOKButton] = useState<boolean>(!(event_option.end_time === null || dayjs(event_option.start_time, 'HH:mm:ss').isBefore(dayjs(event_option.end_time, 'HH:mm:ss'))));
     const [editModalVisibleEventOption, setEditModalVisibleEventOption] = useState<boolean>(false);
     const [choosenOption, setChoosenOption] = useState<UserEventOptionResponse|null>(() => {
@@ -88,17 +90,78 @@ const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, meP
     const [acceptedCount, setAcceptedCount] = useState<number>(0);
     const [deniedCount, setDeniedCount] = useState<number>(0)
 
+    const [acceptedMembers, setAcceptedMembers] = useState<User[]>([])
+    const [deniedMembers, setDeniedMembers] = useState<User[]>([])
+    const [restMembers, setRestMembers] = useState<User[]>([])
+
     const oldEventOptionData = {date: event_option.date, start_time: event_option.start_time, end_time:event_option.end_time}
 
     useEffect(() => {
-        // Calculate counts of ACCEPTED and DENIED responses when component mounts
+        const acceptedUsers: User[] = [];
+        const deniedUsers: User[] = [];
+        let restUsers: User[] = []; 
+
+        if (event_option.user_event_option_responses) {
+            event_option.user_event_option_responses.forEach(user_event_option_response => {
+                if (user_event_option_response.user_and_group === null) return;
+        
+                const userId = user_event_option_response.user_and_group.user_id;
+                const user = members.find(member => member.id === userId);
+        
+                if (!user) return;
+        
+                if (user_event_option_response.response === EventOptionResponseEnum.ACCEPTED) {
+                    acceptedUsers.push(user);
+                } else if (user_event_option_response.response === EventOptionResponseEnum.DENIED) {
+                    deniedUsers.push(user);
+                }
+            });
+        
+            // Filtering members based on accepted and denied users
+            restUsers = members.filter(member => !acceptedUsers.includes(member) && !deniedUsers.includes(member));
+        } else {
+            restUsers = members;
+        }
+
+        setAcceptedMembers(acceptedUsers);
+        setDeniedMembers(deniedUsers);
+        setRestMembers(restUsers);
         const accepted = event_option.user_event_option_responses?.filter(response => response.response === EventOptionResponseEnum.ACCEPTED).length || 0;
         const denied = event_option.user_event_option_responses?.filter(response => response.response === EventOptionResponseEnum.DENIED).length || 0;
         setAcceptedCount(accepted);
         setDeniedCount(denied);
-    }, [event_option.user_event_option_responses]);
+    }, [event_option.user_event_option_responses, members]);
 
     const updateCounts = () => {
+        const acceptedUsers: User[] = [];
+        const deniedUsers: User[] = [];
+        let restUsers: User[] = []; 
+
+        if (event_option.user_event_option_responses) {
+            event_option.user_event_option_responses.forEach(user_event_option_response => {
+                if (user_event_option_response.user_and_group === null) return;
+        
+                const userId = user_event_option_response.user_and_group.user_id;
+                const user = members.find(member => member.id === userId);
+        
+                if (!user) return;
+        
+                if (user_event_option_response.response === EventOptionResponseEnum.ACCEPTED) {
+                    acceptedUsers.push(user);
+                } else if (user_event_option_response.response === EventOptionResponseEnum.DENIED) {
+                    deniedUsers.push(user);
+                }
+            });
+        
+            // Filtering members based on accepted and denied users
+            restUsers = members.filter(member => !acceptedUsers.includes(member) && !deniedUsers.includes(member));
+        } else {
+            restUsers = members;
+        }
+
+        setAcceptedMembers(acceptedUsers);
+        setDeniedMembers(deniedUsers);
+        setRestMembers(restUsers);
         const accepted = event_option.user_event_option_responses?.filter(response => response.response === EventOptionResponseEnum.ACCEPTED).length || 0;
         const denied = event_option.user_event_option_responses?.filter(response => response.response === EventOptionResponseEnum.DENIED).length || 0;
         setAcceptedCount(accepted);
@@ -216,6 +279,7 @@ const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, meP
                         <Progress success={{ percent: acceptedPercentage, strokeColor:"#52c41a" }} strokeColor="#aaaaaa" trailColor='#f5222d' percent={membersLeftPercentage} type="line" showInfo={false} style={{width:"100%", marginLeft:"5px", marginRight:"5px"}}/>
                         <div>{deniedCount}</div>
                     </div>
+                    <Typography.Link onClick={()=> {setShowEventOptionVoteList(true)}}>Show votes</Typography.Link>
                 </div>
             </Card>
             <Modal
@@ -281,6 +345,66 @@ const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, meP
                             disabledTime={(date) => disabledTime(date)}
                         />
                     </div>
+                </div>
+            </Modal>
+            <Modal
+                title="Votes"
+                open={showEventOptionVoteList}
+                onOk={() => {setShowEventOptionVoteList(false)}}
+                onCancel={()=>{setShowEventOptionVoteList(false);}}
+                footer={
+                    <div style={{ display: 'flex', justifyContent:'end' }}>
+                        <Button type="primary" onClick={() => setShowEventOptionVoteList(false)} key="submit">
+                            Close
+                        </Button>
+                    </div>
+                    }
+            >
+                <div style={{ display: 'flex', flexDirection: 'column', maxHeight:"50vh", overflowY: 'auto', overflowX: 'clip', padding:"5px"}}>
+                    <Collapse defaultActiveKey={['1','2','3']} ghost>
+                        <Collapse.Panel header={<span style={{color:"#52c41a", fontWeight: 'bold', fontSize: '16px'}} >Accepted</span>} key="1">
+                            {acceptedMembers.length > 0 ? (
+                                <div style={{padding:"5px"}}>
+                                    {acceptedMembers.map(acceptedMember => {
+                                        return (<div style={{ display: 'flex', alignItems: 'center', marginBottom: 5 }} key={acceptedMember.id}>
+                                            <div style={{width:"30px"}}>
+                                                <UserAvatar user={acceptedMember} size={30} />
+                                            </div>
+                                            <span style={{ marginLeft: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{acceptedMember.name}</span>
+                                        </div>)
+                                    })}
+                                </div>
+                            ) : ("Nobody accepted yet.")}
+                        </Collapse.Panel>
+                        <Collapse.Panel header={<span style={{color:"#f5222d", fontWeight: 'bold', fontSize: '16px'}} >Denied</span>} key="2">
+                            {deniedMembers.length > 0 ? (
+                                <div style={{padding:"5px"}}>
+                                    {deniedMembers.map(deniedMember => {
+                                        return (<div style={{ display: 'flex', alignItems: 'center', marginBottom: 5 }} key={deniedMember.id}>
+                                            <div style={{width:"30px"}}>
+                                                <UserAvatar user={deniedMember} size={30} />
+                                            </div>
+                                            <span style={{ marginLeft: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{deniedMember.name}</span>
+                                        </div>)
+                                    })}
+                                </div>
+                            ) : ("Nobody denied yet.")}
+                        </Collapse.Panel>
+                        <Collapse.Panel header={<span style={{fontWeight: 'bold', fontSize: '16px'}} >Didn't Vote</span>} key="3">
+                            {restMembers.length > 0 ? (
+                                <div style={{padding:"5px"}}>
+                                    {restMembers.map(restMember => {
+                                        return (<div style={{ display: 'flex', alignItems: 'center', marginBottom: 5 }} key={restMember.id}>
+                                            <div style={{width:"30px"}}>
+                                                <UserAvatar user={restMember} size={30} />
+                                            </div>
+                                            <span style={{ marginLeft: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{restMember.name}</span>
+                                        </div>)
+                                    })}
+                                </div>
+                            ) : ("Everyone has Voted")}
+                        </Collapse.Panel>
+                    </Collapse>
                 </div>
             </Modal>
         </div>

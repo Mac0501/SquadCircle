@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import Me from '../api/Me';
 import {  UserGroupPermissionEnum } from '../utils/types';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Card, Checkbox, Input, Modal, Progress, Tooltip } from 'antd';
+import { Avatar, Card, Checkbox, Input, Modal, Progress, Tooltip } from 'antd';
 import VoteOption from '../api/VoteOption';
 import User from '../api/User';
 import UserVoteOptionResponse from '../api/UserVoteOptionResponse';
+import UserAvatar from './UserAvatar';
 
 interface VoteOptionCardProps {
     me: Me,
@@ -97,7 +98,6 @@ const VoteOptionCard: React.FC<VoteOptionCardProps> = ({ me, vote_option, mePerm
     return (
         <div>
             <Card 
-                hoverable
                 actions={editable ? [
                     <Tooltip title="Edit this vote option." trigger="hover">
                         <EditOutlined key="edit" onClick={()=>{setEditModalVisibleVoteOption(true)}}/>
@@ -112,13 +112,58 @@ const VoteOptionCard: React.FC<VoteOptionCardProps> = ({ me, vote_option, mePerm
                         <Checkbox disabled={(vote_option.id === null)} checked={choosenOption ? true : false} onChange={(e)=>{onChooseOption()}}/>
                     </div>
                     <div style={{ display: "flex", flexDirection:"column", alignItems: "center", justifyContent: "center", height:"100%", width:'100%' }}>
-                        <div style={{ display: "flex", flexDirection:"row", alignItems: "center", justifyContent: "space-between", height:"100%", width:'100%' }}>
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "start", height:"100%", width:'80%' }}>
-                                <span style={{ overflowWrap: 'break-word', wordWrap: 'break-word', maxWidth:'100%' }}>
+                        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", height: "100%", width: '100%' }}>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "start", flex: '1', minWidth: 0 }}>
+                                <span style={{ overflowWrap: 'break-word', wordWrap: 'break-word', maxWidth: '100%' }}>
                                     {vote_option.title}
                                 </span>
                             </div>
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "end", height:"100%", width:'20%' }}>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "end", minWidth: 0 }}>
+                                {vote_option.user_vote_option_responses && (
+                                    <Tooltip
+                                        title={
+                                            <div style={{ display: 'flex', flexDirection: 'column', maxHeight:"100px", overflowY: 'auto', overflowX: 'clip', padding:"5px"}}>
+                                                {vote_option.user_vote_option_responses.map(user_vote_option_response => {
+                                                    if(user_vote_option_response.user_and_group === null) return null;
+                                                    const userId = user_vote_option_response.user_and_group.user_id;
+                                                    const user = members.find(member => member.id === userId);
+                                                    return user ? (
+                                                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 5 }} key={userId}>
+                                                            <div style={{width:"30px"}}>
+                                                                <UserAvatar user={user} size={30} />
+                                                            </div>
+                                                            <span style={{ marginLeft: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</span>
+                                                        </div>
+                                                    ) : null;
+                                                })}
+                                            </div>
+                                        }
+                                        trigger="click"
+                                    >
+                                        <div style={{ display: "flex", alignItems: "center", marginLeft:"5px"}}>
+                                            <Avatar.Group maxCount={4} size={30} style={{cursor: 'pointer'}}>
+                                                {vote_option.user_vote_option_responses.slice(0, 3).map(user_vote_option_response => {
+                                                    if(user_vote_option_response.user_and_group === null){return null}
+                                                    const userId = user_vote_option_response.user_and_group.user_id;
+                                                    const user = members.find(member => member.id === userId);
+                                                    return user ? (
+                                                        <UserAvatar user={user} size={30} />
+                                                    ) : null;
+                                                })}
+                                                {vote_option.user_vote_option_responses.length > 4 && (
+                                                    <Avatar size={30} style={{ color: '#f56a00', backgroundColor: '#fde3cf', fontSize:"14px"}}>+{vote_option.user_vote_option_responses.length-3}</Avatar>
+                                                )}
+                                                {vote_option.user_vote_option_responses.length === 4 && (
+                                                    vote_option.user_vote_option_responses[3].user_and_group !== null && (
+                                                        members.find(member => member.id === vote_option.user_vote_option_responses![3].user_and_group!.user_id) &&(
+                                                            <UserAvatar user={members.find(member => member.id === vote_option.user_vote_option_responses![3].user_and_group!.user_id)!} size={30} />
+                                                        )
+                                                    )
+                                                )}
+                                            </Avatar.Group>
+                                        </div>
+                                    </Tooltip>
+                                )}
                                 {voted}
                             </div>
                         </div>
