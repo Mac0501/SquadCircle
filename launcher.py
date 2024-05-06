@@ -4,6 +4,6 @@ from app.backend import app
 
 if __name__ == "__main__":
     app.run(
-        fast=True,
+        single_process=True,
         access_log=False,
         )
