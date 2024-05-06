@@ -10,7 +10,7 @@ import VoteCard from '../../components/VoteCard';
 import EventCard from '../../components/EventCard';
 import dayjs, { Dayjs } from 'dayjs';
 import { CalendarProps, HeaderRender } from 'antd/es/calendar/generateCalendar';
-import { displayDate } from '../../utils/formatDisplayes';
+import { displayDate, displayTime } from '../../utils/formatDisplayes';
 
 interface OverviewGroupPageProps {
     me: Me,
@@ -164,7 +164,7 @@ const OverviewGroupPage: React.FC<OverviewGroupPageProps> = ({ me, group, toDoVo
                                     <h3 style={{ margin: "0px", width:"100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                         {event.title}
                                     </h3>
-                                    <span>{event.choosen_event_option?.start_time} {event.choosen_event_option?.end_time && ` - ${event.choosen_event_option?.end_time}`}</span>
+                                    <span>{event.choosen_event_option ? displayTime(event.choosen_event_option?.start_time) : ""} {event.choosen_event_option?.end_time && ` - ${displayTime(event.choosen_event_option?.end_time)}`}</span>
                                 </div>
                             </Card>
                         </List.Item>
