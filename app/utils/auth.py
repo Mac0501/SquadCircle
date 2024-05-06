@@ -34,7 +34,6 @@ class Register(BaseEndpoint):
         else:
             user = await User.create(name=name, password= User.hash_password(password))
             user_and_group = await UserAndGroup.create(user_id=user.id, group_id=invite.group_id)
-            await invite.delete()
             access_token, output = await self.responses.get_access_token_output(
                 request,
                 user,
