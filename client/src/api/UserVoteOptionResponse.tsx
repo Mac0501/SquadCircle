@@ -35,6 +35,10 @@ class UserVoteOptionResponse {
             if (response.ok) {
                 const responseData = await response.json();
                 return UserVoteOptionResponse.fromJson(responseData);
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -53,6 +57,11 @@ class UserVoteOptionResponse {
                     'Content-Type': 'application/json'
                 }
             });
+            if (fetch_response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return fetch_response.ok;
+            }
             return fetch_response.ok;
         } catch (error) {
             console.error('Error updating user vote option response:', error);

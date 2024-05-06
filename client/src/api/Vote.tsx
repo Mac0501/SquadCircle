@@ -34,6 +34,10 @@ class Vote {
             if (response.ok) {
                 const voteData = await response.json();
                 return Vote.fromJson(voteData);
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -55,6 +59,10 @@ class Vote {
             if (response.ok) {
                 const votesData = await response.json();
                 return votesData.map((voteData: any) => Vote.fromJson(voteData));
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -73,6 +81,11 @@ class Vote {
                     'Content-Type': 'application/json'
                 }
             });
+            if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return response.ok;
+            }
             return response.ok;
         } catch (error) {
             console.error('Error deleting vote:', error);
@@ -94,6 +107,10 @@ class Vote {
                 const voteData = await response.json();
                 this.title = voteData.title;
                 this.multi_select = voteData.multi_select;
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return response.ok;
             }
             return response.ok
         } catch (error) {
@@ -114,6 +131,10 @@ class Vote {
             if (response.ok) {
                 const vote_optionsData = await response.json();
                 return vote_optionsData.map((vote_optionData: any) => new VoteOption(vote_optionData.id, vote_optionData.title, vote_optionData.vote_id));
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -140,6 +161,10 @@ class Vote {
                     this.vote_options.push(newVoteOption)
                 }
                 return newVoteOption;
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }

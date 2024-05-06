@@ -41,6 +41,10 @@ class EventOption {
             if (response.ok) {
                 const event_optionData = await response.json();
                 return new EventOption(event_optionData.id, event_optionData.date, event_optionData.start_time, event_optionData.end_time, event_optionData.event_id);
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -59,6 +63,11 @@ class EventOption {
                     'Content-Type': 'application/json'
                 }
             });
+            if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return response.ok;
+            }
             return response.ok;
         } catch (error) {
             console.error('Error deleting event_option:', error);
@@ -81,6 +90,10 @@ class EventOption {
                 this.date = event_optionData.date;
                 this.start_time = event_optionData.start_time;
                 this.end_time = event_optionData.end_time;
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return response.ok;
             }
             return response.ok
         } catch (error) {
@@ -98,6 +111,11 @@ class EventOption {
                     'Content-Type': 'application/json'
                 }
             });
+            if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return response.ok;
+            }
             return response.ok;
         } catch (error) {
             console.error('Error setting event option for event:', error);
@@ -117,6 +135,10 @@ class EventOption {
             if (response.ok) {
                 const responseData = await response.json();
                 return responseData.map((responseData: any) => UserEventOptionResponse.fromJson(responseData));
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -139,6 +161,10 @@ class EventOption {
             if (fetch_response.ok) {
                 const responseData = await fetch_response.json();
                 return UserEventOptionResponse.fromJson(responseData);
+            } else if (fetch_response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }

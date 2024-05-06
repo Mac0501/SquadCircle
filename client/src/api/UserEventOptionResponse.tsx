@@ -39,6 +39,10 @@ class UserEventOptionResponse {
             if (response.ok) {
                 const responseData = await response.json();
                 return UserEventOptionResponse.fromJson(responseData);
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -61,6 +65,10 @@ class UserEventOptionResponse {
             if (fetch_response.ok) {
                 const responseData = await fetch_response.json();
                 this.response = responseData.response;
+            } else if (fetch_response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return fetch_response.ok;
             }
             return fetch_response.ok;
         } catch (error) {

@@ -25,6 +25,10 @@ class UserAndGroup {
             if (response.ok) {
                 const user_and_groupData = await response.json();
                 return new UserAndGroup(user_and_groupData.id, user_and_groupData.user_id, user_and_groupData.group_id);
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }

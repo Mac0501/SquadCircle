@@ -27,6 +27,11 @@ class VoteOption {
                     'Content-Type': 'application/json'
                 }
             });
+            if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return response.ok;
+            }
             return response.ok;
         } catch (error) {
             console.error('Error deleting vote_option:', error);
@@ -47,6 +52,10 @@ class VoteOption {
             if (response.ok) {
                 const vote_optionData = await response.json();
                 this.title = vote_optionData.date;
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return response.ok;
             }
             return response.ok
         } catch (error) {
@@ -67,6 +76,10 @@ class VoteOption {
             if (response.ok) {
                 const responseData = await response.json();
                 return responseData.map((responseData: any) => UserVoteOptionResponse.fromJson(responseData));
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -88,6 +101,10 @@ class VoteOption {
             if (response.ok) {
                 const responseData = await response.json();
                 return UserVoteOptionResponse.fromJson(responseData);
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -126,6 +143,10 @@ class VoteOption {
             if (response.ok) {
                 const responseData = await response.json();
                 return UserVoteOptionResponse.fromJson(responseData);
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }

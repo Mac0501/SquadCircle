@@ -29,6 +29,10 @@ class User {
             if (response.ok) {
                 const userData = await response.json();
                 return User.fromJson(userData);
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -50,6 +54,10 @@ class User {
             if (response.ok) {
                 const usersData = await response.json();
                 return usersData.map((userData: any) => User.fromJson(userData));
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -68,6 +76,11 @@ class User {
                     'Content-Type': 'application/json'
                 }
             });
+            if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return response.ok;
+            }
             return response.ok;
         } catch (error) {
             console.error('Error deleting user:', error);
@@ -87,6 +100,10 @@ class User {
             if (response.ok) {
                 const groupsData = await response.json();
                 return groupsData.map((groupData: any) => Group.fromJson(groupData));
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }

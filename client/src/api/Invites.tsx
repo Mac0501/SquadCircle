@@ -32,6 +32,10 @@ class Invite {
             if (response.ok) {
                 const inviteData = await response.json();
                 return Invite.fromJson(inviteData);
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -53,6 +57,10 @@ class Invite {
             if (response.ok) {
                 const invitesData = await response.json();
                 return invitesData.map((inviteData: any) => Invite.fromJson(inviteData));
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -71,6 +79,11 @@ class Invite {
                     'Content-Type': 'application/json'
                 }
             });
+            if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return response.ok;
+            }
             return response.ok;
         } catch (error) {
             console.error('Error deleting invite:', error);

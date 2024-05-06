@@ -40,6 +40,10 @@ class Group {
             if (response.ok) {
                 const groupData = await response.json();
                 return Group.fromJson(groupData);
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -61,6 +65,10 @@ class Group {
             if (response.ok) {
                 const groupsData = await response.json();
                 return groupsData.map((groupData: any) => Group.fromJson(groupData));
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -79,6 +87,11 @@ class Group {
                     'Content-Type': 'application/json'
                 }
             });
+            if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return response.ok;
+            }
             return response.ok;
         } catch (error) {
             console.error('Error deleting group:', error);
@@ -112,9 +125,13 @@ class Group {
                 this.name = groupData.name;
                 this.description = groupData.description;;
             } else if (response.status === 400) {
-            const errorMessage = await response.json();
-            message.error(errorMessage.error)
-        }
+                const errorMessage = await response.json();
+                message.error(errorMessage.error)
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return response.ok;
+            }
             return response.ok;
         } catch (error) {
             console.error('Error updating group:', error);
@@ -135,6 +152,10 @@ class Group {
             if (response.ok) {
                 const groupData = await response.json();
                 return new Group(groupData.id, groupData.name, groupData.description);
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -156,6 +177,10 @@ class Group {
             if (response.ok) {
                 const invitesData = await response.json();
                 return invitesData.map((inviteData: any) => new Invite(inviteData.id, inviteData.code, inviteData.expiration_date, inviteData.group_id));
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -178,6 +203,10 @@ class Group {
             if (response.ok) {
                 const inviteData = await response.json();
                 return new Invite(inviteData.id, inviteData.code, inviteData.expiration_date, inviteData.group_id);
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -199,6 +228,10 @@ class Group {
             if (response.ok) {
                 const usersData = await response.json();
                 return usersData.map((userData: any) => new User(userData.id, userData.name, userData.owner));
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -220,6 +253,10 @@ class Group {
             if (response.ok) {
                 const userGroupData = await response.json();
                 return new UserAndGroup(userGroupData.id, userGroupData.groupId, userGroupData.userId);
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -238,6 +275,11 @@ class Group {
                     'Content-Type': 'application/json'
                 }
             });
+            if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return response.ok;
+            }
             return response.ok;
         } catch (error) {
             console.error('Error removing user from group:', error);
@@ -258,6 +300,10 @@ class Group {
             if (response.ok) {
                 const permissionData = await response.json();
                 return new UserGroupPermission(permissionData.id, permissionData.user_and_group_id, permissionData.permission);
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -277,6 +323,11 @@ class Group {
                 },
                 body: JSON.stringify({ permission })
             });
+            if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return response.ok;
+            }
             return response.ok;
         } catch (error) {
             console.error('Error removing permission:', error);
@@ -295,6 +346,10 @@ class Group {
             });
             if (response.ok) {
                 return await response.json();
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return [];
             } else {
                 return [];
             }
@@ -318,6 +373,10 @@ class Group {
                 const tempEvents = eventsData.map((eventData: any) => Event.fromJson(eventData));
                 this.events = tempEvents.sort((a: Event, b: Event) => b.created.getTime() - a.created.getTime());
                 return this.events;
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return this.events = null;
             }
@@ -345,6 +404,10 @@ class Group {
                     this.events.unshift(newEvent);
                 }
                 return newEvent;
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -371,6 +434,10 @@ class Group {
                     this.votes.unshift(newVote);
                 }
                 return newVote;
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -392,6 +459,10 @@ class Group {
             if (response.ok) {
                 const voteData = await response.json();
                 return this.votes = voteData.map((voteData: any) => Vote.fromJson(voteData)).sort((a: Vote, b: Vote) => b.created.getTime() - a.created.getTime());
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }

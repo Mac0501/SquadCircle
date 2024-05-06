@@ -118,6 +118,10 @@ class Me {
             if (response.ok) {
                 const permissionsData = await response.json();
                 return permissionsData.map((permissionData: any) => new UserGroupPermission(permissionData.id, permissionData.user_and_group_id, permissionData.permission));
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -135,6 +139,10 @@ class Me {
             });
             if (response.ok) {
                 return await response.blob();
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -154,6 +162,11 @@ class Me {
                 credentials: 'include',
                 body: formData,
             });
+            if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return response.ok;
+            }
             return response.ok;
         } catch (error) {
             console.error('Error uploading avatar:', error);
@@ -170,6 +183,11 @@ class Me {
                     'Content-Type': 'application/json'
                 }
             });
+            if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return response.ok;
+            }
             return response.ok;
         } catch (error) {
             console.error('Error deleting avatar:', error);
@@ -192,6 +210,10 @@ class Me {
                 const incompleteEventsArray: Event[] = incomplete_events.map((eventData: any) => Event.fromJson(eventData));
                 const otherEventsArray: Event[] = other_events.map((eventData: any) => Event.fromJson(eventData));
                 return { incomplete_events: incompleteEventsArray, other_events: otherEventsArray };
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -229,6 +251,10 @@ class Me {
                 }).filter(Boolean);
     
                 return { meGroupEvents: incompleteEventsArray, meGroupCalender: otherEventsArray };
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return { meGroupEvents: null, meGroupCalender: null};
             } else {
                 return { meGroupEvents: null, meGroupCalender: null };
             }
@@ -254,6 +280,10 @@ class Me {
                 const incompleteVotesArray: Vote[] = incomplete_votes.map((voteData: any) => new Vote(voteData.id, voteData.title, voteData.multi_select, voteData.group_id, voteData.description));
                 const otherVotesArray: Vote[] = other_votes.map((voteData: any) => Vote.fromJson(voteData));
                 return { incomplete_votes: incompleteVotesArray, other_votes: otherVotesArray };
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -283,6 +313,10 @@ class Me {
                 }).filter(Boolean);
     
                 return incompleteVotesArray;
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -303,6 +337,10 @@ class Me {
             });
             if (response.ok) {
                 return await response.json();
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return [];
             } else {
                 return [];
             }

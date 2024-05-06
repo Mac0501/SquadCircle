@@ -61,6 +61,10 @@ class Event {
             if (response.ok) {
                 const eventData = await response.json();
                 return Event.fromJson(eventData);
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -101,6 +105,11 @@ class Event {
                     'Content-Type': 'application/json'
                 }
             });
+            if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return response.ok;
+            }
             return response.ok;
         } catch (error) {
             console.error('Error deleting event:', error);
@@ -125,7 +134,12 @@ class Event {
                 this.state = eventData.state;
                 this.description = eventData.description;
                 this.choosen_event_option_id = eventData.choosen_event_option_id;
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return response.ok;
             }
+            
             return response.ok
         } catch (error) {
             console.error('Error updating event:', error);
@@ -145,6 +159,10 @@ class Event {
             if (response.ok) {
                 const event_optionsData = await response.json();
                 return this.event_options = event_optionsData.map((event_optionData: any) => EventOption.fromJson(event_optionData));
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
@@ -171,6 +189,10 @@ class Event {
                     this.event_options.push(eventOption);
                 }
                 return eventOption;
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return null;
             } else {
                 return null;
             }
