@@ -2,10 +2,8 @@ from app.backend import app
 
 
 
-app.run(
-        debug=True,
-        noisy_exceptions=True,
-        access_log=True,
-        register_sys_signals=True,
-        single_process=True,
+if __name__ == "__main__":
+    app.run(
+        fast=True,
+        access_log=False,
         )
