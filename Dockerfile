@@ -38,5 +38,7 @@ RUN npm install -g serve
 
 WORKDIR /app
 
+ENV url ""
+
 # Define the command to run the start.sh script
 CMD sh -c 'cd /app && sanic launcher:app --host=0.0.0.0 --port=3000 --no-access-logs --fast & cd /app && caddy start --config ./Caddyfile & cd /app/client && serve -s build -l 3001 -L'

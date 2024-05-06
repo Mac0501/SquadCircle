@@ -20,9 +20,6 @@ async def create_owner():
 def setup():
     if os.path.exists(".env"):
         load_dotenv(".env")
-    else:
-        if str(os.getenv("token")) == "":
-            raise "You have to set Environment Variablen."
 
     AppConfig = load_config()
     if AppConfig != None:
@@ -32,7 +29,7 @@ def setup():
     config = {
         "App": {
             "backend_api": "127.0.0.1:8000",
-            "URI": str(os.getenv("redirect_url")),
+            "URI": str(os.getenv("url")),
             "version": str(settings.VERSION),
         },
         "Resources": {
