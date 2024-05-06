@@ -168,7 +168,7 @@ const VoteOptionCard: React.FC<VoteOptionCardProps> = ({ me, vote_option, mePerm
                             </div>
                         </div>
                         <div style={{ display: "flex", flexDirection:"column", alignItems: "center", justifyContent: "center", height:"100%", width:'100%' }}>
-                            <Progress strokeColor="#aaaaaa" percent={(voted / possibleVotes) * 100} type="line" showInfo={false} style={{width:"100%"}}/>
+                            <Progress strokeColor="#52c41a" percent={(voted / possibleVotes) * 100} type="line" showInfo={false} style={{width:"100%"}}/>
                         </div>
                     </div>
                 </div>

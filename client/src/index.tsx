@@ -3,14 +3,21 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import reportWebVitals from './reportWebVitals';
 import { Router } from './Router';
+import { ConfigProvider, theme } from 'antd';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
-  <React.StrictMode>
-    <Router />
-  </React.StrictMode>
+  <ConfigProvider
+    theme={{
+      algorithm: theme.darkAlgorithm,
+    }}
+  >
+    <React.StrictMode>
+      <Router />
+    </React.StrictMode>
+  </ConfigProvider>
 );
 
 // If you want to start measuring performance in your app, pass a function

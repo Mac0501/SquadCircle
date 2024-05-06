@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Input, Button, message } from 'antd';
+import { Form, Input, Button, message, theme, Layout } from 'antd';
 import Auth from '../api/Auth';
+const { Content } = Layout;
+
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
   const [checkedVerification, setCheckedVerification] = useState(false);
 
+  const {
+    token: { colorBgContainer },
+  } = theme.useToken();
 
   useEffect(() => {
     const checkVerification = async () => {
@@ -50,35 +55,41 @@ const Login = () => {
   };
 
   if(!checkedVerification){
-    return null;
+    return <div style={{backgroundColor:colorBgContainer}}></div>;
   }
 
   return (
-    <div style={{ maxWidth: 400, margin: 'auto', marginTop: 100 }}>
-      <h2>Login</h2>
-      <Form
-        name="login-form"
-        onFinish={onFinish}
-      >
-        <Form.Item
-          name="name"
-          rules={[{ required: true, message: 'Please enter your username' }]}
-        >
-          <Input placeholder="Username" />
-        </Form.Item>
-        <Form.Item
-          name="password"
-          rules={[{ required: true, message: 'Please enter your password' }]}
-        >
-          <Input.Password placeholder="Password" />
-        </Form.Item>
-        <Form.Item>
-          <Button type="primary" htmlType="submit" loading={loading} style={{ width: '100%' }}>
-            Login
-          </Button>
-        </Form.Item>
-      </Form>
-    </div>
+    <Layout style={{ backgroundColor: colorBgContainer }}>
+      <Content style={{ margin: '24px 16px 0', overflow: 'initial' }}>
+        <div style={{backgroundColor: colorBgContainer, height: "100vh", display: "flex", flexDirection:"column", alignItems:"center"}}>
+          <div style={{ maxWidth: "400px", width:"90vw", marginTop: "100px", marginRight: '0px', marginBottom: '0px', marginLeft: '0px' }}>
+            <h2>Login</h2>
+            <Form
+              name="login-form"
+              onFinish={onFinish}
+            >
+              <Form.Item
+                name="name"
+                rules={[{ required: true, message: 'Please enter your username' }]}
+              >
+                <Input placeholder="Username" />
+              </Form.Item>
+              <Form.Item
+                name="password"
+                rules={[{ required: true, message: 'Please enter your password' }]}
+              >
+                <Input.Password placeholder="Password" />
+              </Form.Item>
+              <Form.Item>
+                <Button type="primary" htmlType="submit" loading={loading} style={{ width: '100%' }}>
+                  Login
+                </Button>
+              </Form.Item>
+            </Form>
+          </div>
+        </div>
+      </Content>
+    </Layout>
   );
 };
 

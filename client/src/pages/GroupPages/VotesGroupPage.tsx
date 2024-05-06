@@ -40,6 +40,8 @@ const VotesGroupPage: React.FC<VotesGroupPageProps> = ({ me, group, votes, membe
                     xl: 3,
                     xxl: 3,
                 }}
+                pagination={{ pageSize: 24, showSizeChanger: false}}
+                style={{marginBottom:"20px"}}
                 dataSource={votesList}
                 renderItem={(vote: Vote) => (
                     <List.Item>

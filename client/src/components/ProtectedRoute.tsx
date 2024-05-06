@@ -60,7 +60,6 @@ const ProtectedRoute: React.FC = () => {
             </>
           );
         } else {
-          // If me information is not available, display default content
           return (
             <>
               <Avatar style={{ backgroundColor: '#87d068' }} icon={<UserOutlined />} />
@@ -115,14 +114,14 @@ const ProtectedRoute: React.FC = () => {
                 <Sider
                 breakpoint="lg"
                 collapsedWidth="0"
-                style={{ height: '100vh', overflowX: 'hidden', position: 'sticky' , top:0, left:0}}
+                style={{ height: '100vh', overflowX: 'hidden', position: 'sticky' , top:0, left:0, backgroundColor:colorBgContainer, boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',}}
                 collapsible
                 onBreakpoint={(collapsed) => setCollapsable(collapsed)}
                 collapsed={collapsed}
                 onCollapse={(collapsed) => setCollapsed(collapsed)}
                 >
                     <div
-                        style={{ textAlign: 'center', padding: '16px', color: '#fff', fontSize: '20px', cursor: 'pointer' }}
+                        style={{ textAlign: 'center', padding: '16px', color: '#fff', fontSize: '20px', cursor: 'pointer', backgroundColor:colorBgContainer }}
                         onClick={() => {
                           setSelectedKey(null); // Deselect menu item
                           navigate('/homepage');
@@ -131,11 +130,10 @@ const ProtectedRoute: React.FC = () => {
                         SquadCircle
                     </div>
               <Menu
-                theme="dark"
                 mode="inline"
                 defaultSelectedKeys={['1']}
                 selectedKeys={selectedKey ? [selectedKey] : []}
-                style={{ height: '100%', borderRight: 0 }}
+                style={{ height: 'auto', borderRight: 0 }}
                 onSelect={({ key }) => {
                   setSelectedKey(key);
                   navigate(`/${key}`);

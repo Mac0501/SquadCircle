@@ -42,6 +42,8 @@ const EventsGroupPage: React.FC<EventsGroupPageProps> = ({ me, group, events, me
                     xl: 3,
                     xxl: 3,
                 }}
+                pagination={{ pageSize: 24, showSizeChanger: false}}
+                style={{marginBottom:"20px"}}
                 dataSource={eventsList}
                 renderItem={(event: Event) => (
                     <List.Item>
