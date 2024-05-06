@@ -52,7 +52,7 @@ class Logout(BaseEndpoint):
     async def post(self, request: Request, *args, **kwargs):
         response = json({"message": "Logged out successfully"})
         if "access_token" in request.cookies:
-            response.delete_cookie("access_token")
+            response.delete_cookie("access_token", domain=request.host)
             
         return response
 
