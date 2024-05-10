@@ -8,7 +8,7 @@ const Login = React.lazy(() => import("./pages/Login"));
 export const Router: React.FC = () => {
   return (
     <BrowserRouter>
-      <Suspense fallback={<div style={{backgroundColor:"#141414"}}></div>}>
+      <Suspense fallback={<div style={{backgroundColor:"#101010"}}></div>}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/registration/:code" element={<Registration />} />

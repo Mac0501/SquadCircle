@@ -143,9 +143,9 @@ const ProtectedRoute: React.FC = () => {
                 items={items}
               />
             </Sider>
-            <Layout style={{ backgroundColor:"rgb(20 20 20 / 82%)" }}>
+            <Layout style={{ backgroundColor:"#101010" }}>
             {collapsable && (
-            <Header style={{ padding: 0, backgroundColor:"rgb(20 20 20 / 82%)", height:'32px'}}>
+            <Header style={{ padding: 0, backgroundColor:"#101010", height:'32px'}}>
               <Button
                 type="text"
                 icon={collapsable ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}

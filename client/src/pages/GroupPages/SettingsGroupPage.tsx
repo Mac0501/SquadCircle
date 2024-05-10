@@ -113,7 +113,7 @@ const SettingsGroupPage: React.FC<SettingsGroupPageProps> = ({ me, group, mePerm
             >
                 {groupDescription}
             </Typography.Paragraph>
-            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor:"rgb(20 20 20 / 82%)" }}>
+            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
                 <span style={{marginRight:"5px"}}>Discord-Webhook:</span>
                 {group.discord_webhook ? (
                     <>
