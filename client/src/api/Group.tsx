@@ -11,13 +11,15 @@ class Group {
     id: number;
     name: string;
     description: string | null;
+    discord_webhook: boolean;
     events: Event[] | null;
     votes: Vote[] | null;
 
-    constructor(id: number, name: string, description: string | null = null, events: Event[] | null = null, votes: Vote[] | null = null) {
+    constructor(id: number, name: string, description: string | null = null, discord_webhook: boolean, events: Event[] | null = null, votes: Vote[] | null = null) {
         this.id = id;
         this.name = name;
         this.description = description;
+        this.discord_webhook = discord_webhook;
         this.events = events;
         this.votes = votes;
     }
@@ -25,7 +27,7 @@ class Group {
     static fromJson(json: any): Group {
         const events = json.events ? json.events.map((eventData: any) => Event.fromJson(eventData)) : null;
         const votes = json.votes ? json.votes.map((voteData: any) => Vote.fromJson(voteData)) : null;
-        return new Group(json.id, json.name, json.description, events, votes);
+        return new Group(json.id, json.name, json.description, json.discord_webhook, events, votes);
     }
 
     static async get_group(id: number): Promise<Group | null> {
@@ -99,10 +101,10 @@ class Group {
         }
     }
 
-    async update(name?:string, description?:string|null): Promise<boolean> {
+    async update(name?:string, description?:string|null, discord_webhook?:string|null): Promise<boolean> {
         try {
 
-            const data: { name?: string; description?: string|null } = {};
+            const data: { name?: string; description?: string|null, discord_webhook?:string|null } = {};
 
             if (name !== undefined && name !== '') {
                 data.name = name;
@@ -110,6 +112,10 @@ class Group {
 
             if (description !== undefined && description !== '') {
                 data.description = description;
+            }
+
+            if (discord_webhook !== undefined && discord_webhook !== '') {
+                data.discord_webhook = discord_webhook;
             }
 
             const response = await fetch(`/api/groups/${this.id}`, {
@@ -123,7 +129,8 @@ class Group {
             if (response.ok) {
                 const groupData = await response.json();
                 this.name = groupData.name;
-                this.description = groupData.description;;
+                this.description = groupData.description;
+                this.discord_webhook = groupData.discord_webhook;
             } else if (response.status === 400) {
                 const errorMessage = await response.json();
                 message.error(errorMessage.error)
@@ -139,7 +146,7 @@ class Group {
         }
     }
 
-    static async create(name: string, description: string | null = null): Promise<Group | null> {
+    static async create(name: string, description: string | null = null, discord_webhook?:string|null): Promise<Group | null> {
         try {
             const response = await fetch('/api/groups', {
                 method: 'POST',
@@ -147,11 +154,11 @@ class Group {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ name, description })
+                body: JSON.stringify({ name, description, discord_webhook })
             });
             if (response.ok) {
                 const groupData = await response.json();
-                return new Group(groupData.id, groupData.name, groupData.description);
+                return Group.fromJson(groupData);
             } else if (response.status === 401) {
                 console.log("User is unauthorized. Logging out...");
                 window.location.href = "/login";

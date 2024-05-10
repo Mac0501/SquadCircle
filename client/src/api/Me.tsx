@@ -80,7 +80,7 @@ class Me {
             });
             if (response.ok) {
                 const groupsData = await response.json();
-                return groupsData.map((groupData: any) => new Group(groupData.id, groupData.name, groupData.description));
+                return groupsData.map((groupData: any) =>  Group.fromJson(groupData));
             } else {
                 return [];
             }

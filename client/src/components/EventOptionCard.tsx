@@ -275,7 +275,7 @@ const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, meP
                     </div>
                     <div style={{ display: "flex", flexDirection:"row", flex: 1, alignItems:"center", justifyContent:"center", width:"100%" }}>
                         <div>{acceptedCount}</div>
-                        <Progress success={{ percent: acceptedPercentage, strokeColor:"#52c41a" }} strokeColor="#313131" trailColor='#f5222d' percent={membersLeftPercentage} type="line" showInfo={false} style={{width:"100%", marginLeft:"5px", marginRight:"5px"}}/>
+                        <Progress success={{ percent: acceptedPercentage, strokeColor:"#52c41a" }} strokeColor="#313131" trailColor='#f44' percent={membersLeftPercentage} type="line" showInfo={false} style={{width:"100%", marginLeft:"5px", marginRight:"5px"}}/>
                         <div>{deniedCount}</div>
                     </div>
                     <Typography.Link onClick={()=> {setShowEventOptionVoteList(true)}}>Show votes</Typography.Link>
@@ -375,7 +375,7 @@ const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, meP
                                 </div>
                             ) : ("Nobody accepted yet.")}
                         </Collapse.Panel>
-                        <Collapse.Panel header={<span style={{color:"#f5222d", fontWeight: 'bold', fontSize: '16px'}} >Denied</span>} key="2">
+                        <Collapse.Panel header={<span style={{color:"#f44", fontWeight: 'bold', fontSize: '16px'}} >Denied</span>} key="2">
                             {deniedMembers.length > 0 ? (
                                 <div style={{padding:"5px"}}>
                                     {deniedMembers.map(deniedMember => {

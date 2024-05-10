@@ -130,7 +130,9 @@ const OverviewGroupPage: React.FC<OverviewGroupPageProps> = ({ me, group, toDoVo
                 )}
             />
         )}
-        <Calendar validRange={[firstDayOfMonth,lastDayOfMonth]} headerRender={renderEmptyHeader} cellRender={cellRender} onSelect={onSelect}/>
+        <div style={{borderRadius:"15px", backgroundColor:"#141414", padding:"5px", marginBottom:"10px"}}>
+            <Calendar validRange={[firstDayOfMonth,lastDayOfMonth]} headerRender={renderEmptyHeader} cellRender={cellRender} onSelect={onSelect}/>
+        </div>
         <Modal
               title={displayDate(dayModalTitle ? dayModalTitle: "")}
               open={dayModalVisible}

@@ -16,6 +16,7 @@ import Admin from "../pages/AdminPage";
 import UserAvatar from "./UserAvatar";
 import Group from "../api/Group";
 import GroupPage from "../pages/GroupPage";
+import SquadCircle from "../assets/SquadCircle.png"
 
 type MenuItem = Required<MenuProps>['items'][number];
 
@@ -111,24 +112,25 @@ const ProtectedRoute: React.FC = () => {
         {isAuthenticated ? (
           <>
           <Layout hasSider>
-                <Sider
-                breakpoint="lg"
-                collapsedWidth="0"
-                style={{ height: '100vh', overflowX: 'hidden', position: 'sticky' , top:0, left:0, backgroundColor:colorBgContainer, boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',}}
-                collapsible
-                onBreakpoint={(collapsed) => setCollapsable(collapsed)}
-                collapsed={collapsed}
-                onCollapse={(collapsed) => setCollapsed(collapsed)}
-                >
-                    <div
-                        style={{ textAlign: 'center', padding: '16px', color: '#fff', fontSize: '20px', cursor: 'pointer', backgroundColor:colorBgContainer }}
-                        onClick={() => {
-                          setSelectedKey(null); // Deselect menu item
-                          navigate('/homepage');
-                        }}
-                    >
-                        SquadCircle
-                    </div>
+            <Sider
+            breakpoint="lg"
+            collapsedWidth="0"
+            style={{ height: '100vh', overflowX: 'hidden', position: 'sticky' , top:0, left:0, backgroundColor:colorBgContainer, boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',}}
+            collapsible
+            onBreakpoint={(collapsed) => setCollapsable(collapsed)}
+            collapsed={collapsed}
+            onCollapse={(collapsed) => setCollapsed(collapsed)}
+            >
+              <div
+                  style={{ display:"flex", textAlign:"center", justifyContent:"center", alignItems: 'center', padding: '16px', color: '#fff', fontSize: '20px', cursor: 'pointer', backgroundColor:colorBgContainer }}
+                  onClick={() => {
+                    setSelectedKey(null); // Deselect menu item
+                    navigate('/homepage');
+                  }}
+              >
+                  <img src={SquadCircle} alt="SquadCircle Logo" style={{ marginRight: '10px', width:"30px", height:"30px" }}/>
+                  SquadCircle
+              </div>
               <Menu
                 mode="inline"
                 defaultSelectedKeys={['1']}
@@ -141,9 +143,9 @@ const ProtectedRoute: React.FC = () => {
                 items={items}
               />
             </Sider>
-            <Layout style={{ backgroundColor: colorBgContainer }}>
+            <Layout style={{ backgroundColor:"rgb(20 20 20 / 82%)" }}>
             {collapsable && (
-            <Header style={{ padding: 0, backgroundColor:colorBgContainer, height:'32px'}}>
+            <Header style={{ padding: 0, backgroundColor:"rgb(20 20 20 / 82%)", height:'32px'}}>
               <Button
                 type="text"
                 icon={collapsable ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}

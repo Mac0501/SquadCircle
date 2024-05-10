@@ -1,10 +1,12 @@
 import hashlib
 from datetime import date
 from typing import Dict
+from discord import Embed
 from tortoise import fields
 from tortoise import connections
 from tortoise.models import Model
 from tortoise.transactions import atomic
+from app.utils.dc_tools import send_with_webhook
 from app.utils.tools import generate_random_hex
 from app.utils.types import EventStateEnum, EventOptionResponseEnum, UserGroupPermissionEnum
 
@@ -59,7 +61,7 @@ class Group(Model):
         table = "groups"
 
     def to_dict(self) -> Dict[str, any]:
-        return {"id":self.id, "name":self.name, "description":self.description}
+        return {"id":self.id, "name":self.name, "description":self.description, "discord_webhook":(self.discord_webhook != None)}
     
     async def get_group_id(self) -> int:
         return self.id
@@ -161,6 +163,16 @@ class Event(Model):
             "choosen_event_option_id": self.choosen_event_option_id,
             "event_options": event_options_dict
         }
+    
+    async def send_embed(self, url:str):
+        if not isinstance(self.group, Group):
+            await self.fetch_related("group")
+        if self.group and self.group.discord_webhook:
+            embed = Embed(title=self.title, description=self.description, color=int(f"0x{self.color}", 16), url=f"https://{url}/groups/{self.group.id}")
+            embed.set_author(name=self.group.name)
+            embed.set_footer(text="Created Event")
+            embed.timestamp = self.created
+            await send_with_webhook(url=self.group.discord_webhook, embed=embed)
 
     async def get_group_id(self) -> int:
         return self.group_id
@@ -354,6 +366,17 @@ class Vote(Model):
             "group_id": self.group_id,
             "vote_options": vote_options_dict
             }
+    
+    async def send_embed(self, url:str):
+        if not isinstance(self.group, Group):
+            await self.fetch_related("group")
+        if self.group and self.group.discord_webhook:
+            embed = Embed(title=self.title, url=f"https://{url}/groups/{self.group.id}")
+            embed.set_author(name=self.group.name)
+            embed.set_footer(text="Created Vote")
+            embed.timestamp = self.created
+            await send_with_webhook(url=self.group.discord_webhook, embed=embed)
+
 
     async def get_group_id(self) -> int:
         return self.group_id

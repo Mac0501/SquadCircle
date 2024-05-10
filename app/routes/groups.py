@@ -25,7 +25,7 @@ async def get_groups(request: Request, my_user: User):
 @is_owner
 @atomic()
 async def create_group(request: Request, my_user: User):
-    data = filter_dict_by_keys(request.json, ["name", "description"], True)
+    data = filter_dict_by_keys(request.json, ["name", "description", "discord_webhook"], True)
     group = await Group.create(**data)
     return json(group.to_dict(), status=201)
 
@@ -45,7 +45,7 @@ async def get_group(request: Request, my_user: User, group: Group|None):
 @is_owner
 @atomic()
 async def update_group(request: Request, my_user: User, group: Group|None):
-    data = filter_dict_by_keys(request.json, ["name", "description"])
+    data = filter_dict_by_keys(request.json, ["name", "description", "discord_webhook"])
     if group:
         checkName = await Group.check_name_exists(data["name"], group.id)
         if checkName:
@@ -118,6 +118,7 @@ async def create_event_for_group(request: Request, my_user: User, group: Group|N
         return json({"error": "Group not found"}, status=404)
     data = filter_dict_by_keys(request.json, ["title", "color", "description", "state"], True)
     event = await Event.create(group_id=group.id, **data)
+    await event.send_embed(url=request.app.ctx.Config["App"]["URI"])
     return json(event.to_dict())
 
 
@@ -147,6 +148,7 @@ async def create_vote_for_group(request: Request, my_user: User, group: Group|No
         return json({"error": "Group not found"}, status=404)
     data = filter_dict_by_keys(request.json, ["title", "multi_select"], True)
     vote = await Vote.create(group_id=group.id, **data)
+    await vote.send_embed(url=request.app.ctx.Config["App"]["URI"])
     return json(vote.to_dict())
 
 

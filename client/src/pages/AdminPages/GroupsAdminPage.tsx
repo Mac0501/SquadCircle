@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Table, Button, Modal, Form, Input, TableProps, Space, Select, Checkbox } from 'antd';
+import { Table, Button, Modal, Form, Input, TableProps, Space, Select, Checkbox, Tag } from 'antd';
+import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import Group from '../../api/Group';
 import TextArea from 'antd/es/input/TextArea';
 import { UserGroupPermissionEnum } from '../../utils/types';
@@ -41,6 +42,7 @@ interface GroupProps {
 const GroupsAdminPage: React.FC<GroupsAdminPageProps> = ({ groups, users }) => {
     const [selectedUserId, setSelectedUserId] = useState<string|null>(null);
     const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+    const [discordWebhook, setDiscordWebhook] = useState<string | null | undefined>(undefined);
     const [selectedMember, setSelectedMember] = useState<MemberAdd>({ id: undefined, user: undefined, permissions: [], add_permissions: [], remove_permissions: [] });
     const [deleteConfirmVisibleGroup, setDeleteConfirmVisibleGroup] = useState<boolean>(false);
     const [removeConfirmVisibleMember, setRemoveConfirmVisibleMember] = useState<boolean>(false);
@@ -64,6 +66,23 @@ const GroupsAdminPage: React.FC<GroupsAdminPageProps> = ({ groups, users }) => {
             dataIndex: 'description',
             key: 'description',
             align: 'left',
+        },
+        {
+            title: 'Discord-Webhook',
+            dataIndex: 'discord_webhook',
+            key: 'discord_webhook',
+            align: 'left',
+            render: (discord_webhook: boolean, record:Group) => (
+                record.discord_webhook ? (
+                    <Tag icon={<CheckCircleOutlined />} color="success">
+                        activated
+                    </Tag>
+                ) : (
+                    <Tag icon={<CloseCircleOutlined />} color="error">
+                        deactivated
+                    </Tag>
+                )
+            ),
         },
         {
             title:() => (
@@ -127,7 +146,7 @@ const GroupsAdminPage: React.FC<GroupsAdminPageProps> = ({ groups, users }) => {
 
     const isNameAlreadyExists = (nameToCheck:string|null) => {
         if(nameToCheck === null){
-            return true;
+            return false;
         }
         // Iterate over the existing groups
         for (const group of groups) {
@@ -137,6 +156,17 @@ const GroupsAdminPage: React.FC<GroupsAdminPageProps> = ({ groups, users }) => {
             }
         }
         return false; // Name does not exist
+    };
+
+    const isDiscordWebhookValid = (discord_webhook:string|null|undefined) => {
+        if(discord_webhook === null || discord_webhook === undefined || discord_webhook === ""){
+            return true;
+        }
+        if (discord_webhook.includes("https://discord.com/api/webhooks/")){
+            return true;
+        }
+        return false;
+
     };
 
 
@@ -238,6 +268,7 @@ const GroupsAdminPage: React.FC<GroupsAdminPageProps> = ({ groups, users }) => {
 
     const handleEditModalCloseGroup = () => {
         setEditModalVisibleGroup(false);
+        setDiscordWebhook(undefined);
         setEditGroup({ id: null, name: null, description: null, members: [], added_members: [], remove_members: [], add_permissions: {}, remove_permissions: {} });
     };
 
@@ -247,7 +278,7 @@ const GroupsAdminPage: React.FC<GroupsAdminPageProps> = ({ groups, users }) => {
         if (editGroup.name !== null) {
             let newSelectedGroup: Group | null;
             if (selectedGroup) {
-                await selectedGroup.update(editGroup.name, editGroup.description);
+                await selectedGroup.update(editGroup.name, editGroup.description, discordWebhook);
                 newSelectedGroup = selectedGroup;
                 const updatedIndex = updatedGroups.findIndex(group => group.id === selectedGroup.id);
                 if (updatedIndex !== -1) {
@@ -256,7 +287,7 @@ const GroupsAdminPage: React.FC<GroupsAdminPageProps> = ({ groups, users }) => {
                     setUpdatedGroups(updatedGroupsCopy);
             }
             } else {
-                newSelectedGroup = await Group.create(editGroup.name, editGroup.description);
+                newSelectedGroup = await Group.create(editGroup.name, editGroup.description, discordWebhook);
                 setSelectedGroup(newSelectedGroup);
                 if (newSelectedGroup !== null) {
                     setUpdatedGroups([...updatedGroups, newSelectedGroup]);
@@ -520,6 +551,19 @@ const GroupsAdminPage: React.FC<GroupsAdminPageProps> = ({ groups, users }) => {
                                 setEditGroup({ ...editGroup, name: e.target.value });
                             }}
                         />
+                    </Form.Item>
+                    <Form.Item label="Discord-Webhook" validateStatus={isDiscordWebhookValid(discordWebhook) ? '':'error'} help={isDiscordWebhookValid(discordWebhook) ? '':'The Discord-Webhook has to start with "https://discord.com/api/webhooks/"'}>
+                        <Input 
+                            placeholder="Enter a Discord-Webhook to update (https://discord.com/api/webhooks/...)"
+                            value={discordWebhook ? discordWebhook : ""} 
+                            maxLength={130} 
+                            onChange={(e) => {
+                                setDiscordWebhook(e.target.value);
+                            }}
+                        />
+                    </Form.Item>
+                    <Form.Item>
+                        <Button type="primary" danger onClick={()=>(setDiscordWebhook(null))} disabled={discordWebhook === null}>Remove Discord-Webhook</Button>
                     </Form.Item>
                     <Form.Item label="Description">
                         <TextArea showCount maxLength={2000} placeholder="(optional)" value={editGroup?.description || ''} onChange={(e) => setEditGroup({ ...editGroup, description: e.target.value })} style={{ height: 100, resize: 'none' }} />
