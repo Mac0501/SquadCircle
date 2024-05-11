@@ -110,7 +110,7 @@ class Group {
                 data.name = name;
             }
 
-            if (description !== undefined && description !== '') {
+            if (description !== undefined) {
                 data.description = description;
             }
 
