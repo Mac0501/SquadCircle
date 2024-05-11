@@ -90,13 +90,13 @@ const ProfilePage: React.FC<{ me: Me; setSidabarAvatarKey: React.Dispatch<React.
         window.location.href = "/login"
     };
 
-    const handleNameBlur = async () => {
-        if (nameEdit !== me.name) {
-            if(nameEdit.length >= 1){
+    const handleNameBlur = async (name:string) => {
+        if (name !== me.name) {
+            if(name.length >= 1){
                 if(nameEdit.length <= 32){
-                    if(/\S/.test(nameEdit)){
+                    if(/\S/.test(name)){
                         try {
-                            const success = await me.update_me(nameEdit);
+                            const success = await me.update_me(name);
                             if (success) {
                                 message.success('Name updated successfully');
                             } else {
@@ -171,11 +171,11 @@ const ProfilePage: React.FC<{ me: Me; setSidabarAvatarKey: React.Dispatch<React.
 
                 <Typography.Title 
                     editable={{ 
-                        enterIcon: null,
-                        onChange: (e) => {
-                            setNameEdit(e);
-                            handleNameBlur();
+                        onChange: (name:string) => {
+                            setNameEdit(name);
+                            handleNameBlur(name);
                         },
+                        enterIcon: null,
                         maxLength:32,
                     }} 
                     level={5} 
