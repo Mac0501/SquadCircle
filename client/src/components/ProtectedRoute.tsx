@@ -138,6 +138,9 @@ const ProtectedRoute: React.FC = () => {
                 onSelect={({ key }) => {
                   setSelectedKey(key);
                   navigate(`/${key}`);
+                  if(collapsable){
+                    setCollapsed(!collapsed)
+                  }
                 }}
                 items={items}
               />
