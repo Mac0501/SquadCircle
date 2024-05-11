@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Input, Button, message, theme, Layout } from 'antd';
+import { Form, Input, Button, message, Layout } from 'antd';
 import Auth from '../api/Auth';
 const { Content } = Layout;
 
@@ -7,10 +7,6 @@ const { Content } = Layout;
 const Login = () => {
   const [loading, setLoading] = useState(false);
   const [checkedVerification, setCheckedVerification] = useState(false);
-
-  const {
-    token: { colorBgContainer },
-  } = theme.useToken();
 
   useEffect(() => {
     const checkVerification = async () => {
@@ -55,13 +51,13 @@ const Login = () => {
   };
 
   if(!checkedVerification){
-    return <div style={{backgroundColor:colorBgContainer}}></div>;
+    return <div style={{backgroundColor:"#101010"}}></div>;
   }
 
   return (
-    <Layout style={{ backgroundColor: colorBgContainer }}>
+    <Layout style={{ backgroundColor: "#101010" }}>
       <Content style={{ margin: '24px 16px 0', overflow: 'initial' }}>
-        <div style={{backgroundColor: colorBgContainer, height: "100vh", display: "flex", flexDirection:"column", alignItems:"center"}}>
+        <div style={{backgroundColor: "#101010", height: "100vh", display: "flex", flexDirection:"column", alignItems:"center"}}>
           <div style={{ maxWidth: "400px", width:"90vw", marginTop: "100px", marginRight: '0px', marginBottom: '0px', marginLeft: '0px' }}>
             <h2>Login</h2>
             <Form

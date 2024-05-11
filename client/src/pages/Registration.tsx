@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Form, Input, Button, message, theme, Layout } from 'antd';
+import { Form, Input, Button, message, Layout } from 'antd';
 import Auth from '../api/Auth';
 import Invite from '../api/Invites';
 import { Content } from 'antd/es/layout/layout';
@@ -12,9 +12,6 @@ const Registration = () => {
   const [serverError, setServerError] = useState<string>(''); // State to hold server-side error message
   const [checkedVerification, setCheckedVerification] = useState(false);
 
-  const {
-    token: { colorBgContainer },
-  } = theme.useToken();
 
   useEffect(() => {
     const checkVerification = async () => {
@@ -74,15 +71,15 @@ const Registration = () => {
 
   if (validInvite === undefined || !checkedVerification) {
     // While validation is in progress, return null to display nothing
-    return <div style={{backgroundColor:colorBgContainer}}></div>;
+    return <div style={{backgroundColor:"#101010"}}></div>;
   }
 
   if (!validInvite) {
     // If the invite is not valid, display a message
     return (
-      <Layout style={{ backgroundColor: colorBgContainer }}>
+      <Layout style={{ backgroundColor: "#101010" }}>
         <Content style={{ margin: '24px 16px 0', overflow: 'initial' }}>
-          <div style={{backgroundColor: colorBgContainer, height: "100vh", display: "flex", flexDirection:"column", alignItems:"center"}}>
+          <div style={{backgroundColor: "#101010", height: "100vh", display: "flex", flexDirection:"column", alignItems:"center"}}>
             <div style={{ maxWidth: "400px", width:"90vw", marginTop: "100px", marginRight: '0px', marginBottom: '0px', marginLeft: '0px' }}>
               <h2>Invalid Invite</h2>
               <p>The invite you're trying to use is not valid. Please contact the administrator for assistance.</p>
@@ -94,9 +91,9 @@ const Registration = () => {
   }
 
   return (
-    <Layout style={{ backgroundColor: colorBgContainer }}>
+    <Layout style={{ backgroundColor: "#101010" }}>
         <Content style={{ margin: '24px 16px 0', overflow: 'initial' }}>
-          <div style={{backgroundColor: colorBgContainer, height: "100vh", display: "flex", flexDirection:"column", alignItems:"center"}}>
+          <div style={{backgroundColor: "#101010", height: "100vh", display: "flex", flexDirection:"column", alignItems:"center"}}>
             <div style={{ maxWidth: "400px", width:"90vw", marginTop: "100px", marginRight: '0px', marginBottom: '0px', marginLeft: '0px' }}>
               <h2>Registration</h2>
               {serverError && (
