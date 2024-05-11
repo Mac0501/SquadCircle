@@ -59,13 +59,24 @@ const GroupsAdminPage: React.FC<GroupsAdminPageProps> = ({ groups, users }) => {
             dataIndex: 'name',
             key: 'name',
             align: 'center',
-            width: '25%',
+            width: '15%',
+            render: (description: string) => (
+                <div style={{ wordWrap: 'break-word'}}>
+                    {description}
+                </div>
+            ),
         },
         {
             title: 'Description',
             dataIndex: 'description',
             key: 'description',
             align: 'left',
+            width: '65%',
+            render: (description: string) => (
+                <div style={{minWidth:"250px", maxHeight: "100px", overflowY: 'auto', wordWrap: 'break-word', wordBreak: 'break-word', paddingRight:"5px"}}>
+                    {description}
+                </div>
+            ),
         },
         {
             title: 'Discord-Webhook',
@@ -546,7 +557,7 @@ const GroupsAdminPage: React.FC<GroupsAdminPageProps> = ({ groups, users }) => {
                     <Form.Item label="Name" validateStatus={isNameAlreadyExists(editGroup.name) ? 'error' : ''} help={isNameAlreadyExists(editGroup.name) ? 'A Group with this name allready exists' : ''}>
                         <Input 
                             value={editGroup?.name || ''} 
-                            maxLength={2000} 
+                            maxLength={32} 
                             onChange={(e) => {
                                 setEditGroup({ ...editGroup, name: e.target.value });
                             }}
