@@ -4,7 +4,6 @@ import Auth from "../api/Auth";
 import { Avatar, Button, Layout, Menu, theme } from 'antd';
 import {
   UserOutlined,
-  MenuFoldOutlined,
   MenuUnfoldOutlined
 } from '@ant-design/icons';
 import Me from "../api/Me";
@@ -111,11 +110,11 @@ const ProtectedRoute: React.FC = () => {
       <>
         {isAuthenticated ? (
           <>
-          <Layout hasSider>
+          <Layout hasSider style={{ backgroundColor:"#101010"}}>
             <Sider
             breakpoint="lg"
             collapsedWidth="0"
-            style={{ height: '100vh', overflowX: 'hidden', position: 'sticky' , top:0, left:0, backgroundColor:colorBgContainer, boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',}}
+            style={{ zIndex: 1000, height: '100vh', overflowX: 'hidden', position: collapsable ? 'fixed' : "sticky", top:0, left:0, backgroundColor:colorBgContainer, boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',}}
             collapsible
             onBreakpoint={(collapsed) => setCollapsable(collapsed)}
             collapsed={collapsed}
@@ -143,17 +142,33 @@ const ProtectedRoute: React.FC = () => {
                 items={items}
               />
             </Sider>
-            <Layout style={{ backgroundColor:"#101010" }}>
+            <Layout style={{ backgroundColor:"#101010"}}>
+            {collapsable && !collapsed && (
+              <div
+                onClick={() => setCollapsed(!collapsed)}
+                style={{
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  zIndex: 999,
+                  backdropFilter:"blur(5px)",
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent black
+                }}
+              />
+            )}
             {collapsable && (
             <Header style={{ padding: 0, backgroundColor:"#101010", height:'32px'}}>
               <Button
                 type="text"
-                icon={collapsable ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                icon={<MenuUnfoldOutlined />}
                 onClick={() => setCollapsed(!collapsed)}
                 style={{
                   fontSize: '16px',
                   width:'32px',
-                  height:'32px'
+                  height:'32px',
+                  opacity: collapsed ? 1 : 0,
                 }}
               />
             </Header>

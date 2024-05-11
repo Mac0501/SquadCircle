@@ -6,9 +6,9 @@ const Loading = () => {
     <div
       style={{
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'end',
         justifyContent: 'center',
-        height: '100%',
+        height:"50vh",
       }}
     >
       <Spin size="large" />
