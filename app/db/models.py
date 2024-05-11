@@ -168,7 +168,7 @@ class Event(Model):
         if not isinstance(self.group, Group):
             await self.fetch_related("group")
         if self.group and self.group.discord_webhook:
-            embed = Embed(title=self.title, description=self.description, color=int(f"0x{self.color}", 16), url=f"https://{url}/groups/{self.group.id}")
+            embed = Embed(title=self.title, description=self.description, color=int(f"0x{self.color}", 16), url=f"https://{url}/group/{self.group.id}")
             embed.set_author(name=self.group.name)
             embed.set_footer(text="Created Event")
             embed.timestamp = self.created
@@ -371,7 +371,7 @@ class Vote(Model):
         if not isinstance(self.group, Group):
             await self.fetch_related("group")
         if self.group and self.group.discord_webhook:
-            embed = Embed(title=self.title, url=f"https://{url}/groups/{self.group.id}")
+            embed = Embed(title=self.title, url=f"https://{url}/group/{self.group.id}")
             embed.set_author(name=self.group.name)
             embed.set_footer(text="Created Vote")
             embed.timestamp = self.created
