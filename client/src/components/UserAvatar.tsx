@@ -24,7 +24,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({ user, size=30 }) => {
             {user.avatar && !avatarError && user.has_avatar ? (
                 <Avatar src={`${window.location.origin}${user.avatar}`} alt="Avatar" onError={handleAvatarError} size={size}/>
             ) : (
-                <Avatar style={{ backgroundColor: getColorFromId(user.id), fontSize}} size={size}>
+                <Avatar style={{ backgroundColor: getColorFromId(user.id), fontSize, color:"#000"}} size={size}>
                     {user.name.charAt(0).toUpperCase()}
                 </Avatar>
             )}
