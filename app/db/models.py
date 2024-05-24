@@ -1,5 +1,6 @@
 import hashlib
 from datetime import date
+import os
 from typing import Dict
 from discord import Embed
 from tortoise import fields
@@ -24,7 +25,7 @@ class User(Model):
         table = "users"
 
     def to_dict(self) -> Dict[str, any]:
-        return {"id":self.id, "name":self.name, "owner":self.owner}
+        return {"id":self.id, "name":self.name, "owner":self.owner, "has_avatar":os.path.exists(f"./resources/users/{self.id}/avatar.webp")}
     
     def verify_password(self, input_password:str) -> bool:
         salt, stored_password = self.password.split("$")
@@ -91,6 +92,7 @@ class UserAndGroup(Model):
     user_event_option_responses: fields.ReverseRelation["UserEventOptionResponse"]
     user_vote_option_responses: fields.ReverseRelation["UserEventOptionResponse"]
     user_group_permissions: fields.ReverseRelation["UserGroupPermission"]
+    messages: fields.ReverseRelation["Message"]
 
     class Meta:
         table = "user_and_groups"
@@ -145,6 +147,7 @@ class Event(Model):
         on_delete=fields.CASCADE,
     )
     event_options: fields.ReverseRelation["EventOption"]
+    messages: fields.ReverseRelation["Message"]
 
     class Meta:
         table = "events"
@@ -481,3 +484,43 @@ class Invite(Model):
     async def delete_expired():
         conn = connections.get("default")
         await conn.execute_query("DELETE FROM invites WHERE expiration_date < CURRENT_DATE;")
+
+
+class Message(Model):
+    __parse_name__ = "invite"
+    id = fields.BigIntField(pk=True, autoincrement=True)
+    content = fields.TextField(max_length=200, null=False)
+    sent_at = fields.DatetimeField(auto_now_add=True)
+
+
+    event_id: int
+    event: fields.ForeignKeyRelation["Event"] = fields.ForeignKeyField(
+        model_name="models.Event",
+        to_field="id",
+        related_name="messages",
+        null=False,
+    )
+
+    user_and_group_id: int
+    user_and_group: fields.ForeignKeyRelation["UserAndGroup"] = fields.ForeignKeyField(
+        model_name="models.UserAndGroup",
+        to_field="id",
+        related_name="messages",
+        null=False,
+    )
+
+    class Meta:
+        table = "messages"
+
+    def to_dict(self) -> Dict[str, any]:
+        event_dict = None
+        if isinstance(self.event,Event):
+            event_dict = self.event.to_dict()
+        user_and_group_dict = None
+        if isinstance(self.user_and_group,UserAndGroup):
+            user_and_group_dict = self.user_and_group.to_dict()
+        return {"id":self.id, "content":self.content, "sent_at":self.sent_at.isoformat(), "event_id":self.event_id, "event":event_dict, "user_and_group":user_and_group_dict}
+    
+    async def get_group_id(self) -> int:
+        user_and_group = await UserAndGroup.get(id=self.user_and_group_id)
+        return user_and_group.group_id

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Avatar } from 'antd';
 import Me from '../api/Me';
 import User from '../api/User';
+import { getColorFromId } from '../utils/tools';
 
 interface UserAvatarProps {
     user: User | Me;
@@ -16,20 +17,11 @@ const UserAvatar: React.FC<UserAvatarProps> = ({ user, size=30 }) => {
         return true;
     };
 
-    const getColorFromId = (id: number): string => {
-
-        const colors = ['#FFC0CB', '#ADD8E6', '#98FB98', '#FFD700', '#FFA07A', '#87CEFA', '#F08080', '#90EE90', '#AFEEEE'];
-    
-        const colorIndex = id % colors.length;
-    
-        return colors[colorIndex];
-    };
-
     const fontSize = size <= 30 ? 14 : size * 0.5;
 
     return (
         <>
-            {user.avatar && !avatarError ? (
+            {user.avatar && !avatarError && user.has_avatar ? (
                 <Avatar src={`${window.location.origin}${user.avatar}`} alt="Avatar" onError={handleAvatarError} size={size}/>
             ) : (
                 <Avatar style={{ backgroundColor: getColorFromId(user.id), fontSize}} size={size}>

@@ -15,3 +15,15 @@ export function displayDate(dateString: string) { // dateString = YYYY-MM-DD
 export function displayDateTime(dateTimeString: string) { // dateTimeString = YYYY-MM-DD HH:mm:ss
     return moment(dateTimeString, 'YYYY-MM-DD HH:mm:ss').format('lll');;
 }
+
+export function displayTimeWithZone(timeString: string) {
+    // Parse the input datetime string
+    const datetime = moment(timeString);
+
+    // Convert to browser's timezone
+    const browserTimezone = moment.tz.guess();
+    const datetimeInBrowserTimezone = datetime.clone().tz(browserTimezone);
+
+    // Format the datetime and return
+    return datetimeInBrowserTimezone.format('LT');
+}

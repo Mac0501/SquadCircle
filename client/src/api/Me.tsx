@@ -8,12 +8,14 @@ class Me {
     id: number;
     name: string;
     owner: boolean;
+    has_avatar: boolean;
     avatar: string;
 
-    constructor(id: number, name: string, owner: boolean) {
+    constructor(id: number, name: string, owner: boolean, has_avatar: boolean) {
         this.id = id;
         this.name = name;
         this.owner = owner;
+        this.has_avatar = has_avatar;
         this.avatar = `/api/users/me/avatar`;
     }
 
@@ -28,7 +30,7 @@ class Me {
             });
             if (response.ok) {
                 const meData = await response.json();
-                return new Me(meData.id, meData.name, meData.owner);
+                return new Me(meData.id, meData.name, meData.owner, meData.has_avatar);
             } else {
                 return null;
             }

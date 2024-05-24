@@ -234,7 +234,7 @@ class Group {
             });
             if (response.ok) {
                 const usersData = await response.json();
-                return usersData.map((userData: any) => new User(userData.id, userData.name, userData.owner));
+                return usersData.map((userData: any) => User.fromJson(userData));
             } else if (response.status === 401) {
                 console.log("User is unauthorized. Logging out...");
                 window.location.href = "/login";

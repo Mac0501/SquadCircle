@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import Me from '../api/Me';
 import Event from '../api/Event';
 import { EventStateEnum, UserGroupPermissionEnum } from '../utils/types';
-import { InfoCircleOutlined } from '@ant-design/icons';
+import { InfoCircleOutlined, CommentOutlined } from '@ant-design/icons';
 import { Badge, Card, List, Typography } from 'antd';
 import EventOption from '../api/EventOption';
 import EventOptionCard from './EventOptionCard';
 import EventModal from './EventModal';
 import Group from '../api/Group';
 import User from '../api/User';
+import EventChatModal from './EventChatModal';
 
 interface EventCardProps {
     me: Me;
@@ -24,6 +25,7 @@ interface EventCardProps {
 const EventCard: React.FC<EventCardProps> = ({ me, event, mePermissions, group, members, onDelete }) =>  {
     const [descriptionExpanded, setDescriptionExpanded] = useState<boolean>(false);
     const [eventModalVisible, setEventModalVisible] = useState<boolean>(false);
+    const [eventChatModalVisible, setEventChatModalVisible] = useState<boolean>(false);
     const [currentEvent, setCurrentEvent] = useState<Event>(event);
     const [isNew, setIsNew] = useState<boolean>(false);
 
@@ -66,7 +68,7 @@ const EventCard: React.FC<EventCardProps> = ({ me, event, mePermissions, group, 
             >
             <Card 
                 title={event.title}
-                extra={<Typography.Link onClick={handleOpenEventModal}><InfoCircleOutlined style={{ fontSize: '18px' }}/></Typography.Link>}
+                extra={<><Typography.Link onClick={() => {setEventChatModalVisible(true)}} style={{marginRight:"10px"}}><CommentOutlined style={{ fontSize: '18px' }}/></Typography.Link><Typography.Link onClick={handleOpenEventModal}><InfoCircleOutlined style={{ fontSize: '18px' }}/></Typography.Link>  </>}
                 style={{ borderTopWidth:'5px', borderTopColor:`#${event.color}` }}
             >
                 <div style={{height:"360px", maxHeight:"360px", overflow:"hidden"}}>
@@ -112,6 +114,7 @@ const EventCard: React.FC<EventCardProps> = ({ me, event, mePermissions, group, 
             </Card>
             </Badge>
             <EventModal me={me} mePermissions={mePermissions} event={event} visible={eventModalVisible} onFinish={handleFinishEvent} onDelete={handleDeleteEvent} onCancel={handleCloseEventModal} group={group} members={members}/>
+            <EventChatModal me={me} mePermissions={mePermissions} event={event} visible={eventChatModalVisible} onFinish={()=>{setEventChatModalVisible(false)}} onCancel={()=>{setEventChatModalVisible(false)}} group={group} members={members}/>
         </div>
     );
 };

@@ -1,5 +1,6 @@
 import { EventStateEnum } from "../utils/types";
 import EventOption from "./EventOption";
+import Message from "./Message";
 
 class Event {
     id: number
@@ -199,6 +200,36 @@ class Event {
         } catch (error) {
             console.error('Error creating event options for event:', error);
             return null;
+        }
+    }
+
+    async get_messages_for_event(limit:number = 20, timestamp?:string): Promise<Message[]> {
+        try {
+            let url = `/api/events/${this.id}/messages?limit=${limit}`;
+            if (timestamp) {
+                url += `&timestamp=${timestamp}`;
+            }
+
+            const response = await fetch(url, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (response.ok) {
+                const messagesData = await response.json();
+                return messagesData.map((messageData: any) => Message.fromJson(messageData));
+            } else if (response.status === 401) {
+                console.log("User is unauthorized. Logging out...");
+                window.location.href = "/login";
+                return [];
+            } else {
+                return [];
+            }
+        } catch (error) {
+            console.error('Error fetching event options for event:', error);
+            return [];
         }
     }
     

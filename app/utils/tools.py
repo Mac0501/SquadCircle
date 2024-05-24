@@ -39,7 +39,7 @@ async def process_match(match_data: Dict[str, Any]) -> Dict[str, Any]:
             else:
                 processed_data[variable] = resolved_value
         else:
-            processed_data[variable] = value
+            processed_data[key] = value
     return processed_data
 
 def filter_dict_by_keys(input_dict:Dict[str,Any], key_list:List[str], check_if_one_key_matches:bool = False):

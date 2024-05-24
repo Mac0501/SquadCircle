@@ -14,6 +14,7 @@ setup()
 app = Sanic("SquadCircle")
 config = load_config()
 app.ctx.Config = config
+app.ctx.connected_users = {}
 app.config.CORS_ORIGINS = f"http://{config['App']['URI']}"
 app.config.CORS_SUPPORTS_CREDENTIALS = True
 app.config.OAS = False

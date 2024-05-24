@@ -12,4 +12,13 @@
 	handle {
 		reverse_proxy localhost:3001
 	}
+
+	@websockets {
+		header Connection *Upgrade*
+		header Upgrade websocket
+	}
+
+	handle @websockets {
+		reverse_proxy localhost:8000
+	}
 }

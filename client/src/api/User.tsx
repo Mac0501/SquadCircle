@@ -4,17 +4,19 @@ class User {
     id: number
     name: string;
     owner: boolean;
+    has_avatar: boolean;
     avatar: string;
 
-    constructor(id: number, name: string, owner: boolean) {
+    constructor(id: number, name: string, owner: boolean, has_avatar: boolean) {
         this.id = id;
         this.name = name;
         this.owner = owner;
+        this.has_avatar = has_avatar;
         this.avatar = `/api/users/${id}/avatar`;
     }
 
     static fromJson(json: any): User {
-        return new User(json.id, json.name, json.owner);
+        return new User(json.id, json.name, json.owner, json.has_avatar);
     }
 
     static async get_user(id: number): Promise<User | null> {
