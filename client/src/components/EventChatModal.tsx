@@ -87,7 +87,7 @@ const EventChatModal: React.FC<EventModalProps> = ({ me, mePermissions, visible,
 
         if (visible) {
             // Connect to WebSocket when modal is visible
-            ws.current = new WebSocket(`ws://${window.location.host}/api/events/chat/${event.id}`);
+            ws.current = new WebSocket(`${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/api/events/chat/${event.id}`);
             
             ws.current.onopen = () => {
                 console.log("WebSocket connection established");
