@@ -1,14 +1,14 @@
-import { Button, Divider, Input, Modal, Typography } from "antd";
+import { Button, Divider, Input, Modal, Tag, Typography } from "antd";
 import { useEffect, useRef, useState } from "react";
 import Event from "../api/Event";
 import Me from "../api/Me";
-import { UserGroupPermissionEnum } from "../utils/types";
+import { EventStateEnum, UserGroupPermissionEnum } from "../utils/types";
 import Group from "../api/Group";
 import User from "../api/User";
 import { SendOutlined, CommentOutlined } from '@ant-design/icons';
 import Message from "../api/Message";
 import { displayTimeWithZone } from "../utils/formatDisplayes";
-import { getColorFromId } from "../utils/tools";
+import { colorMap, getColorFromId, getKeyByEnumValue } from "../utils/tools";
 import UserAvatar from "./UserAvatar";
 import moment from "moment";
 
@@ -159,7 +159,12 @@ const EventChatModal: React.FC<EventModalProps> = ({ me, mePermissions, visible,
     return (
         <div>
             <Modal
-                title="Event"
+                title={ <><span style={{paddingRight:"10px"}}>Event</span><Tag
+                color={`${colorMap[event.state]}`}
+                style={{ marginInlineEnd: 4, color:'#000', fontSize:"14px", fontWeight:"500" }}
+            >
+                {getKeyByEnumValue(EventStateEnum, event.state)}
+            </Tag></>}
                 width="900px"
                 open={visible}
                 onCancel={onCancel}

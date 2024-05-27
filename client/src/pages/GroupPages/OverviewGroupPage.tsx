@@ -4,13 +4,14 @@ import Group from '../../api/Group';
 import { UserGroupPermissionEnum } from '../../utils/types';
 import User from '../../api/User';
 import Event from '../../api/Event';
-import { Badge, Button, Calendar, Card, List, Modal } from 'antd';
+import { Badge, Button, Calendar, List, Modal } from 'antd';
 import Vote from '../../api/Vote';
 import VoteCard from '../../components/VoteCard';
 import EventCard from '../../components/EventCard';
 import dayjs, { Dayjs } from 'dayjs';
 import { CalendarProps, HeaderRender } from 'antd/es/calendar/generateCalendar';
-import { displayDate, displayTime } from '../../utils/formatDisplayes';
+import { displayDate } from '../../utils/formatDisplayes';
+import EventCalendarCard from '../../components/EventCalendarCard';
 
 interface OverviewGroupPageProps {
     me: Me,
@@ -160,15 +161,14 @@ const OverviewGroupPage: React.FC<OverviewGroupPageProps> = ({ me, group, toDoVo
                     dataSource={dayModalEventList}
                     renderItem={(event: Event) => (
                         <List.Item>
-                            <Card 
-                                style={{ borderLeftWidth:'5px', borderLeftColor:`#${event.color}` }}>
-                                <div style={{ display: "flex", flexDirection:"column", alignItems: "start", justifyContent: "start", height:"100%", width:"100%", gap:'5px' }}>
-                                    <h3 style={{ margin: "0px", width:"100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                        {event.title}
-                                    </h3>
-                                    <span>{event.choosen_event_option ? displayTime(event.choosen_event_option?.start_time) : ""} {event.choosen_event_option?.end_time && ` - ${displayTime(event.choosen_event_option?.end_time)}`}</span>
-                                </div>
-                            </Card>
+                            <EventCalendarCard
+                                me={me}
+                                event={event}
+                                mePermissions={mePermissions}
+                                group={group}
+                                members={members}
+                                onDelete={handleDeleteEvent}
+                            />
                         </List.Item>
                     )}
                 />

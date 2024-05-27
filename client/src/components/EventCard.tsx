@@ -3,13 +3,14 @@ import Me from '../api/Me';
 import Event from '../api/Event';
 import { EventStateEnum, UserGroupPermissionEnum } from '../utils/types';
 import { InfoCircleOutlined, CommentOutlined } from '@ant-design/icons';
-import { Badge, Card, List, Typography } from 'antd';
+import { Badge, Card, List, Tag, Typography } from 'antd';
 import EventOption from '../api/EventOption';
 import EventOptionCard from './EventOptionCard';
 import EventModal from './EventModal';
 import Group from '../api/Group';
 import User from '../api/User';
 import EventChatModal from './EventChatModal';
+import { colorMap, getKeyByEnumValue } from '../utils/tools';
 
 interface EventCardProps {
     me: Me;
@@ -67,9 +68,14 @@ const EventCard: React.FC<EventCardProps> = ({ me, event, mePermissions, group, 
                 style={{ backgroundColor: '#52c41a', paddingRight:"4px", paddingLeft:"4px", display:"unset"}}
             >
             <Card 
-                title={event.title}
-                extra={<><Typography.Link onClick={() => {setEventChatModalVisible(true)}} style={{marginRight:"10px"}}><CommentOutlined style={{ fontSize: '18px' }}/></Typography.Link><Typography.Link onClick={handleOpenEventModal}><InfoCircleOutlined style={{ fontSize: '18px' }}/></Typography.Link>  </>}
-                style={{ borderTopWidth:'5px', borderTopColor:`#${event.color}` }}
+                title={<span style={{fontWeight:"700"}}>{event.title}</span>}
+                extra={<><Tag
+                    color={`${colorMap[event.state]}`}
+                    style={{ marginInlineEnd: 4, color:'#000', fontSize:"14px", fontWeight:"500" }}
+                >
+                    {getKeyByEnumValue(EventStateEnum, event.state)}
+                </Tag><Typography.Link onClick={() => {setEventChatModalVisible(true)}} style={{marginRight:"10px"}}><CommentOutlined style={{ fontSize: '18px' }}/></Typography.Link><Typography.Link onClick={handleOpenEventModal}><InfoCircleOutlined style={{ fontSize: '18px' }}/></Typography.Link>  </>}
+                style={{ borderTopWidth:'5px', borderTopColor:`#${event.color}`, color:"#333" }}
             >
                 <div style={{height:"360px", maxHeight:"360px", overflow:"hidden"}}>
                     <div style={{ overflowY: 'auto', maxHeight:"100%"}}>

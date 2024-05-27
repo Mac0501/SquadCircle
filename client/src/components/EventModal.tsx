@@ -1,14 +1,16 @@
-import { Badge, Button, DatePicker, List, Modal, Select, TimePicker, Typography } from "antd";
-import { useEffect, useState } from "react";
+import { Badge, Button, DatePicker, Input, List, Modal, Select, Tag, TimePicker, Typography } from "antd";
+import { useEffect, useRef, useState } from "react";
 import Event from "../api/Event";
 import EventOption from "../api/EventOption";
 import EventOptionCard from "./EventOptionCard";
 import Me from "../api/Me";
 import { EventColorEnum, EventStateEnum, UserGroupPermissionEnum } from "../utils/types";
+import { EditOutlined } from '@ant-design/icons';
 import Group from "../api/Group";
 import UserEventOptionResponse from "../api/UserEventOptionResponse";
 import User from "../api/User";
 import dayjs from 'dayjs';
+import { colorMap, getKeyByEnumValue } from "../utils/tools";
 
 interface EventModalProps {
     me: Me,
@@ -20,6 +22,7 @@ interface EventModalProps {
     event?: Event;
     group: Group;
     members: User[];
+    editable?: boolean;
 }
 
 interface EventProps {
@@ -45,8 +48,9 @@ interface EventOptionProp {
     user_event_option_responses: UserEventOptionResponse[] | null;
 }
 
-const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onFinish, onDelete, onCancel, event, group, members }) => {
+const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onFinish, onDelete, onCancel, event, group, members, editable = true }) => {
     const [descriptionExpanded, setDescriptionExpanded] = useState<boolean>(false);
+    const [isOverflowing, setIsOverflowing] = useState<boolean>(true);
     const [finishingModalEvent, setFinishingModalEvent] = useState<boolean>(false);
     const [deleteConfirmVisibleEvent, setDeleteConfirmVisibleEvent] = useState<boolean>(false);
     const [createModalVisibleEventOption, setCreateModalVisibleEventOption] = useState<boolean>(false);
@@ -54,9 +58,22 @@ const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onF
     const [createEventOption, setCreateEventOption] = useState<EventOptionProp>({ id: null, date: dayjs().add(1, 'day').format('YYYY-MM-DD'), start_time:"12:00:00", end_time: null, event_id:event ? event.id : null, user_event_option_responses:[]});
     const [editModalEventOptionOKButton, setEditModalEventOptionOKButton] = useState<boolean>(!(createEventOption.end_time === null || dayjs(createEventOption.start_time, 'HH:mm:ss').isBefore(dayjs(createEventOption.end_time, 'HH:mm:ss'))));
     const [changed, setChanged] = useState<boolean>(event === undefined);
-    const allowedToEdit = (me.owner || mePermissions.includes(UserGroupPermissionEnum.ADMIN) || mePermissions.includes(UserGroupPermissionEnum.MANAGE_EVENTS));
+    const allowedToEdit = (me.owner || mePermissions.includes(UserGroupPermissionEnum.ADMIN) || mePermissions.includes(UserGroupPermissionEnum.MANAGE_EVENTS)) && editable;
+    const [isEditing, setIsEditing] = useState(false);
+    const textAreaRef = useRef<any>(null);
+    const descriptionRef = useRef<any>(null);
 
     const tomorrow = dayjs().add(1, 'day');
+
+    useEffect(() => {
+        const checkOverflow = () => {
+            if (descriptionRef.current) {
+                setIsOverflowing(descriptionRef.current.scrollHeight > descriptionRef.current.clientHeight);
+            }
+        };
+        // Check overflow when description content changes
+        checkOverflow();
+    }, [descriptionRef, descriptionRef.current, descriptionExpanded]);
 
     useEffect(() => {
         if (event) {
@@ -287,10 +304,42 @@ const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onF
         };
     };
     
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (textAreaRef.current.resizableTextArea.textArea !== event.target) {
+                setIsEditing(false);
+            }
+        };
+
+        if (isEditing) {
+            document.addEventListener('mousedown', handleClickOutside);
+        } else {
+            document.removeEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+
+    }, [isEditing]);
+
     return (
         <div>
             <Modal
-                title="Event"
+                title={
+                    <>
+                        <span style={{ paddingRight: "10px" }}>Event</span>
+                        {editEvent.state !== null && (
+                            <Tag
+                                color={`${colorMap[editEvent.state]}`}
+                                style={{ marginInlineEnd: 4, color: '#000', fontSize: "14px", fontWeight: "500" }}
+                            >
+                                {getKeyByEnumValue(EventStateEnum, editEvent.state)}
+                            </Tag>
+                        )}
+                    </>
+                }
                 width="900px"
                 open={visible}
                 onCancel={handleCancel}
@@ -303,7 +352,7 @@ const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onF
                                 </Button>
                             )}
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end'}}>
                             {changed ? (
                                 <div>
                                     <Button onClick={handleCancel} key="back" style={{marginRight:'5px'}}>
@@ -338,26 +387,51 @@ const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onF
                     {editEvent ? editEvent.title : ''}
                 </Typography.Title>
                 </div>
-                <Typography.Paragraph
-                    style={{margin:'0px'}}
-                    ellipsis={{
-                        rows: 4,
-                        expandable: 'collapsible',
-                        expanded: descriptionExpanded,
-                        onExpand: (_, info) => setDescriptionExpanded(info.expanded),
-                    }}
-                    { ...(allowedToEdit ? { editable: { 
-                                            onChange: (description:string) => {
-                                                setChanged(true);
-                                                setEditEvent({ ...editEvent, description })
-                                            },
-                                            enterIcon: null,
-                                            maxLength:2000,
-                                        } } : {}) }
-                >
-                    {editEvent ? editEvent.description : ''}
-                </Typography.Paragraph>
-                
+                    {isEditing ? (
+                        <div>
+                            <Input.TextArea
+                                ref={textAreaRef}
+                                placeholder="Description"
+                                autoSize={{ minRows: 1, maxRows: 4 }}
+                                maxLength={2000}
+                                value={editEvent.description ? editEvent.description : ''}
+                                onChange={(e)=>{
+                                    setChanged(true);
+                                    setEditEvent({ ...editEvent, description:e.target.value })
+                                }}
+                                style={{ whiteSpace: 'pre-line' }}
+                            />
+                        </div>
+                    ) : (
+                        <div style={{position:"relative"}}>
+                            <div
+                                ref={el => { console.log(el); descriptionRef.current = el; }}
+                                style={{
+                                    overflow: 'hidden',
+                                    maxHeight: descriptionExpanded ? 'none' : '6em',
+                                    lineHeight: '1.5em',
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: descriptionExpanded ? 'unset' : '4', // Number of lines to show
+                                    WebkitBoxOrient: 'vertical',
+                                    wordBreak: 'break-word',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace:"pre-line",
+                                    
+                                }}
+                            >
+                                {allowedToEdit ? (
+                                    <Typography.Link onClick={() => setIsEditing(true)} style={{ marginRight: "10px" }}>
+                                        <EditOutlined />
+                                    </Typography.Link>
+                                ) : null}{editEvent.description ? editEvent.description : "Description"}
+                            </div>
+                            {(isOverflowing || descriptionExpanded) && (
+                                <a style={{ display: "inline-flex" }} onClick={() => { setDescriptionExpanded(!descriptionExpanded) }}>
+                                    {descriptionExpanded ? 'Show Less...' : 'Show More...'}
+                                </a>
+                            )}
+                        </div>
+                    )}
                 <div style={{display:'flex', alignItems:'center', marginBottom: '10px', marginTop: '5px'}}>
                     <span>Event Color:</span>
                     <Select
