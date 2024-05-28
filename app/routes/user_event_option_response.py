@@ -31,7 +31,7 @@ async def update_user_event_option_response(request: Request, my_user: User, use
             event_option = await EventOption.get(id=user_event_option_response.event_option_id).prefetch_related("event")
             if event_option.event.state != EventStateEnum.VOTING:
                 return json({"error": f"The Voting period is over."}, status=403)
-            await user_event_option_response.update_from_dict(filter_dict_by_keys(request.json,["response"]))
+            await user_event_option_response.update_from_dict(filter_dict_by_keys(request.json,["response", "reason"]))
             await user_event_option_response.save()
             return json(user_event_option_response.to_dict())
         else:

@@ -64,6 +64,7 @@ const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onF
     const descriptionRef = useRef<any>(null);
 
     const tomorrow = dayjs().add(1, 'day');
+    const now = dayjs();
 
     useEffect(() => {
         const checkOverflow = () => {
@@ -73,7 +74,7 @@ const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onF
         };
         // Check overflow when description content changes
         checkOverflow();
-    }, [descriptionRef, descriptionRef.current, descriptionExpanded]);
+    }, [descriptionRef, descriptionExpanded, editEvent.description]);
 
     useEffect(() => {
         if (event) {
@@ -150,7 +151,8 @@ const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onF
                 await event.update({
                     title: editEvent.title,
                     color: editEvent.color,
-                    description: editEvent.description
+                    vote_end_date: editEvent.vote_end_date,
+                    description: editEvent.description,
                 });
                 newEvent = new Event(
                     event.id,
@@ -403,7 +405,9 @@ const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onF
                             />
                         </div>
                     ) : (
-                        <div style={{position:"relative"}}>
+                        null
+                    )}
+                    <div style={{position:"relative", display: isEditing ? "none" : "block"}}>
                             <div
                                 ref={el => { console.log(el); descriptionRef.current = el; }}
                                 style={{
@@ -431,7 +435,6 @@ const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onF
                                 </a>
                             )}
                         </div>
-                    )}
                 <div style={{display:'flex', alignItems:'center', marginBottom: '10px', marginTop: '5px'}}>
                     <span>Event Color:</span>
                     <Select
@@ -453,6 +456,27 @@ const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onF
                             </Select.Option>
                         ))}
                     </Select>
+                </div>
+                <div style={{display:'flex', alignItems:'center', marginBottom: '10px', marginTop: '5px'}}>
+                    <span>Vote End-Date:</span>
+                    <DatePicker 
+                        needConfirm={false}
+                        style={{ width: 'auto', marginLeft:'5px'}}
+                        format='YYYY-MM-DD HH:mm'
+                        showTime={{ defaultValue: dayjs('00:00:00', 'HH:mm:ss') }}
+                        allowClear={true} 
+                        showNow={false}
+                        defaultValue={
+                            editEvent.vote_end_date !== null
+                                ? dayjs(editEvent.vote_end_date, 'YYYY-MM-DD HH:mm:ss')
+                                : null
+                        }
+                        onChange={(vote_end_date, vote_end_dateString) => {
+                            if (typeof vote_end_dateString === 'string') {
+                                setChanged(true);
+                                editEvent.vote_end_date = vote_end_date !== null ? `${vote_end_dateString}:00` : null;
+                            }
+                        }}/>
                 </div>
                 {allowedToEdit && (
                     <Button onClick={()=>{
@@ -525,7 +549,8 @@ const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onF
                     <div>
                         <span style={{marginRight:"5px"}}>Date:</span>
                         <DatePicker 
-                            allowClear={false} 
+                            showNow={false}
+                            allowClear={false}
                             defaultValue={dayjs(createEventOption.date, 'YYYY-MM-DD')} 
                             minDate={tomorrow} 
                             onChange={(date, dateString) => {

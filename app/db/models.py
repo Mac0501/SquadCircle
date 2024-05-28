@@ -158,7 +158,7 @@ class Event(Model):
             "id": self.id,
             "title": self.title,
             "color": self.color,
-            "vote_end_date": self.vote_end_date.strftime("%H:%M:%S") if self.vote_end_date else None,
+            "vote_end_date": self.vote_end_date.strftime("%Y-%m-%d %H:%M:%S") if self.vote_end_date else None,
             "created": self.created.strftime("%Y-%m-%d %H:%M:%S"),
             "description": self.description,
             "state": self.state,
@@ -188,49 +188,53 @@ class Event(Model):
             UPDATE events
             SET state = {EventStateEnum.OPEN},
                 choosen_event_option_id = (
-                    SELECT COALESCE(
-                        (
-                            SELECT event_option_id
-                            FROM (
-                                SELECT event_option_id, COUNT(*) AS response_count
-                                FROM user_event_option_responses
-                                INNER JOIN event_options ON user_event_option_responses.event_option_id = event_options.id
-                                WHERE response = {EventOptionResponseEnum.ACCEPTED}
-                                AND event_options.event_id = events.id
-                                GROUP BY event_option_id
-                                ORDER BY response_count DESC, event_option_id ASC
-                                LIMIT 1
+                    CASE 
+                        WHEN choosen_event_option_id IS NULL THEN (
+                            SELECT COALESCE(
+                                (
+                                    SELECT event_option_id
+                                    FROM (
+                                        SELECT event_option_id, COUNT(*) AS response_count
+                                        FROM user_event_option_responses
+                                        INNER JOIN event_options ON user_event_option_responses.event_option_id = event_options.id
+                                        WHERE response = {EventOptionResponseEnum.ACCEPTED}
+                                        AND event_options.event_id = events.id
+                                        GROUP BY event_option_id
+                                        ORDER BY response_count DESC, event_option_id ASC
+                                        LIMIT 1
+                                    )
+                                ),
+                                (
+                                    SELECT event_option_id
+                                    FROM (
+                                        SELECT event_option_id, COUNT(*) AS response_count
+                                        FROM user_event_option_responses
+                                        INNER JOIN event_options ON user_event_option_responses.event_option_id = event_options.id
+                                        WHERE response = {EventOptionResponseEnum.DENIED}
+                                        AND event_options.event_id = events.id
+                                        GROUP BY event_option_id
+                                        ORDER BY response_count ASC, event_option_id ASC
+                                        LIMIT 1
+                                    )
+                                ),
+                                (
+                                    SELECT id as event_option_id
+                                    FROM event_options
+                                    WHERE event_options.event_id = events.id
+                                    LIMIT 1
+                                )
                             )
-                        ),
-                        (
-                            SELECT event_option_id
-                            FROM (
-                                SELECT event_option_id, COUNT(*) AS response_count
-                                FROM user_event_option_responses
-                                INNER JOIN event_options ON user_event_option_responses.event_option_id = event_options.id
-                                WHERE response = {EventOptionResponseEnum.DENIED}
-                                AND event_options.event_id = events.id
-                                GROUP BY event_option_id
-                                ORDER BY response_count ASC, event_option_id ASC
-                                LIMIT 1
                             )
-                        ),
-                        (
-                            SELECT id as event_option_id
-                            FROM event_options
-                            WHERE event_options.event_id = events.id
-                            LIMIT 1
-                        )
-                    )
+                        ELSE choosen_event_option_id
+                    END
                 )
             WHERE state = {EventStateEnum.VOTING}
-            AND choosen_event_option_id IS NULL
             AND (
                 (events.vote_end_date IS NOT NULL AND events.vote_end_date <= DATETIME('now'))
                 OR
                 (
                     events.vote_end_date IS NULL AND (
-                        SELECT DATETIME(MIN(event_options.date) || ' 23:00', '-1 day')
+                        SELECT DATETIME(MIN(event_options.date), '-1 hour')
                         FROM event_options
                         WHERE event_options.event_id = events.id
                     )  <= DATETIME('now')
@@ -308,6 +312,7 @@ class UserEventOptionResponse(Model):
     __parse_name__ = "user_event_option_response"
     id = fields.IntField(pk=True, autoincrement=True)
     response = fields.IntEnumField(enum_type=EventOptionResponseEnum, null=False)
+    reason = fields.TextField(max_length=200, null=True)
 
     event_option_id: int
     event_option: fields.ForeignKeyRelation["EventOption"] = fields.ForeignKeyField(
@@ -333,7 +338,7 @@ class UserEventOptionResponse(Model):
         if self.user_and_group:
             user_and_group_dict = self.user_and_group.to_dict()
 
-        return {"id":self.id, "response":self.response, "event_option_id": self.event_option_id, "user_and_group_id":self.user_and_group_id, "user_and_group":user_and_group_dict}
+        return {"id":self.id, "response":self.response, "reason":self.reason, "event_option_id": self.event_option_id, "user_and_group_id":self.user_and_group_id, "user_and_group":user_and_group_dict}
     
     async def get_group_id(self) -> int:
         user_and_group = await UserAndGroup.get(id=self.user_and_group_id)

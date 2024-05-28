@@ -4,12 +4,24 @@ import './index.css';
 import reportWebVitals from './reportWebVitals';
 import { Router } from './Router';
 import { ConfigProvider, theme } from 'antd';
+import dayjs from 'dayjs';
+import 'dayjs/locale/en-gb';
+import updateLocale from 'dayjs/plugin/updateLocale';
+import enGB from 'antd/locale/en_GB';
+dayjs.extend(updateLocale);
+
+// Configure dayjs locale to start the week on Monday
+dayjs.updateLocale('en-gb', {
+    weekStart: 1,
+    weekdaysMin: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+});
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
   <ConfigProvider
+    locale={enGB}
     theme={{
       algorithm: theme.darkAlgorithm,
     }}

@@ -4,14 +4,16 @@ import UserAndGroup from "./UserAndGroup";
 class UserEventOptionResponse {
     id: number;
     response: EventOptionResponseEnum;
+    reason: string;
     event_option_id: number;
     user_and_group_id: number;
     user_and_group: UserAndGroup | null;
 
 
-    constructor(id: number, response: EventOptionResponseEnum, event_option_id: number, user_and_group_id: number, user_and_group: UserAndGroup | null) {
+    constructor(id: number, response: EventOptionResponseEnum, reason: string, event_option_id: number, user_and_group_id: number, user_and_group: UserAndGroup | null) {
         this.id = id;
         this.response = response;
+        this.reason = reason;
         this.event_option_id = event_option_id;
         this.user_and_group_id = user_and_group_id;
         this.user_and_group = user_and_group;
@@ -21,6 +23,7 @@ class UserEventOptionResponse {
         return new UserEventOptionResponse(
             json.id,
             json.response,
+            json.reason,
             json.event_option_id,
             json.user_and_group_id,
             json.user_and_group ? UserAndGroup.fromJson(json.user_and_group) : null
@@ -52,7 +55,7 @@ class UserEventOptionResponse {
         }
     }
 
-    async update(response: EventOptionResponseEnum): Promise<boolean> {
+    async update(response: EventOptionResponseEnum, reason:string|null = null): Promise<boolean> {
         try {
             const fetch_response = await fetch(`/api/user_event_option_response/${this.id}`, {
                 method: 'PUT',
@@ -60,7 +63,7 @@ class UserEventOptionResponse {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ response })
+                body: JSON.stringify({ response, reason })
             });
             if (fetch_response.ok) {
                 const responseData = await fetch_response.json();

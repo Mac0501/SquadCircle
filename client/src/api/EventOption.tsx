@@ -148,7 +148,7 @@ class EventOption {
         }
     }
 
-    async create_user_event_option_response(response: EventOptionResponseEnum): Promise<UserEventOptionResponse | null> {
+    async create_user_event_option_response(response: EventOptionResponseEnum, reason: string|null = null): Promise<UserEventOptionResponse | null> {
         try {
             const fetch_response = await fetch(`/api/event_options/${this.id}/user_event_option_response`, {
                 method: 'POST',
@@ -156,7 +156,7 @@ class EventOption {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ response })
+                body: JSON.stringify({ response, reason })
             });
             if (fetch_response.ok) {
                 const responseData = await fetch_response.json();

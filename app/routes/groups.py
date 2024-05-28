@@ -116,7 +116,7 @@ async def get_all_events_for_group(request: Request, my_user: User, group: Group
 async def create_event_for_group(request: Request, my_user: User, group: Group|None):
     if not group:
         return json({"error": "Group not found"}, status=404)
-    data = filter_dict_by_keys(request.json, ["title", "color", "description", "state"], True)
+    data = filter_dict_by_keys(request.json, ["title", "color", "description", "state", "vote_end_date"], True)
     event = await Event.create(group_id=group.id, **data)
     await event.send_embed(url=request.app.ctx.Config["App"]["URI"])
     return json(event.to_dict())

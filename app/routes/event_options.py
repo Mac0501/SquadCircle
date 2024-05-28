@@ -84,7 +84,7 @@ async def create_user_event_option_response(request: Request, my_user: User, eve
         return json({"error": f"User is not in Group"}, status=404)
 
     user_event_option_response = await UserEventOptionResponse.get_or_none(event_option_id=event_option.id, user_and_group_id=user_and_group.id)
-    data = filter_dict_by_keys(request.json, ["response"], True)
+    data = filter_dict_by_keys(request.json, ["response", "reason"], True)
     if user_event_option_response:
         await user_event_option_response.update_from_dict(data)
         await user_event_option_response.save()

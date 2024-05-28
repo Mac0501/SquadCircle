@@ -240,6 +240,7 @@ type EventUpdateData = {
     color?: string;
     state?: EventStateEnum;
     description?: string|null;
+    vote_end_date?: string|null;
 };
 
 export default Event;

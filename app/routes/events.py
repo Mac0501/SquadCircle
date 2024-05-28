@@ -41,7 +41,7 @@ async def update_event(request: Request, my_user: User, event: Event|None):
     if event:
         if event.state == EventStateEnum.ARCHIVED:
             return json({"error": f"The Event is Archived."}, status=403)
-        await event.update_from_dict(filter_dict_by_keys(request.json, ["title", "color", "description", "state"]))
+        await event.update_from_dict(filter_dict_by_keys(request.json, ["title", "color", "description", "state", "vote_end_date"]))
         await event.save()
         return json(event.to_dict())
     else:

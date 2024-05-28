@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import Me from '../api/Me';
 import { EventOptionResponseEnum, EventStateEnum, UserGroupPermissionEnum } from '../utils/types';
-import { CheckCircleOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Card, DatePicker, Modal, Progress, Radio, RadioChangeEvent, TimePicker, Tooltip, Typography, Button, Collapse } from 'antd';
+import { CheckCircleOutlined, EditOutlined, DeleteOutlined, RightOutlined, DownOutlined } from '@ant-design/icons';
+import { Card, DatePicker, Modal, Progress, Radio, RadioChangeEvent, TimePicker, Tooltip, Typography, Button, Collapse, Input } from 'antd';
 import EventOption from '../api/EventOption';
 import User from '../api/User';
 import UserEventOptionResponse from '../api/UserEventOptionResponse';
@@ -36,7 +36,7 @@ interface EventOptionProp {
     user_event_option_responses: UserEventOptionResponse[] | null;
 }
 
-async function create_user_event_option_response(event_option_id: number, response: EventOptionResponseEnum): Promise<UserEventOptionResponse | null> {
+async function create_user_event_option_response(event_option_id: number, response: EventOptionResponseEnum, reason: string|null = null): Promise<UserEventOptionResponse | null> {
     try {
         const fetch_response = await fetch(`/api/event_options/${event_option_id}/user_event_option_response`, {
             method: 'POST',
@@ -44,11 +44,15 @@ async function create_user_event_option_response(event_option_id: number, respon
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ response })
+            body: JSON.stringify({ response, reason })
         });
         if (fetch_response.ok) {
             const responseData = await fetch_response.json();
             return UserEventOptionResponse.fromJson(responseData);
+        } else if (fetch_response.status === 401) {
+            console.log("User is unauthorized. Logging out...");
+            window.location.href = "/login";
+            return null;
         } else {
             return null;
         }
@@ -76,7 +80,10 @@ async function set_for_event(event_option_id:number): Promise<boolean> {
 
 const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, mePermissions, editable = false, onSet, onEdit, onDelete, members, event_state }) => {
     const [deleteConfirmVisibleEventOption, setDeleteConfirmVisibleEventOption] = useState<boolean>(false);
+    const [expandedReason, setExpandedReason] = useState<number|null>(null);
     const [showEventOptionVoteList, setShowEventOptionVoteList] = useState<boolean>(false);
+    const [showEventOptionReason, setShowEventOptionReason] = useState<boolean>(false);
+    const [reason, setReason] = useState<string|null>(null);
     const [editModalEventOptionOKButton, setEditModalEventOptionOKButton] = useState<boolean>(!(event_option.end_time === null || dayjs(event_option.start_time, 'HH:mm:ss').isBefore(dayjs(event_option.end_time, 'HH:mm:ss'))));
     const [editModalVisibleEventOption, setEditModalVisibleEventOption] = useState<boolean>(false);
     const [choosenOption, setChoosenOption] = useState<UserEventOptionResponse|null>(() => {
@@ -179,8 +186,35 @@ const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, meP
     const onChooseOption = async ({ target: { value } }: RadioChangeEvent) => {
         if (event_option.id !== null) {
             let updatedOption: UserEventOptionResponse | null;
+            if( value === EventOptionResponseEnum.ACCEPTED){
+                if (choosenOption === null) {
+                    const new__user_event_option_response = await create_user_event_option_response(event_option.id!, value);
+                    if (new__user_event_option_response !== null) {
+                        setChoosenOption(new__user_event_option_response);
+                        event_option.user_event_option_responses = event_option.user_event_option_responses !== null ? event_option.user_event_option_responses : [] 
+                        event_option.user_event_option_responses?.push(new__user_event_option_response);
+                        updateCounts();
+                    }
+                } else {
+                    await choosenOption.update(value);
+                    updatedOption = choosenOption
+                    if (updatedOption !== null) {
+                        setChoosenOption(updatedOption);
+                        updateCounts();
+                    }
+                }
+            }
+            else{
+                setShowEventOptionReason(true)
+            }
+        }
+    };
+
+    const onChooseOptionWithReason = async () => {
+        if (event_option.id !== null) {
+            let updatedOption: UserEventOptionResponse | null;
             if (choosenOption === null) {
-                const new__user_event_option_response = await create_user_event_option_response(event_option.id!, value);
+                const new__user_event_option_response = await create_user_event_option_response(event_option.id!, EventOptionResponseEnum.DENIED, reason);
                 if (new__user_event_option_response !== null) {
                     setChoosenOption(new__user_event_option_response);
                     event_option.user_event_option_responses = event_option.user_event_option_responses !== null ? event_option.user_event_option_responses : [] 
@@ -188,13 +222,14 @@ const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, meP
                     updateCounts();
                 }
             } else {
-                await choosenOption.update(value);
+                await choosenOption.update(EventOptionResponseEnum.DENIED, reason);
                 updatedOption = choosenOption
                 if (updatedOption !== null) {
                     setChoosenOption(updatedOption);
                     updateCounts();
                 }
             }
+            setReason(null)
         }
     };
 
@@ -349,11 +384,11 @@ const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, meP
             <Modal
                 title="Votes"
                 open={showEventOptionVoteList}
-                onOk={() => {setShowEventOptionVoteList(false)}}
-                onCancel={()=>{setShowEventOptionVoteList(false);}}
+                onOk={() => {setShowEventOptionVoteList(false); setExpandedReason(null)}}
+                onCancel={()=>{setShowEventOptionVoteList(false); setExpandedReason(null)}}
                 footer={
                     <div style={{ display: 'flex', justifyContent:'end' }}>
-                        <Button type="primary" onClick={() => setShowEventOptionVoteList(false)} key="submit">
+                        <Button type="primary" onClick={() => {setShowEventOptionVoteList(false); setExpandedReason(null)}} key="submit">
                             Close
                         </Button>
                     </div>
@@ -365,7 +400,8 @@ const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, meP
                             {acceptedMembers.length > 0 ? (
                                 <div style={{padding:"5px"}}>
                                     {acceptedMembers.map(acceptedMember => {
-                                        return (<div style={{ display: 'flex', alignItems: 'center', marginBottom: 5 }} key={acceptedMember.id}>
+                                        return (<div style={{ display: 'flex', alignItems: 'center', marginBottom: 5, backgroundColor:"#101010", borderRadius:"8px", padding:"8px" }} key={acceptedMember.id}>
+                                            <RightOutlined style={{marginRight:"5px", visibility:"hidden"}}/>
                                             <div style={{width:"30px"}}>
                                                 <UserAvatar user={acceptedMember} size={30} />
                                             </div>
@@ -379,12 +415,26 @@ const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, meP
                             {deniedMembers.length > 0 ? (
                                 <div style={{padding:"5px"}}>
                                     {deniedMembers.map(deniedMember => {
-                                        return (<div style={{ display: 'flex', alignItems: 'center', marginBottom: 5 }} key={deniedMember.id}>
-                                            <div style={{width:"30px"}}>
-                                                <UserAvatar user={deniedMember} size={30} />
+                                        const deniedMemberResponses = event_option.user_event_option_responses!.find(user_event_option_response => {
+                                            return user_event_option_response.user_and_group?.user_id === deniedMember.id;
+                                        });
+
+                                        if(deniedMemberResponses === undefined){
+                                            return null;
+                                        }
+
+                                        return (
+                                            <div onClick={()=>{expandedReason === deniedMember.id || deniedMemberResponses.reason === null ? setExpandedReason(null) : setExpandedReason(deniedMember.id) }} style={{ display: 'flex', flexDirection:"column", marginBottom: 5, backgroundColor:"#101010", borderRadius:"8px", padding:"8px" }} key={deniedMember.id}>
+                                                <div style={{ display: 'flex', flexDirection:"row", alignItems: 'center'}} key={deniedMember.id}>
+                                                {deniedMemberResponses.reason !== null ? (expandedReason === deniedMember.id ? <DownOutlined style={{marginRight:"5px"}} /> : <RightOutlined style={{marginRight:"5px"}}/>):<RightOutlined style={{marginRight:"5px", visibility:"hidden"}}/>}
+                                                    <div style={{width:"30px"}}>
+                                                        <UserAvatar user={deniedMember} size={30} />
+                                                    </div>
+                                                    <span style={{ marginLeft: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{deniedMember.name}</span>
+                                                </div>
+                                                {(deniedMemberResponses.reason !== null && expandedReason === deniedMember.id) && <span style={{paddingTop:"5px", paddingLeft:"19px"}}>{deniedMemberResponses.reason}</span>}
                                             </div>
-                                            <span style={{ marginLeft: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{deniedMember.name}</span>
-                                        </div>)
+                                        )
                                     })}
                                 </div>
                             ) : ("Nobody denied yet.")}
@@ -393,7 +443,8 @@ const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, meP
                             {restMembers.length > 0 ? (
                                 <div style={{padding:"5px"}}>
                                     {restMembers.map(restMember => {
-                                        return (<div style={{ display: 'flex', alignItems: 'center', marginBottom: 5 }} key={restMember.id}>
+                                        return (<div style={{ display: 'flex', alignItems: 'center', marginBottom: 5, backgroundColor:"#101010", borderRadius:"8px", padding:"8px" }} key={restMember.id}>
+                                            <RightOutlined style={{marginRight:"5px", visibility:"hidden"}}/>
                                             <div style={{width:"30px"}}>
                                                 <UserAvatar user={restMember} size={30} />
                                             </div>
@@ -405,6 +456,27 @@ const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, meP
                         </Collapse.Panel>
                     </Collapse>
                 </div>
+            </Modal>
+            <Modal
+                title="Reason"
+                open={showEventOptionReason}
+                onOk={() => {setShowEventOptionReason(false); onChooseOptionWithReason();}}
+                onCancel={()=>{setShowEventOptionReason(false) }}
+                footer={
+                    <div style={{ display: 'flex', justifyContent:'end' }}>
+                        <Button type="primary" onClick={() => {setShowEventOptionReason(false);  onChooseOptionWithReason();}} key="submit">
+                            Send
+                        </Button>
+                    </div>
+                    }>
+                        <Input.TextArea
+                            value={reason ? reason : ""}
+                            onChange={(e) => setReason(e.target.value)}
+                            placeholder="Enter your Reason to deny the event."
+                            autoSize={{ minRows: 3, maxRows: 5 }}
+                            maxLength={200}
+                        />
+
             </Modal>
         </div>
     );
