@@ -15,7 +15,7 @@ import Admin from "../pages/AdminPage";
 import UserAvatar from "./UserAvatar";
 import Group from "../api/Group";
 import GroupPage from "../pages/GroupPage";
-import SquadCircle from "../assets/SquadCircle.png"
+import SquadCircle from "../assets/SquadCircle.webp"
 
 type MenuItem = Required<MenuProps>['items'][number];
 
