@@ -181,25 +181,35 @@ const { TabPane } = Tabs;
                 }
                 >            
                 <TabPane tab="Overview" key={`/group/${group.id}`}>
-                    <OverviewGroupPage me={me} group={group} toDoVotes={meGroupVotes ? meGroupVotes : []} toDoEvents={meGroupEvents ? meGroupEvents : []} calenderEvents={meGroupCalender ? meGroupCalender : []}  members={members ? members : []} mePermissions={mePermissions} />
+                    <Suspense fallback={<div></div>}>
+                        <OverviewGroupPage me={me} group={group} toDoVotes={meGroupVotes ? meGroupVotes : []} toDoEvents={meGroupEvents ? meGroupEvents : []} calenderEvents={meGroupCalender ? meGroupCalender : []}  members={members ? members : []} mePermissions={mePermissions} />
+                    </Suspense>
                 </TabPane>
                 <TabPane tab="Members" key={`/group/${group.id}/members`}>
-                    <UsersGroupPage me={me} group={group} users={users ? users : []} members={members ? members : []} mePermissions={mePermissions}/>
+                    <Suspense fallback={<div></div>}>
+                        <UsersGroupPage me={me} group={group} users={users ? users : []} members={members ? members : []} mePermissions={mePermissions}/>
+                    </Suspense>
                 </TabPane>
                 <TabPane tab="Events" key={`/group/${group.id}/events`}>
-                    <EventsGroupPage me={me} group={group} events={events ? events : []} members={members ? members : []} mePermissions={mePermissions} />
+                    <Suspense fallback={<div></div>}>
+                        <EventsGroupPage me={me} group={group} events={events ? events : []} members={members ? members : []} mePermissions={mePermissions} />
+                    </Suspense>
                 </TabPane>
                 <TabPane tab="Votes" key={`/group/${group.id}/votes`}>
-                    <VotesGroupPage me={me} group={group} votes={votes ? votes : []} members={members ? members : []} mePermissions={mePermissions} />
+                    <Suspense fallback={<div></div>}>
+                        <VotesGroupPage me={me} group={group} votes={votes ? votes : []} members={members ? members : []} mePermissions={mePermissions} />
+                    </Suspense>
                 </TabPane>
                 {(me.owner || mePermissions.includes(UserGroupPermissionEnum.ADMIN) || mePermissions.includes(UserGroupPermissionEnum.MANAGE_INVITES)) &&
                     <TabPane tab="Invites" key={`/group/${group.id}/invites`}>
-                        <InvitesGroupPage group={group} invites={invites ? invites : []}/>
+                        <Suspense fallback={<div></div>}>
+                            <InvitesGroupPage group={group} invites={invites ? invites : []}/>
+                        </Suspense>
                     </TabPane>
                 }
                 <TabPane tab="Settings" key={`/group/${group.id}/settings`}>
                     <Suspense fallback={<div></div>}>
-                    <SettingsGroupPage me={me} group={group} mePermissions={mePermissions} />
+                        <SettingsGroupPage me={me} group={group} mePermissions={mePermissions} />
                     </Suspense>
                 </TabPane>
             </Tabs>
