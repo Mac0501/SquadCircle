@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import Auth from "../api/Auth";
 import { Avatar, Button, Layout, Menu, theme } from 'antd';
@@ -9,13 +9,13 @@ import {
 import Me from "../api/Me";
 
 import type { MenuProps } from 'antd';
-import Homepage from "../pages/Homepage";
-import ProfilePage from "../pages/Profilepage";
-import Admin from "../pages/AdminPage";
-import UserAvatar from "./UserAvatar";
 import Group from "../api/Group";
-import GroupPage from "../pages/GroupPage";
+import UserAvatar from "./UserAvatar";
 import SquadCircle from "../assets/SquadCircle.webp"
+const GroupPage = React.lazy(() => import("../pages/GroupPage"));
+const Homepage = React.lazy(() => import("../pages/Homepage"));
+const ProfilePage = React.lazy(() => import("../pages/Profilepage"));
+const Admin = React.lazy(() => import("../pages/AdminPage"));
 
 type MenuItem = Required<MenuProps>['items'][number];
 
@@ -177,16 +177,18 @@ const ProtectedRoute: React.FC = () => {
             </Header>
             )}
               <Content style={{ margin: '24px 16px 0', overflow: 'initial' }}>
-                <Routes>
-                  <Route path={`/`} element={<Navigate to="/homepage" replace={true} />} />
-                  <Route path={`/homepage`} element={<Homepage/>} />
-                  <Route path={`/profile`} element={<ProfilePage me={me} setSidabarAvatarKey={setAvatarKey}/>} />
-                  <Route path={`/admin`} element={<Navigate to="/admin/users" replace={true} />} />
-                  <Route path={`/admin/*`} element={me.owner ? <Admin me={me} /> : <Navigate to="/homepage" replace={true} />} />
-                  {groups.map(group => (
-                    <Route key={`group/${group.id}`} path={`/group/${group.id}/*`} element={<GroupPage key={group.id} me={me} group={group} />} />
-                  ))}
-                </Routes>
+                <Suspense fallback={<div></div>}>
+                  <Routes>
+                    <Route path={`/`} element={<Navigate to="/homepage" replace={true} />} />
+                    <Route path={`/homepage`} element={<Homepage/>} />
+                    <Route path={`/profile`} element={<ProfilePage me={me} setSidabarAvatarKey={setAvatarKey}/>} />
+                    <Route path={`/admin`} element={<Navigate to="/admin/users" replace={true} />} />
+                    <Route path={`/admin/*`} element={me.owner ? <Admin me={me} /> : <Navigate to="/homepage" replace={true} />} />
+                      {groups.map(group => (
+                        <Route key={`group/${group.id}`} path={`/group/${group.id}/*`} element={<GroupPage key={group.id} me={me} group={group} />} />
+                      ))}
+                  </Routes>
+                </Suspense>
               </Content>
             </Layout>
           </Layout>
