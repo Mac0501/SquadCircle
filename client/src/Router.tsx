@@ -1,9 +1,9 @@
 import React, { Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import ProtectedRoute from "./components/ProtectedRoute";
-import Registration from "./pages/Registration";
 
 const Login = React.lazy(() => import("./pages/Login"));
+const Registration = React.lazy(() => import("./pages/Registration"));
+const ProtectedRoute = React.lazy(() => import("./components/ProtectedRoute"));
 
 export const Router: React.FC = () => {
   return (
