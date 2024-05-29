@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Button, Tabs } from 'antd';
 import User from '../api/User';
 import Invite from '../api/Invites';
@@ -8,15 +8,15 @@ import { UserGroupPermissionEnum } from '../utils/types';
 import Loading from '../components/Loading';
 import Vote from '../api/Vote';
 import Event from '../api/Event';
-import UsersGroupPage from './GroupPages/UsersGroupPage';
-import InvitesGroupPage from './GroupPages/InvitesGroupPage';
-import EventsGroupPage from './GroupPages/EventsGroupPage';
-import EventModal from '../components/EventModal';
-import VotesGroupPage from './GroupPages/VotesGroupPage';
 import VoteModal from '../components/VoteModal';
-import OverviewGroupPage from './GroupPages/OverviewGroupPage';
+import EventModal from '../components/EventModal';
 import { useLocation, useNavigate } from 'react-router-dom';
-import SettingsGroupPage from './GroupPages/SettingsGroupPage';
+const UsersGroupPage = React.lazy(() => import("./GroupPages/UsersGroupPage"));
+const InvitesGroupPage = React.lazy(() => import("./GroupPages/InvitesGroupPage"));
+const EventsGroupPage = React.lazy(() => import("./GroupPages/EventsGroupPage"));
+const VotesGroupPage = React.lazy(() => import("./GroupPages/VotesGroupPage"));
+const OverviewGroupPage = React.lazy(() => import("./GroupPages/OverviewGroupPage"));
+const SettingsGroupPage = React.lazy(() => import("./GroupPages/SettingsGroupPage"));
 const { TabPane } = Tabs;
 
   interface GroupProps {
@@ -198,7 +198,9 @@ const { TabPane } = Tabs;
                     </TabPane>
                 }
                 <TabPane tab="Settings" key={`/group/${group.id}/settings`}>
+                    <Suspense fallback={<div></div>}>
                     <SettingsGroupPage me={me} group={group} mePermissions={mePermissions} />
+                    </Suspense>
                 </TabPane>
             </Tabs>
             <EventModal me={me} mePermissions={mePermissions} visible={eventModalVisible} onFinish={handleFinishEvent} onDelete={handleDeleteEvent} onCancel={handleCloseEventModal} group={group} members={members ? members : []}/>
