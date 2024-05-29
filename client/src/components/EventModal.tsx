@@ -459,7 +459,8 @@ const EventModal: React.FC<EventModalProps> = ({ me, mePermissions, visible, onF
                 </div>
                 <div style={{display:'flex', alignItems:'center', marginBottom: '10px', marginTop: '5px'}}>
                     <span>Vote End-Date:</span>
-                    <DatePicker 
+                    <DatePicker
+                        disabled={!allowedToEdit}
                         needConfirm={false}
                         style={{ width: 'auto', marginLeft:'5px'}}
                         format='YYYY-MM-DD HH:mm'

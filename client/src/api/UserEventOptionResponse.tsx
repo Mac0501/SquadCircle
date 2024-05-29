@@ -68,6 +68,7 @@ class UserEventOptionResponse {
             if (fetch_response.ok) {
                 const responseData = await fetch_response.json();
                 this.response = responseData.response;
+                this.reason = responseData.reason;
             } else if (fetch_response.status === 401) {
                 console.log("User is unauthorized. Logging out...");
                 window.location.href = "/login";

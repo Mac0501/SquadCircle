@@ -464,7 +464,7 @@ const EventOptionCard: React.FC<EventOptionCardProps> = ({ me, event_option, meP
                 onCancel={()=>{setShowEventOptionReason(false) }}
                 footer={
                     <div style={{ display: 'flex', justifyContent:'end' }}>
-                        <Button type="primary" onClick={() => {setShowEventOptionReason(false);  onChooseOptionWithReason();}} key="submit">
+                        <Button disabled={!(reason !== null && reason.length > 0)} type="primary" onClick={() => {setShowEventOptionReason(false);  onChooseOptionWithReason();}} key="submit">
                             Send
                         </Button>
                     </div>
