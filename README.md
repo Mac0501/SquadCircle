@@ -5,10 +5,10 @@ SquadCircle is a self-hosted group manager, designed for creating events and vot
 - Event Creation: Effortlessly create and manage events for your group activities.
 - Voting System: Set up polls to gather opinions and make group decisions.
 - User-Friendly Interface: Intuitive and responsive UI built with React for a seamless experience.
-- API Integration: Interact with third-party applications through a robust API.
+- API Integration: Connect and interact with third-party applications for extended functionality of SquadCircle.
 - Real-Time Updates: Keep your group informed with real-time notifications and updates.
 - Customizable Settings: Tailor the app to meet your group's specific needs and preferences.
-- Secure Data Management: Ensure your group's data is safe with secure backend processing in Python.
+- Easy Invites: Just create a Invite-Link and people can become a part of your Group.
 
 ## Deploy with Docker in seconds
 
@@ -28,32 +28,34 @@ Follow these steps to build and self-host the Docker image for SquadCircle:
 
 1. Clone the Repository:
 
-```bash
-git clone https://github.com/Mac0501/SquadCircle.git
-cd squadcircle
-```
+    ```bash
+    git clone https://github.com/Mac0501/SquadCircle.git
+    cd squadcircle
+    ```
 
 2. Build the Docker Image:
-Make sure you have Docker installed on your system. Then, build the Docker image using the following command:
 
-```bash
-docker build -t squadcircle .
-```
+    Make sure you have Docker installed on your system. Then, build the Docker image using the following command:
+
+    ```bash
+    docker build -t squadcircle .
+    ```
 
 3. Run the Docker Container:
 
-After the image is built, run the Docker container:
-```bash
-docker run -d \
-    --name=SquadCircle \
-    -p 9050:3000 \
-    -e url="your.own.domain" \
-    -v squadcircle-data:/app/resources \
-    --restart unless-stopped \
-    squadcircle
-```
+    After the image is built, run the Docker container:
+    ```bash
+    docker run -d \
+        --name=SquadCircle \
+        -p 9050:3000 \
+        -e url="your.own.domain" \
+        -v squadcircle-data:/app/resources \
+        --restart unless-stopped \
+        squadcircle
+    ```
 4. Access the Application:
-Open your web browser and go to http://your.own.domain to start using SquadCircle.
+
+    Open your web browser and go to http://your.own.domain to start using SquadCircle.
 
 ## Running the Project in a Development Environment
 This guide will help you set up and run the project in a development environment. Follow these steps to get started:
