@@ -44,6 +44,26 @@ const { TabPane } = Tabs;
     const currentPath = location.pathname;
 
     useEffect(() => {
+        const fetchData = async () => {
+          try {
+            const [meGroupEventsData, meGroupVotesData] = await Promise.all([
+              Me.get_me_group_events(group.id, events || []),
+              Me.get_me_group_votes(group.id, votes || []),
+            ]);
+            setMeGroupEvents(meGroupEventsData.meGroupEvents || []);
+            setMeGroupCalender(meGroupEventsData.meGroupCalender || []);
+            setMeGroupVotes(meGroupVotesData || []);
+          } catch (error) {
+            console.error('Failed to fetch data:', error);
+          }
+        };
+    
+        if (activeTab === `/group/${group.id}`) {
+          fetchData();
+        }
+      }, [activeTab, group.id, events, votes]);
+
+    useEffect(() => {
         if(mePermissions === undefined){
             setMePermissions([])
             Me.get_group_permissions(group.id).then((permissionData: UserGroupPermissionEnum[]) => {

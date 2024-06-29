@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Me from '../../api/Me';
 import Group from '../../api/Group';
 import { UserGroupPermissionEnum } from '../../utils/types';
@@ -26,9 +26,16 @@ interface OverviewGroupPageProps {
 const OverviewGroupPage: React.FC<OverviewGroupPageProps> = ({ me, group, toDoVotes, toDoEvents, calenderEvents, members, mePermissions }) =>  {
     const [votesList, setVotesList] = useState<Vote[]>(toDoVotes);
     const [eventsList, setEventsList] = useState<Event[]>(toDoEvents);
+    const [calendarEvents, setCalendarEvents] = useState<Event[]>(calenderEvents);
     const [dayModalEventList, setDayModalEventList] = useState<Event[]>([]);
     const [dayModalTitle, setDayModalTitle] = useState<string>();
     const [dayModalVisible, setDayModalVisible] = useState<boolean>(false);
+
+    useEffect(() => {
+        setVotesList(toDoVotes)
+        setEventsList(toDoEvents)
+        setCalendarEvents(calenderEvents)
+      }, [toDoVotes, toDoEvents, calenderEvents]);
 
     const handleDeleteVote = async (deletedVote: Vote) => {
         const updatedVotesList = votesList.filter(vote => vote.id !== deletedVote.id);
@@ -54,7 +61,7 @@ const OverviewGroupPage: React.FC<OverviewGroupPageProps> = ({ me, group, toDoVo
 
     const dateCellRender = (value: Dayjs) => {
         const formattedDate = value.format('YYYY-MM-DD');
-        const listData = calenderEvents.filter(event => {
+        const listData = calendarEvents.filter(event => {
             const chosenOption = event.choosen_event_option;
             return chosenOption && dayjs(chosenOption.date).format('YYYY-MM-DD') === formattedDate;
         });
@@ -71,7 +78,7 @@ const OverviewGroupPage: React.FC<OverviewGroupPageProps> = ({ me, group, toDoVo
 
     const onSelect = (value: Dayjs) => {
         const formattedDate = value.format('YYYY-MM-DD');
-        const listData = calenderEvents.filter(event => {
+        const listData = calendarEvents.filter(event => {
             const chosenOption = event.choosen_event_option;
             return chosenOption && dayjs(chosenOption.date).format('YYYY-MM-DD') === formattedDate;
         });
