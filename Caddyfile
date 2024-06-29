@@ -10,15 +10,21 @@
 	}
 
 	handle {
-		reverse_proxy localhost:3001
+		root * /usr/share/caddy
+		file_server
+        try_files {path} /index.html
 	}
 
 	@websockets {
-		header Connection *Upgrade*
+		header Connection Upgrade
 		header Upgrade websocket
 	}
 
 	handle @websockets {
 		reverse_proxy localhost:8000
 	}
+    log {
+        level debug
+        format console
+    }
 }
